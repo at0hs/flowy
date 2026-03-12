@@ -1,0 +1,94 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
+  // フォームの入力値
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // エラーメッセージと送信中フラグ
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault(); // ブラウザのデフォルトのフォーム送信を止める
+    setErrorMessage('');
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      // 認証失敗：エラーメッセージを表示する
+      // Supabaseのエラーメッセージは英語なので、日本語に変換する
+      setErrorMessage('メールアドレスまたはパスワードが正しくありません');
+      setIsLoading(false);
+			console.error("auth failed:", error);
+      return;
+    }
+
+    // 認証成功：プロジェクト一覧へ遷移
+    router.push('/projects');
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>ログイン</CardTitle>
+        </CardHeader>
+
+        <form onSubmit={handleLogin}>
+          <CardContent className="space-y-4">
+            {/* エラーメッセージ */}
+            {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">メールアドレス</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">パスワード</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </CardContent>
+
+          <CardFooter className="flex flex-col gap-3">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'ログイン中...' : 'ログイン'}
+            </Button>
+            <p className="text-sm text-muted-foreground">
+              アカウントをお持ちでない方は{' '}
+              <Link href="/signup" className="underline">
+                サインアップ
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  );
+}
