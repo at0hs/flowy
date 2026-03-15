@@ -32,6 +32,7 @@ export default function NewTicketPage() {
       setErrorMessage(result.error)
       setIsLoading(false)
     }
+		router.push(`/projects/${projectId}`);
   }
 
   return (
