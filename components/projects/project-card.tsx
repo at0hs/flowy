@@ -15,13 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-type Project = {
-  id: string;
-  name: string;
-  description: string | null;
-  created_at: string;
-};
+import { Project } from "@/types";
+import { toast } from "sonner";
 
 type Props = {
   project: Project;
@@ -37,13 +32,13 @@ export function ProjectCard({ project }: Props) {
     const result = await deleteProject(project.id);
 
     if (result?.error) {
-      // エラーが返ってきた場合（redirectされなかった場合）
-      alert(result.error);
+      toast.error(result.error);
       setIsLoading(false);
       setIsDialogOpen(false);
       return;
     }
 
+    toast.success("プロジェクトを削除しました");
     setIsDialogOpen(false);
     setIsLoading(false);
     router.refresh();

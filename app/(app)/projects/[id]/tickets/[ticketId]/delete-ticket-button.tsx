@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 type Props = {
   ticketId: string;
@@ -29,15 +30,15 @@ export function DeleteTicketButton({ ticketId, projectId, ticketTitle }: Props) 
     const result = await deleteTicket(ticketId, projectId);
 
     if (result?.error) {
-      alert(result.error);
+      toast.error(result.error);
       setIsLoading(false);
       setIsDialogOpen(false);
       return;
     }
 
+    toast.success("チケットを削除しました");
     setIsDialogOpen(false);
     setIsLoading(false);
-    // deleteTicket内のredirectが効かない場合の保険
     router.push(`/projects/${projectId}`);
   };
 

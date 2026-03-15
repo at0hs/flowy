@@ -8,12 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-
-type Project = {
-  id: string;
-  name: string;
-  description: string | null;
-};
+import { Project } from "@/types";
+import { toast } from "sonner";
 
 type Props = {
   project: Project;
@@ -21,21 +17,23 @@ type Props = {
 
 export function EditProjectForm({ project }: Props) {
   const router = useRouter();
-  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage("");
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const result = await updateProject(project.id, formData);
 
     if (result?.error) {
-      setErrorMessage(result.error);
+      toast.error(result.error);
       setIsLoading(false);
+      return;
     }
+
+    toast.success("プロジェクトを更新しました");
+    router.push("/projects");
   };
 
   return (
@@ -46,7 +44,6 @@ export function EditProjectForm({ project }: Props) {
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
 
           <div className="space-y-2">
             <Label htmlFor="name">プロジェクト名 *</Label>

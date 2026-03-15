@@ -6,16 +6,32 @@ import { Separator } from "@/components/ui/separator"
 import { TicketListItem } from "@/components/tickets/ticket-list-item"
 import { TicketFilters } from "@/components/tickets/ticket-filters"
 import { Suspense } from "react"
+import { ticketsQuerySchema } from "@/lib/validations"
 
 type Props = {
   params: Promise<{ id: string }>
-  // URLの ?status=todo&priority=high&order=asc を受け取る
-  searchParams: Promise<{ status?: string; priority?: string; order?: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export default async function TicketsPage({ params, searchParams }: Props) {
   const { id } = await params
-  const { status, priority, order } = await searchParams
+  const rawSearchParams = await searchParams
+
+  // クエリパラメータをバリデーション
+  const validationResult = ticketsQuerySchema.safeParse({
+    status: rawSearchParams.status,
+    priority: rawSearchParams.priority,
+    order: rawSearchParams.order,
+  })
+
+  if (!validationResult.success) {
+    // バリデーション失敗時は無効なパラメータを無視
+    console.warn('Invalid search params:', validationResult.error.issues)
+  }
+
+  const { status, priority, order } = validationResult.success
+    ? validationResult.data
+    : {}
 
   const supabase = await createClient()
 

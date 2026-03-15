@@ -1,14 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-
-type Ticket = {
-  id: string;
-  project_id: string;
-  title: string;
-  status: "todo" | "in_progress" | "done";
-  priority: "low" | "medium" | "high" | "urgent";
-  created_at: string;
-};
+import { Ticket } from "@/types";
 
 // ステータスの日本語ラベルと色
 const STATUS_MAP = {

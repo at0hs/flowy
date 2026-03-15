@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { ticketSchema } from "@/lib/validations";
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -11,18 +12,20 @@ export async function createTicket(projectId: string, formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const title = formData.get("title") as string;
-  const description = formData.get("description") as string;
-  const status = formData.get("status") as string;
-  const priority = formData.get("priority") as string;
+  const data = ticketSchema.parse({
+    title: formData.get("title"),
+    description: formData.get("description") || undefined,
+    status: formData.get("status"),
+    priority: formData.get("priority"),
+  });
 
   const { error } = await supabase.from("tickets").insert({
     project_id: projectId,
-    title,
-    description: description || null,
-    status,
-    priority,
-    assignee_id: user.id, // 担当者はログインユーザー自身に自動セット
+    title: data.title,
+    description: data.description || null,
+    status: data.status,
+    priority: data.priority,
+    assignee_id: user.id,
   });
 
   if (error) {
@@ -30,8 +33,7 @@ export async function createTicket(projectId: string, formData: FormData) {
     return { error: "チケットの作成に失敗しました" };
   }
 
-  // 作成成功 → チケット一覧へ
-  redirect(`/projects/${projectId}`);
+  return { success: true, projectId };
 }
 
 export async function deleteTicket(ticketId: string, projectId: string) {
@@ -49,6 +51,38 @@ export async function deleteTicket(ticketId: string, projectId: string) {
     return { error: "チケットの削除に失敗しました" };
   }
 
-  // 削除成功 → チケット一覧へ
-  redirect(`/projects/${projectId}`);
+  return { success: true, projectId };
+}
+
+export async function updateTicket(ticketId: string, projectId: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const data = ticketSchema.parse({
+    title: formData.get("title"),
+    description: formData.get("description") || undefined,
+    status: formData.get("status"),
+    priority: formData.get("priority"),
+  });
+
+  const { error } = await supabase
+    .from("tickets")
+    .update({
+      title: data.title,
+      description: data.description || null,
+      status: data.status,
+      priority: data.priority,
+    })
+    .eq("id", ticketId);
+
+  if (error) {
+    console.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
+  return { success: true, ticketId, projectId };
 }

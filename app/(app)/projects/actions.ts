@@ -23,12 +23,10 @@ export async function createProject(formData: FormData) {
 
   if (error) {
     console.error(error);
-    // エラーをページ側に返す（次のステップで詳しく扱います）
     return { error: "プロジェクトの作成に失敗しました" };
   }
 
-  // 作成成功 → 一覧へ
-  redirect("/projects");
+  return { success: true };
 }
 
 export async function updateProject(projectId: string, formData: FormData) {
@@ -56,7 +54,7 @@ export async function updateProject(projectId: string, formData: FormData) {
     return { error: "プロジェクトの更新に失敗しました" };
   }
 
-  redirect("/projects");
+  return { success: true };
 }
 
 export async function deleteProject(projectId: string) {
@@ -75,5 +73,5 @@ export async function deleteProject(projectId: string) {
     return { error: "プロジェクトの削除に失敗しました" };
   }
 
-  redirect("/projects");
+  return { success: true };
 }

@@ -10,6 +10,6 @@
     ".gitignore"
   ],
   "editor.wordWrap": "on",
-  "cSpell.words": ["flowy", "plpgsql", "shadcn", "SUPABASE"],
+  "cSpell.words": ["fkey", "flowy", "plpgsql", "shadcn", "SUPABASE"],
   "files.eol": "\n"
 }
