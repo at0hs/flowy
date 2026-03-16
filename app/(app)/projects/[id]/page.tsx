@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { TicketListItem } from "@/components/tickets/ticket-list-item"
+import { TicketTable } from "@/components/tickets/ticket-table"
 import { TicketFilters } from "@/components/tickets/ticket-filters"
 import { Suspense } from "react"
 import { ticketsQuerySchema } from "@/lib/validations"
@@ -92,11 +92,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       </Suspense>
 
       {tickets && tickets.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          {tickets.map((ticket) => (
-            <TicketListItem key={ticket.id} ticket={ticket} />
-          ))}
-        </div>
+        <TicketTable tickets={tickets} />
       ) : (
         <div className="text-center py-16 text-muted-foreground">
           <p className="mb-4">チケットがありません</p>
