@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 
 export async function createProject(formData: FormData) {
   const supabase = await createClient();
-
   // ログイン中のユーザーを取得
   const {
     data: { user },
