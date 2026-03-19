@@ -27,6 +27,7 @@ export default function NewProjectPage() {
     }
 
     toast.success("プロジェクトを作成しました");
+		setIsLoading(false);
     router.push("/projects");
   };
 

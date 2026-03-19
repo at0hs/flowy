@@ -1,5 +1,5 @@
 import { createClient } from "./server";
-import { ProjectMember, ProjectRole, Profile } from "@/types";
+import { ProjectRole, Profile } from "@/types";
 
 export interface ProjectMemberWithProfile {
   id: string;
@@ -65,56 +65,6 @@ export async function getProjectMembers(
       profile: profile || ({} as Profile),
     };
   });
-}
-
-/**
- * プロジェクトにメンバーを追加
- * @param projectId プロジェクトID
- * @param userEmail 追加するユーザーのメールアドレス
- * @returns 新規に追加されたメンバー情報
- */
-export async function addProjectMember(projectId: string, userEmail: string) {
-  const supabase = await createClient();
-
-  // メールアドレスからユーザーを検索
-  const { data: profileData, error: profileError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", userEmail)
-    .single();
-
-  if (profileError) {
-    console.error("User not found:", profileError);
-    throw new Error(`メールアドレス「${userEmail}」は登録されていません`);
-  }
-
-  if (!profileData) {
-    throw new Error(`メールアドレス「${userEmail}」は登録されていません`);
-  }
-
-  const userId = profileData.id;
-
-  // メンバーを追加
-  const { data, error } = await supabase
-    .from("project_members")
-    .insert({
-      project_id: projectId,
-      user_id: userId,
-      role: "member",
-    })
-    .select()
-    .single();
-
-  if (error) {
-    if (error.code === "23505") {
-      // UNIQUE制約違反（既に追加されている）
-      throw new Error(`このメンバーは既に追加されています`);
-    }
-    console.error("Failed to add project member:", error);
-    throw error;
-  }
-
-  return data as ProjectMember;
 }
 
 /**
