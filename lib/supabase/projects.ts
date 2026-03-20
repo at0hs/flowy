@@ -1,5 +1,5 @@
-import { createClient } from './server';
-import { Project } from '@/types';
+import { createClient } from "./server";
+import { Project } from "@/types";
 
 // ユーザーが所有・参加しているプロジェクト一覧を取得
 export async function getUserProjects(): Promise<Project[]> {
@@ -12,18 +12,18 @@ export async function getUserProjects(): Promise<Project[]> {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error('Failed to get current user:', userError);
-    throw new Error('ユーザー認証情報が見つかりません');
+    console.error("Failed to get current user:", userError);
+    throw new Error("ユーザー認証情報が見つかりません");
   }
 
   // ユーザーが所属するプロジェクトメンバーレコードを検索
   const { data: memberData, error: memberError } = await supabase
-    .from('project_members')
-    .select('project_id')
-    .eq('user_id', user.id);
+    .from("project_members")
+    .select("project_id")
+    .eq("user_id", user.id);
 
   if (memberError) {
-    console.error('Failed to fetch project members:', memberError);
+    console.error("Failed to fetch project members:", memberError);
     throw memberError;
   }
 
@@ -37,13 +37,13 @@ export async function getUserProjects(): Promise<Project[]> {
 
   // プロジェクト情報を取得（新しい順）
   const { data: projects, error: projectError } = await supabase
-    .from('projects')
-    .select('*')
-    .in('id', projectIds)
-    .order('created_at', { ascending: false });
+    .from("projects")
+    .select("*")
+    .in("id", projectIds)
+    .order("created_at", { ascending: false });
 
   if (projectError) {
-    console.error('Failed to fetch projects:', projectError);
+    console.error("Failed to fetch projects:", projectError);
     throw projectError;
   }
 
@@ -60,17 +60,17 @@ export async function getUserProfile() {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    throw new Error('ユーザー認証情報が見つかりません');
+    throw new Error("ユーザー認証情報が見つかりません");
   }
 
   const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, display_name, email')
-    .eq('id', user.id)
+    .from("profiles")
+    .select("id, display_name, email")
+    .eq("id", user.id)
     .single();
 
   if (profileError) {
-    console.error('Failed to fetch user profile:', profileError);
+    console.error("Failed to fetch user profile:", profileError);
     throw profileError;
   }
 

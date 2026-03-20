@@ -19,13 +19,16 @@ export async function createTicket(projectId: string, formData: FormData) {
     priority: formData.get("priority"),
   });
 
+  const assigneeIdRaw = formData.get("assignee_id") as string | null;
+  const assigneeId = assigneeIdRaw && assigneeIdRaw.trim() !== "" ? assigneeIdRaw : null;
+
   const { error } = await supabase.from("tickets").insert({
     project_id: projectId,
     title: data.title,
     description: data.description || null,
     status: data.status,
     priority: data.priority,
-    assignee_id: user.id,
+    assignee_id: assigneeId,
   });
 
   if (error) {
@@ -69,6 +72,9 @@ export async function updateTicket(ticketId: string, projectId: string, formData
     priority: formData.get("priority"),
   });
 
+  const assigneeIdRaw = formData.get("assignee_id") as string | null;
+  const assigneeId = assigneeIdRaw && assigneeIdRaw.trim() !== "" ? assigneeIdRaw : null;
+
   const { error } = await supabase
     .from("tickets")
     .update({
@@ -76,6 +82,7 @@ export async function updateTicket(ticketId: string, projectId: string, formData
       description: data.description || null,
       status: data.status,
       priority: data.priority,
+      assignee_id: assigneeId,
     })
     .eq("id", ticketId);
 

@@ -40,6 +40,10 @@ export default async function TicketDetailPage({ params }: Props) {
   const status = STATUS_MAP[ticket.status as keyof typeof STATUS_MAP];
   const priority = PRIORITY_MAP[ticket.priority as keyof typeof PRIORITY_MAP];
 
+  const assignee = ticket.assignee_id
+    ? (await supabase.from("profiles").select("display_name, email").eq("id", ticket.assignee_id).single()).data
+    : null;
+
   return (
     <div className="max-w-2xl mx-auto p-8">
       {/* 戻るリンク */}
@@ -73,6 +77,18 @@ export default async function TicketDetailPage({ params }: Props) {
           <p className="text-sm whitespace-pre-wrap">{ticket.description}</p>
         ) : (
           <p className="text-sm text-muted-foreground italic">説明なし</p>
+        )}
+      </div>
+
+      <Separator className="mb-6" />
+
+      {/* 担当者 */}
+      <div className="mb-6">
+        <p className="text-sm font-medium text-muted-foreground mb-2">担当者</p>
+        {assignee ? (
+          <p className="text-sm">{assignee.display_name || assignee.email}</p>
+        ) : (
+          <p className="text-sm text-muted-foreground italic">担当者なし</p>
         )}
       </div>
 

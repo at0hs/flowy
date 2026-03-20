@@ -5,6 +5,7 @@ import { getProjectMembers, isProjectOwner } from "@/lib/supabase/members";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { AddMemberForm } from "@/components/members/add-member-form";
+import { DeleteMemberButton } from "@/components/members/delete-member-button";
 import { revalidatePath } from "next/cache";
 
 type Props = {
@@ -58,6 +59,7 @@ export default async function MembersPage({ params }: Props) {
               <th className="px-4 py-3 text-left font-medium">ユーザー名</th>
               <th className="px-4 py-3 text-left font-medium">メールアドレス</th>
               <th className="px-4 py-3 text-left font-medium">ロール</th>
+              {isOwner && <th className="px-4 py-3" />}
             </tr>
           </thead>
           <tbody>
@@ -70,6 +72,17 @@ export default async function MembersPage({ params }: Props) {
                     {member.role === "owner" ? "オーナー" : "メンバー"}
                   </Badge>
                 </td>
+                {isOwner && (
+                  <td className="px-4 py-3 text-right">
+                    {member.user_id !== user.id && (
+                      <DeleteMemberButton
+                        projectId={id}
+                        memberId={member.id}
+                        memberName={member.profile.display_name}
+                      />
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

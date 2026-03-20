@@ -68,26 +68,6 @@ export async function getProjectMembers(
 }
 
 /**
- * プロジェクトからメンバーを削除
- * @param projectId プロジェクトID
- * @param memberId 削除するメンバーID（project_members.id）
- */
-export async function removeProjectMember(projectId: string, memberId: string) {
-  const supabase = await createClient();
-
-  const { error } = await supabase
-    .from("project_members")
-    .delete()
-    .eq("id", memberId)
-    .eq("project_id", projectId);
-
-  if (error) {
-    console.error("Failed to remove project member:", error);
-    throw error;
-  }
-}
-
-/**
  * ユーザーがプロジェクトのオーナーかどうかを確認
  * @param projectId プロジェクトID
  * @param userId ユーザーID

@@ -42,14 +42,12 @@ export function AddMemberForm({ projectId, onMemberAdded }: Props) {
         return;
       }
 
-			console.log("email changed");
       debounceTimer.current = setTimeout(async () => {
         setIsSearching(true);
         try {
           const results = await searchProfiles(value.trim(), projectId);
           setCandidates(results);
           setOpen(results.length > 0);
-					console.log("results:",results);
         } finally {
           setIsSearching(false);
         }
