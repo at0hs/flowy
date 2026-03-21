@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3111",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -12,7 +12,8 @@
 		"sb:start": "supabase start",
     "sb:stop": "supabase stop",
     "sb:status": "supabase status",
-    "sb:reset": "supabase db reset"
+    "sb:reset": "supabase db reset",
+		"sb:push": "supabase db push"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",
