@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { updateProfile } from './actions';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { Profile } from '@/types';
+import { useState } from "react";
+import { updateProfile } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Profile } from "@/types";
 
 type Props = {
-  profile: Pick<Profile, 'username' | 'email'>;
+  profile: Pick<Profile, "username" | "email">;
 };
 
 export function UpdateProfileForm({ profile }: Props) {
@@ -29,9 +29,11 @@ export function UpdateProfileForm({ profile }: Props) {
     }
 
     if (result?.emailChanged) {
-      toast.success('プロフィールを更新しました。\n新しいメールアドレスに確認メールを送信しました。');
+      toast.success(
+        "プロフィールを更新しました。\n新しいメールアドレスに確認メールを送信しました。"
+      );
     } else {
-      toast.success('プロフィールを更新しました');
+      toast.success("プロフィールを更新しました");
     }
     setIsLoading(false);
   };
@@ -44,24 +46,19 @@ export function UpdateProfileForm({ profile }: Props) {
           id="username"
           name="username"
           defaultValue={profile.username}
+          autoComplete="username"
           required
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="email">メールアドレス *</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          defaultValue={profile.email}
-          required
-        />
+        <Input id="email" name="email" type="email" defaultValue={profile.email} autoComplete="email" required />
       </div>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? '更新中...' : '更新する'}
+          {isLoading ? "更新中..." : "更新する"}
         </Button>
       </div>
     </form>

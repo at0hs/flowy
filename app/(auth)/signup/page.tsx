@@ -36,6 +36,7 @@ export default function SignupPage() {
     });
 
     if (error) {
+			console.log("failed to signup: ", error.message);
       // メールアドレス重複など
       setErrorMessage("登録に失敗しました。別のメールアドレスをお試しください");
       setIsLoading(false);

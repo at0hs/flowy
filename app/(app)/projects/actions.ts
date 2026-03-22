@@ -194,11 +194,11 @@ export async function addProjectMember(projectId: string, userEmail: string) {
     .single();
 
   if (error) {
+    console.error("Failed to add project member:", error.message);
     if (error.code === "23505") {
       // UNIQUE制約違反（既に追加されている）
       throw new Error(`このメンバーは既に追加されています`);
     }
-    console.error("Failed to add project member:", error);
     throw error;
   }
 
