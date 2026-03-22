@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/projects/project-card";
+import { logger } from "@/lib/logger";
 
 export default async function ProjectsPage() {
   const supabase = await createClient();
@@ -20,7 +21,7 @@ export default async function ProjectsPage() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error(error);
+    logger.error(error);
   }
 
   return (

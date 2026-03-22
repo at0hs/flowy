@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ticketSchema } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -32,7 +33,7 @@ export async function createTicket(projectId: string, formData: FormData) {
   });
 
   if (error) {
-    console.error(error);
+    logger.error(error);
     return { error: "チケットの作成に失敗しました" };
   }
 

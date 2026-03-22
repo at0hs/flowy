@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { logger } from '@/lib/logger';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,7 +34,7 @@ export default function LoginPage() {
       // Supabaseのエラーメッセージは英語なので、日本語に変換する
       setErrorMessage('メールアドレスまたはパスワードが正しくありません');
       setIsLoading(false);
-			console.error("auth failed:", error);
+      logger.error("auth failed:", error);
       return;
     }
 

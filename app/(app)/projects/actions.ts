@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Profile, ProjectMember } from "@/types";
+import { logger } from "@/lib/logger";
 
 export async function createProject(formData: FormData) {
   const supabase = await createClient();
@@ -23,7 +24,7 @@ export async function createProject(formData: FormData) {
   });
 
   if (error) {
-    console.error(error);
+    logger.error(error);
     return { error: "プロジェクトの作成に失敗しました" };
   }
   // サイドバーの表示を更新するために、キャッシュを削除
@@ -52,7 +53,7 @@ export async function updateProject(projectId: string, formData: FormData) {
   // RLSがowner_idを確認するので、他人のプロジェクトは更新できない
 
   if (error) {
-    console.error(error);
+    logger.error(error);
     return { error: "プロジェクトの更新に失敗しました" };
   }
 
@@ -71,7 +72,7 @@ export async function deleteProject(projectId: string) {
   const { error } = await supabase.from("projects").delete().eq("id", projectId);
 
   if (error) {
-    console.error(error);
+    logger.error(error);
     return { error: "プロジェクトの削除に失敗しました" };
   }
 
@@ -103,7 +104,6 @@ export async function searchProfiles(email: string, projectId: string): Promise<
   }
 
   const { data } = await query;
-  console.log("query:", query, "data:", data);
   return (data ?? []) as Profile[];
 }
 
@@ -124,7 +124,7 @@ export async function removeProjectMember(projectId: string, memberId: string) {
     .single();
 
   if (fetchError || !member) {
-    console.error("Failed to fetch project member:", fetchError);
+    logger.error("Failed to fetch project member:", fetchError);
     throw new Error("メンバーの削除に失敗しました");
   }
 
@@ -135,7 +135,7 @@ export async function removeProjectMember(projectId: string, memberId: string) {
     .eq("project_id", projectId);
 
   if (error) {
-    console.error("Failed to remove project member:", error);
+    logger.error("Failed to remove project member:", error);
     throw new Error("メンバーの削除に失敗しました");
   }
 
@@ -147,7 +147,7 @@ export async function removeProjectMember(projectId: string, memberId: string) {
     .eq("assignee_id", member.user_id);
 
   if (ticketError) {
-    console.error("Failed to clear assignee_id from tickets:", ticketError);
+    logger.error("Failed to clear assignee_id from tickets:", ticketError);
     throw new Error("メンバーの削除に失敗しました");
   }
 
@@ -172,7 +172,7 @@ export async function addProjectMember(projectId: string, userEmail: string) {
     .single();
 
   if (profileError) {
-    console.error("User not found:", profileError);
+    logger.error("User not found:", profileError);
     throw new Error(`メールアドレス「${userEmail}」は登録されていません`);
   }
 
@@ -194,7 +194,7 @@ export async function addProjectMember(projectId: string, userEmail: string) {
     .single();
 
   if (error) {
-    console.error("Failed to add project member:", error.message);
+    logger.error("Failed to add project member:", error.message);
     if (error.code === "23505") {
       // UNIQUE制約違反（既に追加されている）
       throw new Error(`このメンバーは既に追加されています`);

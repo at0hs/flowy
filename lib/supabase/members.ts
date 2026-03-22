@@ -1,5 +1,6 @@
 import { createClient } from "./server";
 import { ProjectRole, Profile } from "@/types";
+import { logger } from "@/lib/logger";
 
 export interface ProjectMemberWithProfile {
   id: string;
@@ -28,7 +29,7 @@ export async function getProjectMembers(
     .order("created_at", { ascending: true });
 
   if (membersError) {
-    console.error("Failed to fetch project members:", membersError);
+    logger.error("Failed to fetch project members:", membersError);
     throw membersError;
   }
 
@@ -46,7 +47,7 @@ export async function getProjectMembers(
     .in("id", userIds);
 
   if (profilesError) {
-    console.error("Failed to fetch profiles:", profilesError);
+    logger.error("Failed to fetch profiles:", profilesError);
     throw profilesError;
   }
 
@@ -84,7 +85,7 @@ export async function isProjectOwner(projectId: string, userId: string) {
     .single();
 
   if (error) {
-    console.error("Failed to check project owner:", error);
+    logger.error("Failed to check project owner:", error);
     return false;
   }
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { logger } from "@/lib/logger";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function SignupPage() {
     });
 
     if (error) {
-			console.log("failed to signup: ", error.message);
+      logger.error("failed to signup: ", error.message);
       // メールアドレス重複など
       setErrorMessage("登録に失敗しました。別のメールアドレスをお試しください");
       setIsLoading(false);

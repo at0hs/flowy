@@ -1,5 +1,6 @@
 import { createClient } from "./server";
 import { Project } from "@/types";
+import { logger } from "@/lib/logger";
 
 // ユーザーが所有・参加しているプロジェクト一覧を取得
 export async function getUserProjects(): Promise<Project[]> {
@@ -12,7 +13,7 @@ export async function getUserProjects(): Promise<Project[]> {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error("Failed to get current user:", userError);
+    logger.error("Failed to get current user:", userError);
     throw new Error("ユーザー認証情報が見つかりません");
   }
 
@@ -23,7 +24,7 @@ export async function getUserProjects(): Promise<Project[]> {
     .eq("user_id", user.id);
 
   if (memberError) {
-    console.error("Failed to fetch project members:", memberError);
+    logger.error("Failed to fetch project members:", memberError);
     throw memberError;
   }
 
@@ -43,7 +44,7 @@ export async function getUserProjects(): Promise<Project[]> {
     .order("created_at", { ascending: false });
 
   if (projectError) {
-    console.error("Failed to fetch projects:", projectError);
+    logger.error("Failed to fetch projects:", projectError);
     throw projectError;
   }
 
@@ -70,7 +71,7 @@ export async function getUserProfile() {
     .single();
 
   if (profileError) {
-    console.error("Failed to fetch user profile:", profileError);
+    logger.error("Failed to fetch user profile:", profileError);
     throw profileError;
   }
 

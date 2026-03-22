@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LogOut, Settings, ChevronDown, ChevronRight, Ticket, Users, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 
 interface SidebarProps {
   projects: Array<{
@@ -58,7 +59,7 @@ export function Sidebar({ projects, userProfile }: SidebarProps) {
         router.push("/login");
       }
     } catch (error) {
-      console.error("Logout failed:", error);
+      logger.error("Logout failed:", error);
     }
   };
 

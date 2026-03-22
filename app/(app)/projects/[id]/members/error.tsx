@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { ErrorDisplay } from '@/components/layout/error-display';
+import { logger } from '@/lib/logger';
 
 type Props = {
   error: Error & { digest?: string };
@@ -10,7 +11,7 @@ type Props = {
 
 export default function MembersError({ error, reset }: Props) {
   useEffect(() => {
-    console.error(error);
+    logger.error(error);
   }, [error]);
 
   return (

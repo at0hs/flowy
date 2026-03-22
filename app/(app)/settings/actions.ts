@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { logger } from "@/lib/logger";
 
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
@@ -31,7 +32,7 @@ export async function updateProfile(formData: FormData) {
     .eq("id", user.id);
 
   if (profileError) {
-    console.error("Failed to update profile:", profileError);
+    logger.error("Failed to update profile:", profileError);
     return { error: "プロフィールの更新に失敗しました" };
   }
 
@@ -40,7 +41,7 @@ export async function updateProfile(formData: FormData) {
   if (emailChanged) {
     const { error: authError } = await supabase.auth.updateUser({ email: email.trim() });
     if (authError) {
-      console.error("Failed to update auth email:", authError);
+      logger.error("Failed to update auth email:", authError);
       return { error: "メールアドレスの更新に失敗しました" };
     }
   }
@@ -73,7 +74,7 @@ export async function updatePassword(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
 
   if (error) {
-    console.error("Failed to update password:", error);
+    logger.error("Failed to update password:", error);
     return { error: "パスワードの変更に失敗しました" };
   }
 

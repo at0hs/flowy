@@ -7,6 +7,7 @@ import { TicketTable } from "@/components/tickets/ticket-table";
 import { TicketFilters } from "@/components/tickets/ticket-filters";
 import { Suspense } from "react";
 import { ticketsQuerySchema } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -26,7 +27,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
 
   if (!validationResult.success) {
     // バリデーション失敗時は無効なパラメータを無視
-    console.warn("Invalid search params:", validationResult.error.issues);
+    logger.warn("Invalid search params:", validationResult.error.issues);
   }
 
   const { status, priority, order } = validationResult.success ? validationResult.data : {};
@@ -62,7 +63,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   if (priority) query = query.eq("priority", priority);
   const { data: tickets, error } = await query;
 
-  if (error) console.error(error);
+  if (error) logger.error(error);
 
   return (
     <div className="max-w-4xl mx-auto p-8">
