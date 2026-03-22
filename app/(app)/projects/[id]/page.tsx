@@ -39,8 +39,14 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   if (!user) redirect("/login");
 
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).single();
-
   if (!project) notFound();
+
+  const { data: ticketExists } = await supabase
+    .from("tickets")
+    .select("id")
+    .eq("project_id", id)
+    .limit(1);
+  const notExistsTicket = !ticketExists || ticketExists.length === 0;
 
   // チケット取得クエリを組み立てる
   let query = supabase
@@ -87,9 +93,11 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       ) : (
         <div className="text-center py-16 text-muted-foreground">
           <p className="mb-4">チケットがありません</p>
-          <Button asChild variant="outline">
-            <Link href={`/projects/${id}/tickets/new`}>最初のチケットを作成する</Link>
-          </Button>
+          {notExistsTicket && (
+            <Button asChild variant="outline">
+              <Link href={`/projects/${id}/tickets/new`}>最初のチケットを作成する</Link>
+            </Button>
+          )}
         </div>
       )}
     </div>
