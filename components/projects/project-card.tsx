@@ -20,9 +20,10 @@ import { toast } from "sonner";
 
 type Props = {
   project: Project;
+  isOwner: boolean;
 };
 
-export function ProjectCard({ project }: Props) {
+export function ProjectCard({ project, isOwner }: Props) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,12 +71,16 @@ export function ProjectCard({ project }: Props) {
           </Badge>
 
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/projects/${project.id}/edit`}>編集</Link>
-            </Button>
-            <Button variant="destructive" size="sm" onClick={() => setIsDialogOpen(true)}>
-              削除
-            </Button>
+            {isOwner && (
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/projects/${project.id}/edit`}>編集</Link>
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => setIsDialogOpen(true)}>
+                  削除
+                </Button>
+              </>
+            )}
           </div>
         </CardFooter>
       </Card>
@@ -86,8 +91,9 @@ export function ProjectCard({ project }: Props) {
           <DialogHeader>
             <DialogTitle>プロジェクトを削除しますか？</DialogTitle>
             <DialogDescription>
-              「{project.name}
-              」を削除すると、紐づくチケットもすべて削除されます。<br/>この操作は取り消せません。
+              「{project.name}」を削除すると、紐づくチケットもすべて削除されます。
+              <br />
+              この操作は取り消せません。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

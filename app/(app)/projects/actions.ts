@@ -70,7 +70,6 @@ export async function deleteProject(projectId: string) {
 
   // RLSがowner_idを確認するので、他人のプロジェクトは削除できない
   const { error } = await supabase.from("projects").delete().eq("id", projectId);
-
   if (error) {
     logger.error(error);
     return { error: "プロジェクトの削除に失敗しました" };
