@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Profile } from '@/types';
 
 type Props = {
-  profile: Pick<Profile, 'display_name' | 'email'>;
+  profile: Pick<Profile, 'username' | 'email'>;
 };
 
 export function UpdateProfileForm({ profile }: Props) {
@@ -39,11 +39,11 @@ export function UpdateProfileForm({ profile }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="display_name">表示名 *</Label>
+        <Label htmlFor="username">ユーザー名 *</Label>
         <Input
-          id="display_name"
-          name="display_name"
-          defaultValue={profile.display_name}
+          id="username"
+          name="username"
+          defaultValue={profile.username}
           required
         />
       </div>

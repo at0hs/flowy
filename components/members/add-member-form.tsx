@@ -123,7 +123,7 @@ export function AddMemberForm({ projectId, onMemberAdded }: Props) {
                     onSelect={() => handleSelect(profile)}
                   >
                     <div className="flex flex-col">
-                      <span className="font-medium">{profile.display_name}</span>
+                      <span className="font-medium">{profile.username}</span>
                       <span className="text-xs text-muted-foreground">{profile.email}</span>
                     </div>
                   </CommandItem>

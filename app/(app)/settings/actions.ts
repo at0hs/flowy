@@ -12,11 +12,11 @@ export async function updateProfile(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const displayName = formData.get("display_name") as string;
+  const username = formData.get("username") as string;
   const email = formData.get("email") as string;
 
-  if (!displayName?.trim()) {
-    return { error: "表示名は必須です" };
+  if (!username?.trim()) {
+    return { error: "ユーザー名は必須です" };
   }
   if (!email?.trim()) {
     return { error: "メールアドレスは必須です" };
@@ -24,10 +24,10 @@ export async function updateProfile(formData: FormData) {
 
   const emailChanged = email.trim() !== user.email;
 
-  // display_name を profiles テーブルへ更新（RLS により自分のレコードのみ更新可）
+  // username を profiles テーブルへ更新（RLS により自分のレコードのみ更新可）
   const { error: profileError } = await supabase
     .from("profiles")
-    .update({ display_name: displayName.trim() })
+    .update({ username: username.trim() })
     .eq("id", user.id);
 
   if (profileError) {

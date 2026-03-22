@@ -41,7 +41,7 @@ export default async function TicketDetailPage({ params }: Props) {
   const priority = PRIORITY_MAP[ticket.priority as keyof typeof PRIORITY_MAP];
 
   const assignee = ticket.assignee_id
-    ? (await supabase.from("profiles").select("display_name, email").eq("id", ticket.assignee_id).single()).data
+    ? (await supabase.from("profiles").select("username, email").eq("id", ticket.assignee_id).single()).data
     : null;
 
   return (
@@ -86,7 +86,7 @@ export default async function TicketDetailPage({ params }: Props) {
       <div className="mb-6">
         <p className="text-sm font-medium text-muted-foreground mb-2">担当者</p>
         {assignee ? (
-          <p className="text-sm">{assignee.display_name || assignee.email}</p>
+          <p className="text-sm">{assignee.username || assignee.email}</p>
         ) : (
           <p className="text-sm text-muted-foreground italic">担当者なし</p>
         )}

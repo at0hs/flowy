@@ -9,5 +9,9 @@ type Props = {
 
 export default function ErrorPage({ error, reset }: Props) {
   console.error(error);
-  return <ErrorDisplay reset={reset} />;
+  return (
+    <div className="max-w-4xl mx-auto p-8">
+      <ErrorDisplay reset={reset} />
+    </div>
+  );
 }

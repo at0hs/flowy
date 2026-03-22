@@ -15,7 +15,7 @@ export default function SignupPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState(""); // ログインページにはない項目
+  const [username, setUsername] = useState(""); // ログインページにはない項目
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -29,9 +29,9 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        // display_name をトリガーに渡すためのメタデータ
-        // DB設計書のトリガーがこの値を profiles.display_name に入れる
-        data: { display_name: displayName },
+        // username をトリガーに渡すためのメタデータ
+        // DB設計書のトリガーがこの値を profiles.username に入れる
+        data: { username: username },
       },
     });
 
@@ -58,13 +58,13 @@ export default function SignupPage() {
             {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
 
             <div className="space-y-2">
-              <Label htmlFor="displayName">ユーザー名</Label>
+              <Label htmlFor="username">ユーザー名</Label>
               <Input
-                id="displayName"
+                id="username"
                 type="text"
                 autoComplete="username"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>

@@ -39,11 +39,11 @@ export async function TicketTable({ tickets }: Props) {
     const supabase = await createClient();
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, display_name, email")
+      .select("id, username, email")
       .in("id", assigneeIds);
 
     profiles?.forEach((p) => {
-      assigneeMap.set(p.id, p.display_name || p.email || "");
+      assigneeMap.set(p.id, p.username || p.email || "");
     });
   }
   return (

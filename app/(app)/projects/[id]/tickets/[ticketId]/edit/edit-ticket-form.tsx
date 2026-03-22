@@ -89,7 +89,7 @@ export function EditTicketForm({ ticket, projectId, members }: Props) {
                 <SelectItem value="none">未選択（担当者なし）</SelectItem>
                 {members.map((member) => (
                   <SelectItem key={member.user_id} value={member.user_id}>
-                    {member.profile.display_name || member.profile.email}
+                    {member.profile.username || member.profile.email}
                   </SelectItem>
                 ))}
               </SelectContent>

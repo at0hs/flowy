@@ -8,12 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "gen:types": "supabase gen types typescript --local > types/database.types.ts",
-
-		"sb:start": "supabase start",
+    "sb:start": "supabase start",
     "sb:stop": "supabase stop",
     "sb:status": "supabase status",
     "sb:reset": "supabase db reset",
-		"sb:push": "supabase db push"
+    "sb:push": "supabase db push",
+		"sb:migration-up": "supabase migration up"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

@@ -65,7 +65,7 @@ export default async function MembersPage({ params }: Props) {
           <tbody>
             {members.map((member) => (
               <tr key={member.id} className="border-b last:border-0">
-                <td className="px-4 py-3">{member.profile.display_name}</td>
+                <td className="px-4 py-3">{member.profile.username}</td>
                 <td className="px-4 py-3 text-muted-foreground">{member.profile.email}</td>
                 <td className="px-4 py-3">
                   <Badge variant={member.role === "owner" ? "default" : "secondary"}>
@@ -78,7 +78,7 @@ export default async function MembersPage({ params }: Props) {
                       <DeleteMemberButton
                         projectId={id}
                         memberId={member.id}
-                        memberName={member.profile.display_name}
+                        memberName={member.profile.username}
                       />
                     )}
                   </td>
