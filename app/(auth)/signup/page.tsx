@@ -21,7 +21,7 @@ export default function SignupPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);

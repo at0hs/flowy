@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SyntheticEvent) => {
     e.preventDefault(); // ブラウザのデフォルトのフォーム送信を止める
     setErrorMessage('');
     setIsLoading(true);

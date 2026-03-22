@@ -45,8 +45,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 認証済みユーザーがログイン・サインアップページにアクセスした場合
-  if (user && isAuthPage) {
+  // 認証済みユーザーがログイン・サインアップページまたはルートにアクセスした場合
+  if (user && (isAuthPage || request.nextUrl.pathname === "/")) {
     // /projects へリダイレクト
     const url = request.nextUrl.clone();
     url.pathname = "/projects";

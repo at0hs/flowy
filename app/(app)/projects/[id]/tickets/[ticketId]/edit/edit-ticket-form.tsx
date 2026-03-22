@@ -32,7 +32,7 @@ export function EditTicketForm({ ticket, projectId, members }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [assigneeId, setAssigneeId] = useState<string>(ticket.assignee_id ?? "none");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -97,7 +97,7 @@ export function EditTicketForm({ ticket, projectId, members }: Props) {
           </div>
 
           <Separator />
-					
+
           {/* ステータス */}
           <div className="space-y-3">
             <Label>ステータス *</Label>
