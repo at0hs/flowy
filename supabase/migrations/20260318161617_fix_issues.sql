@@ -64,8 +64,8 @@ CREATE POLICY "users can update own profile"
   ON profiles FOR UPDATE
   USING ((SELECT auth.uid()) = id);
 
-DROP POLICY IF EXISTS "users can update own profile" ON projects;
-CREATE POLICY "users can update own profile"
+DROP POLICY IF EXISTS "owner can update" ON projects;
+CREATE POLICY "owner can update"
   ON projects FOR UPDATE
   USING ((SELECT auth.uid()) = owner_id);
 
