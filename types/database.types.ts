@@ -34,24 +34,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      profiles: {
+      comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          ticket_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
         Row: {
           created_at: string
-          username: string
           email: string
+          expires_at: string
           id: string
+          project_id: string
+          status: Database["public"]["Enums"]["invitation_status"]
+          token: string
         }
         Insert: {
           created_at?: string
-          username: string
           email: string
-          id: string
+          expires_at?: string
+          id?: string
+          project_id: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
         }
         Update: {
           created_at?: string
-          username?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          project_id?: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
           email?: string
           id?: string
+          username?: string
         }
         Relationships: []
       }
@@ -185,9 +265,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_project_member: { Args: { project_id: string }; Returns: boolean }
+      is_project_owner: { Args: { project_id: string }; Returns: boolean }
     }
     Enums: {
+      invitation_status: "pending" | "accepted" | "expired"
       project_role: "owner" | "member"
       ticket_priority: "low" | "medium" | "high" | "urgent"
       ticket_status: "todo" | "in_progress" | "done"
@@ -321,6 +403,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      invitation_status: ["pending", "accepted", "expired"],
       project_role: ["owner", "member"],
       ticket_priority: ["low", "medium", "high", "urgent"],
       ticket_status: ["todo", "in_progress", "done"],
