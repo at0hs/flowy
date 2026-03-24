@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { logger } from "@/lib/logger";
+import { acceptInvitationAction } from "@/app/(auth)/actions";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const supabase = createClient();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [username, setUsername] = useState(""); // ログインページにはない項目
+  const [username, setUsername] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,25 +29,31 @@ export default function SignupPage() {
     setErrorMessage("");
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        // username をトリガーに渡すためのメタデータ
-        // DB設計書のトリガーがこの値を profiles.username に入れる
         data: { username: username },
       },
     });
 
     if (error) {
       logger.error("failed to signup: ", error.message);
-      // メールアドレス重複など
       setErrorMessage("登録に失敗しました。別のメールアドレスをお試しください");
       setIsLoading(false);
       return;
     }
 
-    // 登録成功 → ログインページへ
+    // 招待トークンがある場合、プロジェクトメンバーに自動追加
+    if (token && data.user) {
+      try {
+        await acceptInvitationAction(token, data.user.id);
+      } catch (err) {
+        logger.error("failed to accept invitation: ", err);
+        // 招待受け入れに失敗しても登録自体は成功しているため、そのまま続行
+      }
+    }
+
     router.push("/projects");
   };
 
@@ -102,7 +111,7 @@ export default function SignupPage() {
             </Button>
             <p className="text-sm text-muted-foreground">
               すでにアカウントをお持ちの方は{" "}
-              <Link href="/login" className="underline">
+              <Link href={token ? `/login?token=${token}` : "/login"} className="underline">
                 ログイン
               </Link>
             </p>
@@ -110,5 +119,13 @@ export default function SignupPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   );
 }
