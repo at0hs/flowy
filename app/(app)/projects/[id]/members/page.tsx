@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { AddMemberForm } from "@/components/members/add-member-form";
 import { DeleteMemberButton } from "@/components/members/delete-member-button";
+import { ChangeRoleButton } from "@/components/members/change-role-button";
 import { revalidatePath } from "next/cache";
 
 type Props = {
@@ -33,6 +34,7 @@ export default async function MembersPage({ params }: Props) {
 
   const members = await getProjectMembers(id);
   const isOwner = await isProjectOwner(id, user.id);
+  const ownerCount = members.filter((m) => m.role === "owner").length;
 
   return (
     <div className="max-w-4xl mx-auto p-8">
@@ -68,9 +70,19 @@ export default async function MembersPage({ params }: Props) {
                 <td className="px-4 py-3">{member.profile.username}</td>
                 <td className="px-4 py-3 text-muted-foreground">{member.profile.email}</td>
                 <td className="px-4 py-3">
-                  <Badge variant={member.role === "owner" ? "default" : "secondary"}>
-                    {member.role === "owner" ? "オーナー" : "メンバー"}
-                  </Badge>
+                  {isOwner ? (
+                    <ChangeRoleButton
+                      projectId={id}
+                      memberId={member.id}
+                      memberName={member.profile.username}
+                      currentRole={member.role}
+                      isLastOwner={member.role === "owner" && ownerCount === 1}
+                    />
+                  ) : (
+                    <Badge variant={member.role === "owner" ? "default" : "secondary"}>
+                      {member.role === "owner" ? "オーナー" : "メンバー"}
+                    </Badge>
+                  )}
                 </td>
                 {isOwner && (
                   <td className="px-4 py-3 text-right">
@@ -78,6 +90,7 @@ export default async function MembersPage({ params }: Props) {
                       <DeleteMemberButton
                         projectId={id}
                         memberId={member.id}
+                        userId={member.user_id}
                         memberName={member.profile.username}
                       />
                     )}

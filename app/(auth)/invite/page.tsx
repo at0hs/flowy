@@ -22,15 +22,13 @@ export default async function InvitePage({ searchParams }: InvitePageProps) {
     return <ErrorView message={result.error} />;
   }
 
-  // 招待メールアドレスが登録済みかチェック
+  // 招待メールアドレスが登録済みかチェック（未認証でも動作するよう RPC 経由で実行）
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", result.invitation.email)
-    .maybeSingle();
+  const { data: isRegistered } = await supabase.rpc("is_email_registered", {
+    p_email: result.invitation.email,
+  });
 
-  if (profile) {
+  if (isRegistered) {
     redirect(`/login?token=${token}`);
   } else {
     redirect(`/signup?token=${token}`);

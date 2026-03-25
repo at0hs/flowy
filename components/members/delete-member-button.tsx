@@ -12,15 +12,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { removeProjectMember } from "@/app/(app)/projects/actions";
+import { removeProjectMember, clearMemberComments } from "@/app/(app)/projects/actions";
 
 type Props = {
   projectId: string;
   memberId: string;
+  userId: string;
   memberName: string;
 };
 
-export function DeleteMemberButton({ projectId, memberId, memberName }: Props) {
+export function DeleteMemberButton({ projectId, memberId, userId, memberName }: Props) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,6 +29,7 @@ export function DeleteMemberButton({ projectId, memberId, memberName }: Props) {
     setIsLoading(true);
     try {
       await removeProjectMember(projectId, memberId);
+      await clearMemberComments(projectId, userId);
       toast.success("メンバーを削除しました");
       setOpen(false);
     } catch (error) {

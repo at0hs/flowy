@@ -265,6 +265,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: {
+        Args: { p_token: string; p_user_id: string }
+        Returns: undefined
+      }
+      is_email_registered: { Args: { p_email: string }; Returns: boolean }
       is_project_member: { Args: { project_id: string }; Returns: boolean }
       is_project_owner: { Args: { project_id: string }; Returns: boolean }
     }

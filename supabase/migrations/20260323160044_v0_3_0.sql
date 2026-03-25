@@ -107,6 +107,22 @@ CREATE POLICY "comments: can delete own or project owner"
   );
 
 -- ----------------------------------------
+-- projects の RLS ポリシーを is_project_owner() ベースに更新
+-- owner_id による直接比較から project_members.role = 'owner' チェックに変更し、
+-- 後から昇格されたオーナーも操作できるようにする
+-- ----------------------------------------
+DROP POLICY "owner can update" ON projects;
+DROP POLICY "owner can delete" ON projects;
+
+CREATE POLICY "owner can update"
+  ON projects FOR UPDATE
+  USING (is_project_owner(id));
+
+CREATE POLICY "owner can delete"
+  ON projects FOR DELETE
+  USING (is_project_owner(id));
+
+-- ----------------------------------------
 -- project_members の RLS ポリシーに UPDATE を追加
 -- ----------------------------------------
 CREATE POLICY "owner can update members"
@@ -138,3 +154,55 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 CREATE TRIGGER check_last_owner_demotion
   BEFORE UPDATE ON project_members
   FOR EACH ROW EXECUTE FUNCTION prevent_last_owner_demotion();
+
+-- ----------------------------------------
+-- メールアドレス登録済みチェック用 SECURITY DEFINER 関数
+-- 未認証ユーザー（招待リンクからのアクセス）が profiles を参照できるよう RLS をバイパスする
+-- ----------------------------------------
+CREATE OR REPLACE FUNCTION is_email_registered(p_email text)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (SELECT 1 FROM profiles WHERE email = p_email);
+$$;
+
+-- ----------------------------------------
+-- 招待受け入れ用 SECURITY DEFINER 関数
+-- RLS をバイパスして project_members への追加と
+-- invitations ステータス更新をアトミックに実行する
+-- ----------------------------------------
+CREATE OR REPLACE FUNCTION accept_invitation(p_token text, p_user_id uuid)
+RETURNS void AS $$
+DECLARE
+  v_invitation invitations%ROWTYPE;
+BEGIN
+  -- 排他ロックを取得しながら招待を取得
+  SELECT * INTO v_invitation
+  FROM invitations
+  WHERE token = p_token
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION '招待が見つかりません';
+  END IF;
+
+  IF v_invitation.status = 'accepted' THEN
+    RAISE EXCEPTION 'この招待はすでに使用されています';
+  END IF;
+
+  IF v_invitation.status = 'expired' OR v_invitation.expires_at < now() THEN
+    UPDATE invitations SET status = 'expired' WHERE id = v_invitation.id;
+    RAISE EXCEPTION 'この招待の有効期限が切れています';
+  END IF;
+
+  -- プロジェクトメンバーに追加（既存の場合は無視）
+  INSERT INTO project_members (project_id, user_id, role)
+  VALUES (v_invitation.project_id, p_user_id, 'member')
+  ON CONFLICT (project_id, user_id) DO NOTHING;
+
+  -- 招待ステータスを accepted に更新
+  UPDATE invitations SET status = 'accepted' WHERE id = v_invitation.id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

@@ -29,6 +29,11 @@ export async function proxy(request: NextRequest) {
     }
   );
 
+	// 招待リンクからの場合は何もしない
+	if (request.nextUrl.pathname.startsWith("/invite")) {
+		return supabaseResponse;
+	}
+
   // セッションを取得する（この呼び出しでCookieが更新される）
   const {
     data: { user },
@@ -47,6 +52,10 @@ export async function proxy(request: NextRequest) {
 
   // 認証済みユーザーがログイン・サインアップページまたはルートにアクセスした場合
   if (user && (isAuthPage || request.nextUrl.pathname === "/")) {
+    // Server Action の呼び出しはリダイレクトしない
+    if (request.headers.has("Next-Action")) {
+      return supabaseResponse;
+    }
     // /projects へリダイレクト
     const url = request.nextUrl.clone();
     url.pathname = "/projects";

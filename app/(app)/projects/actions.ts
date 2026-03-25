@@ -155,6 +155,161 @@ export async function removeProjectMember(projectId: string, memberId: string) {
 }
 
 /**
+ * 削除されたメンバーのコメントの user_id を NULL に更新
+ * @param projectId プロジェクトID
+ * @param userId 削除されたメンバーのユーザーID
+ */
+export async function clearMemberComments(projectId: string, userId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: tickets } = await supabase.from("tickets").select("id").eq("project_id", projectId);
+
+  const ticketIds = tickets?.map((t) => t.id) ?? [];
+
+  if (ticketIds.length > 0) {
+    const { error } = await supabase
+      .from("comments")
+      .update({ user_id: null })
+      .eq("user_id", userId)
+      .in("ticket_id", ticketIds);
+
+    if (error) {
+      logger.error("Failed to clear user_id from comments:", error);
+      throw new Error("コメントの更新に失敗しました");
+    }
+  }
+}
+
+/**
+ * 招待メールを送信してプロジェクトに招待する
+ * @param projectId プロジェクトID
+ * @param email 招待先メールアドレス
+ */
+export async function inviteMember(projectId: string, email: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // 自分自身への招待を防ぐ
+  const { data: myProfile } = await supabase
+    .from("profiles")
+    .select("email, username")
+    .eq("id", user.id)
+    .single();
+
+  if (myProfile?.email === email) {
+    return { error: "自分自身を招待することはできません" };
+  }
+
+  // 既にメンバーかどうかを確認（登録済みユーザーの場合のみ）
+  const { data: targetProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (targetProfile) {
+    const { data: existingMember } = await supabase
+      .from("project_members")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("user_id", targetProfile.id)
+      .maybeSingle();
+
+    if (existingMember) {
+      return { error: "このユーザーは既にメンバーです" };
+    }
+  }
+
+  // プロジェクト情報を取得
+  const { data: project } = await supabase
+    .from("projects")
+    .select("name")
+    .eq("id", projectId)
+    .single();
+
+  if (!project) {
+    return { error: "プロジェクトが見つかりません" };
+  }
+
+  // 招待レコードを作成
+  const { createInvitation } = await import("@/lib/supabase/invitations");
+  let invitation;
+  try {
+    invitation = await createInvitation(projectId, email);
+  } catch (error) {
+    logger.error("Failed to create invitation:", error);
+    return { error: "招待の作成に失敗しました" };
+  }
+
+  // 招待メールを送信
+  const { sendInvitationEmail } = await import("@/lib/email");
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3111";
+  const inviteUrl = `${appUrl}/invite?token=${invitation.token}`;
+
+  try {
+    await sendInvitationEmail({
+      to: email,
+      inviterName: myProfile?.username ?? "招待者",
+      projectName: project.name,
+      inviteUrl,
+    });
+  } catch (error) {
+    logger.error("Failed to send invitation email:", error);
+    const { deleteInvitation } = await import("@/lib/supabase/invitations");
+    try {
+      await deleteInvitation(invitation.id);
+    } catch (deleteError) {
+      logger.error("Failed to rollback invitation:", deleteError);
+    }
+    return { error: "招待メールの送信に失敗しました" };
+  }
+
+  revalidatePath(`/projects/${projectId}/members`);
+  return { success: true };
+}
+
+/**
+ * メンバーのロールを変更（昇格・降格）
+ * @param projectId プロジェクトID
+ * @param memberId project_members の ID
+ * @param newRole 変更後のロール
+ */
+export async function updateMemberRole(
+  projectId: string,
+  memberId: string,
+  newRole: "owner" | "member"
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("project_members")
+    .update({ role: newRole })
+    .eq("id", memberId)
+    .eq("project_id", projectId);
+
+  if (error) {
+    logger.error("Failed to update member role:", error);
+    throw new Error("ロールの変更に失敗しました");
+  }
+
+  revalidatePath(`/projects/${projectId}/members`);
+}
+
+/**
  * プロジェクトにメンバーを追加
  * @param projectId プロジェクトID
  * @param userEmail 追加するユーザーのメールアドレス
