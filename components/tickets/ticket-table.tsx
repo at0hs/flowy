@@ -66,7 +66,7 @@ export async function TicketTable({ tickets }: Props) {
 
             return (
               <tr key={ticket.id} className="border-b hover:bg-muted/50 transition-colors">
-                <td className="px-6 py-3">
+                <td className="px-6 py-3 text-sm">
                   <Link
                     href={`/projects/${ticket.project_id}/tickets/${ticket.id}`}
                     className="font-medium text-primary hover:underline"

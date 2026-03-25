@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { TicketTable } from "@/components/tickets/ticket-table";
 import { TicketFilters } from "@/components/tickets/ticket-filters";
+import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
 import { Suspense } from "react";
 import { ticketsQuerySchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
+import { getProjectMembers } from "@/lib/supabase/members";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -42,12 +43,12 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).single();
   if (!project) notFound();
 
-  const { data: ticketExists } = await supabase
-    .from("tickets")
-    .select("id")
-    .eq("project_id", id)
-    .limit(1);
-  const notExistsTicket = !ticketExists || ticketExists.length === 0;
+  const [members, ticketExistsResult] = await Promise.all([
+    getProjectMembers(id),
+    supabase.from("tickets").select("id").eq("project_id", id).limit(1),
+  ]);
+  const notExistsTicket =
+    !ticketExistsResult.data || ticketExistsResult.data.length === 0;
 
   // チケット取得クエリを組み立てる
   let query = supabase
@@ -74,9 +75,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
           </Link>
           <h1 className="text-2xl font-bold mt-1">{project.name}</h1>
         </div>
-        <Button asChild>
-          <Link href={`/projects/${id}/tickets/new`}>+ チケット作成</Link>
-        </Button>
+        <TicketCreateModal projectId={id} members={members} />
       </div>
 
       {project.description && (
@@ -94,11 +93,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       ) : (
         <div className="text-center py-16 text-muted-foreground">
           <p className="mb-4">チケットがありません</p>
-          {notExistsTicket && (
-            <Button asChild variant="outline">
-              <Link href={`/projects/${id}/tickets/new`}>最初のチケットを作成する</Link>
-            </Button>
-          )}
+          {notExistsTicket && <TicketCreateModal projectId={id} members={members} />}
         </div>
       )}
     </div>

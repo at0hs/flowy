@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createTicket } from "../../actions";
+import { createTicket } from "@/app/(app)/projects/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -17,15 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 
-interface NewTicketFormProps {
+interface TicketCreateModalProps {
   projectId: string;
   members: ProjectMemberWithProfile[];
 }
 
-export default function NewTicketForm({ projectId, members }: NewTicketFormProps) {
+export function TicketCreateModal({ projectId, members }: TicketCreateModalProps) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [assigneeId, setAssigneeId] = useState<string>("none");
@@ -44,31 +52,44 @@ export default function NewTicketForm({ projectId, members }: NewTicketFormProps
       setErrorMessage(result.error);
       setIsLoading(false);
     } else {
-      router.push(`/projects/${projectId}`);
+      setOpen(false);
+      setAssigneeId("none");
+      router.refresh();
     }
   };
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setErrorMessage("");
+      setAssigneeId("none");
+    }
+    setOpen(nextOpen);
+  };
+
   return (
-    <div className="max-w-lg mx-auto p-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>チケット作成</CardTitle>
-        </CardHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button>+ チケット作成</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle>チケット作成</DialogTitle>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
+          <div className="space-y-6 py-2">
             {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
 
             {/* タイトル */}
             <div className="space-y-2">
-              <Label htmlFor="title">タイトル *</Label>
-              <Input id="title" name="title" required />
+              <Label htmlFor="modal-title">タイトル *</Label>
+              <Input id="modal-title" name="title" required />
             </div>
 
             {/* 説明 */}
             <div className="space-y-2">
-              <Label htmlFor="description">説明</Label>
-              <Textarea id="description" name="description" rows={4} />
+              <Label htmlFor="modal-description">説明</Label>
+              <Textarea id="modal-description" name="description" rows={3} />
             </div>
 
             <Separator />
@@ -98,16 +119,16 @@ export default function NewTicketForm({ projectId, members }: NewTicketFormProps
               <Label>ステータス *</Label>
               <RadioGroup name="status" defaultValue="todo">
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="todo" id="todo" />
-                  <Label htmlFor="todo">TODO</Label>
+                  <RadioGroupItem value="todo" id="modal-todo" />
+                  <Label htmlFor="modal-todo">TODO</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="in_progress" id="in_progress" />
-                  <Label htmlFor="in_progress">進行中</Label>
+                  <RadioGroupItem value="in_progress" id="modal-in_progress" />
+                  <Label htmlFor="modal-in_progress">進行中</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="done" id="done" />
-                  <Label htmlFor="done">完了</Label>
+                  <RadioGroupItem value="done" id="modal-done" />
+                  <Label htmlFor="modal-done">完了</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -119,35 +140,32 @@ export default function NewTicketForm({ projectId, members }: NewTicketFormProps
               <Label>優先度 *</Label>
               <RadioGroup name="priority" defaultValue="medium">
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="low" id="low" />
-                  <Label htmlFor="low">低</Label>
+                  <RadioGroupItem value="low" id="modal-low" />
+                  <Label htmlFor="modal-low">低</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="medium" id="medium" />
-                  <Label htmlFor="medium">中</Label>
+                  <RadioGroupItem value="medium" id="modal-medium" />
+                  <Label htmlFor="modal-medium">中</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="high" id="high" />
-                  <Label htmlFor="high">高</Label>
+                  <RadioGroupItem value="high" id="modal-high" />
+                  <Label htmlFor="modal-high">高</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="urgent" id="urgent" />
-                  <Label htmlFor="urgent">緊急</Label>
+                  <RadioGroupItem value="urgent" id="modal-urgent" />
+                  <Label htmlFor="modal-urgent">緊急</Label>
                 </div>
               </RadioGroup>
             </div>
-          </CardContent>
+          </div>
 
-          <CardFooter className="flex gap-3 justify-end">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
-              キャンセル
-            </Button>
+          <DialogFooter className="mt-4">
             <Button type="submit" disabled={isLoading}>
               {isLoading ? "作成中..." : "作成する"}
             </Button>
-          </CardFooter>
+          </DialogFooter>
         </form>
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
