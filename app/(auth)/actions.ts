@@ -1,6 +1,5 @@
 "use server";
 
-import { logger } from "@/lib/logger";
 import { acceptInvitation } from "@/lib/supabase/invitations";
 
 export async function acceptInvitationAction(token: string, userId: string): Promise<void> {

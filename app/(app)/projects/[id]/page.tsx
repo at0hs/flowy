@@ -47,8 +47,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
     getProjectMembers(id),
     supabase.from("tickets").select("id").eq("project_id", id).limit(1),
   ]);
-  const notExistsTicket =
-    !ticketExistsResult.data || ticketExistsResult.data.length === 0;
+  const notExistsTicket = !ticketExistsResult.data || ticketExistsResult.data.length === 0;
 
   // チケット取得クエリを組み立てる
   let query = supabase

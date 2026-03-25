@@ -44,7 +44,6 @@ export function EditProjectForm({ project }: Props) {
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-
           <div className="space-y-2">
             <Label htmlFor="name">プロジェクト名 *</Label>
             <Input
