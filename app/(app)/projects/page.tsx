@@ -14,10 +14,11 @@ export default async function ProjectsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // 自分がメンバーのプロジェクトを取得（RLSが project_members でフィルタしてくれる）
+  // 自分がメンバーのプロジェクトを取得（自分のroleも含める）
   const { data: projects, error } = await supabase
     .from("projects")
-    .select("*")
+    .select("*, project_members!inner(role)")
+    .eq("project_members.user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -38,7 +39,11 @@ export default async function ProjectsPage() {
       {projects && projects.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} isOwner={project.owner_id === user.id} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              isOwner={project.project_members[0]?.role === "owner"}
+            />
           ))}
         </div>
       ) : (
