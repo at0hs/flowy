@@ -1,15 +1,26 @@
 {
-  "cSpell.ignorePaths": [
-    "package*.json",
-    "node_modules",
-    "vscode-extension",
-    ".git/{info,lfs,logs,refs,objects}/**",
-    ".git/{index,*refs,*HEAD}",
-    ".vscode",
-    ".vscode-insiders",
-    ".gitignore"
-  ],
-  "editor.wordWrap": "on",
-  "cSpell.words": ["fkey", "flowy", "ilike", "plpgsql", "Redmine", "shadcn", "SUPABASE"],
-  "files.eol": "\n"
+	"[sql]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"cSpell.ignorePaths": [
+		"package*.json",
+		"node_modules",
+		"vscode-extension",
+		".git/{info,lfs,logs,refs,objects}/**",
+		".git/{index,*refs,*HEAD}",
+		".vscode",
+		".vscode-insiders",
+		".gitignore"
+	],
+	"cSpell.words": [
+		"fkey",
+		"flowy",
+		"ilike",
+		"plpgsql",
+		"Redmine",
+		"shadcn",
+		"SUPABASE"
+	],
+	"editor.wordWrap": "on",
+	"files.eol": "\n",
 }

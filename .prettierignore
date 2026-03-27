@@ -4,7 +4,8 @@
 # Non-target directories
 components/ui/
 public/
-supabase/
+supabase/.branches/
+supabase/.temp/
 .next/
 dist/
 build/

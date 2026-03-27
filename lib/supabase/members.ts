@@ -16,9 +16,7 @@ export interface ProjectMemberWithProfile {
  * @param projectId プロジェクトID
  * @returns メンバー情報（プロフィール付き）の配列
  */
-export async function getProjectMembers(
-  projectId: string
-): Promise<ProjectMemberWithProfile[]> {
+export async function getProjectMembers(projectId: string): Promise<ProjectMemberWithProfile[]> {
   const supabase = await createClient();
 
   // project_members を取得
