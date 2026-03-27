@@ -17,10 +17,10 @@ CREATE TABLE invitations (
 --- pendingのときのみ、ユニークとする
 CREATE UNIQUE INDEX invitation_active_unique ON invitations (project_id, email)
 WHERE
-  status = 'pending'
-  -- ----------------------------------------
-  -- invitations テーブルに RLS を有効化
-  -- ----------------------------------------
+  status = 'pending';
+-- ----------------------------------------
+-- invitations テーブルに RLS を有効化
+-- ----------------------------------------
 ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 
 -- ----------------------------------------
@@ -30,7 +30,7 @@ ALTER TABLE invitations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "invitations: read by token" ON invitations FOR
 SELECT
   TO anon,
-  authenticated USING (true);
+  authenticated USING (TRUE);
 
 -- 作成: プロジェクトのオーナーのみ可
 CREATE POLICY "invitations: owner can create" ON invitations FOR INSERT TO authenticated

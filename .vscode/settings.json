@@ -23,4 +23,5 @@
 	],
 	"editor.wordWrap": "on",
 	"files.eol": "\n",
+	"editor.detectIndentation": false,
 }
