@@ -18,7 +18,7 @@ export async function getComments(ticketId: string): Promise<CommentWithProfile[
     .from("comments")
     .select("*")
     .eq("ticket_id", ticketId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (commentsError) {
     logger.error("Failed to fetch comments:", commentsError);

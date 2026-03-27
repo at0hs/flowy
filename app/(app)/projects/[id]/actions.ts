@@ -6,6 +6,7 @@ import { ticketSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { Ticket } from "@/types";
+import { createComment, updateComment, deleteComment } from "@/lib/supabase/comments";
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -134,4 +135,66 @@ export async function updateTicketField(
   }
 
   return { success: true };
+}
+
+export async function addComment(
+  ticketId: string,
+  body: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const trimmed = body.trim();
+  if (!trimmed) return { error: "コメントを入力してください" };
+
+  try {
+    await createComment(ticketId, user.id, trimmed);
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to add comment:", err);
+    return { error: "コメントの投稿に失敗しました" };
+  }
+}
+
+export async function editComment(
+  commentId: string,
+  body: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const trimmed = body.trim();
+  if (!trimmed) return { error: "コメントを入力してください" };
+
+  try {
+    await updateComment(commentId, trimmed);
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to edit comment:", err);
+    return { error: "コメントの更新に失敗しました" };
+  }
+}
+
+export async function removeComment(
+  commentId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  try {
+    await deleteComment(commentId);
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to delete comment:", err);
+    return { error: "コメントの削除に失敗しました" };
+  }
 }

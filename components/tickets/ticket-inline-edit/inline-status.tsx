@@ -40,7 +40,7 @@ export function InlineStatus({ value, onSave, disabled }: Props) {
   }
 
   return (
-    <Select  value={value} onValueChange={handleChange} disabled={disabled}>
+    <Select value={value} onValueChange={handleChange} disabled={disabled}>
       <SelectTrigger
         className={`w-auto h-7 px-3 text-xs font-medium border-0 shadow-none rounded-sm gap-1 transition-colors ${status.className}`}
       >

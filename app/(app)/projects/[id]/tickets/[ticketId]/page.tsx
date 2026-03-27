@@ -5,6 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { DeleteTicketButton } from "./delete-ticket-button";
 import { TicketInlineEditPanel } from "@/components/tickets/ticket-inline-edit";
 import { getProjectMembers } from "@/lib/supabase/members";
+import { getComments } from "@/lib/supabase/comments";
+import { CommentList } from "@/components/tickets/comment-list";
 
 type Props = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -19,9 +21,10 @@ export default async function TicketDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: ticket }, members] = await Promise.all([
+  const [{ data: ticket }, members, comments] = await Promise.all([
     supabase.from("tickets").select("*").eq("id", ticketId).single(),
     getProjectMembers(id),
+    getComments(ticketId),
   ]);
 
   if (!ticket) notFound();
@@ -53,6 +56,11 @@ export default async function TicketDetailPage({ params }: Props) {
       <div className="mt-6">
         <DeleteTicketButton ticketId={ticketId} projectId={id} ticketTitle={ticket.title} />
       </div>
+
+      <Separator className="my-6" />
+
+      {/* コメント */}
+      <CommentList comments={comments} ticketId={ticketId} currentUserId={user.id} />
     </div>
   );
 }
