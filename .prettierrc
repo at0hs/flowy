@@ -7,14 +7,5 @@
   "bracketSpacing": true,
   "arrowParens": "always",
   "endOfLine": "lf",
-  "useTabs": false,
-  "plugins": ["prettier-plugin-sql-cst"],
-  "overrides": [
-    {
-      "files": "*.sql",
-      "options": {
-        "parser": "postgresql"
-      }
-    }
-  ]
+  "useTabs": false
 }
