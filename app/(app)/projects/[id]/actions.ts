@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ticketSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+import { Ticket } from "@/types";
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -93,4 +95,43 @@ export async function updateTicket(ticketId: string, projectId: string, formData
   }
 
   return { success: true, ticketId, projectId };
+}
+
+type TicketFieldUpdate =
+  | { field: "title"; value: string }
+  | { field: "description"; value: string | null }
+  | { field: "status"; value: Ticket["status"] }
+  | { field: "priority"; value: Ticket["priority"] }
+  | { field: "assignee_id"; value: string | null };
+
+export async function updateTicketField(
+  ticketId: string,
+  _projectId: string,
+  update: TicketFieldUpdate
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  if (update.field === "title") {
+    const result = z.string().min(1, "タイトルは必須です").safeParse(update.value);
+    if (!result.success) {
+      return { error: result.error.issues[0].message };
+    }
+  }
+
+  const { error } = await supabase
+    .from("tickets")
+    .update({ [update.field]: update.value })
+    .eq("id", ticketId);
+
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
+  return { success: true };
 }
