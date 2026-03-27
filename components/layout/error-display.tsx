@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
 
 type Props = {
   title?: string;
@@ -17,7 +17,7 @@ export function ErrorDisplay({ title, message, reset }: Props) {
         <div className="flex-1">
           {title && <h2 className="text-lg font-semibold text-destructive mb-2">{title}</h2>}
           <p className="text-sm text-muted-foreground mb-4">
-            {message ?? '予期しないエラーが発生しました。もう一度お試しください。'}
+            {message ?? "予期しないエラーが発生しました。もう一度お試しください。"}
           </p>
           <Button onClick={() => reset()} variant="outline" size="sm">
             再度読み込む

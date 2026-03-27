@@ -1,0 +1,27 @@
+# Prettier check targets: .ts, .tsx only
+# lib/**, emails/**, components/** (except components/ui), app/**, types/**, proxy.ts
+
+# Non-target directories
+components/ui/
+public/
+supabase/
+.next/
+dist/
+build/
+coverage/
+
+# Non-TypeScript files
+**/*.js
+**/*.jsx
+**/*.json
+**/*.md
+**/*.css
+**/*.scss
+**/*.html
+**/*.xml
+**/*.yml
+**/*.yaml
+
+# Default ignores
+node_modules/
+.git/

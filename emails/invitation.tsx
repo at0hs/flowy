@@ -37,9 +37,7 @@ export default function InvitationEmail({
             」への招待が届いています。
           </Text>
 
-          <Text style={paragraph}>
-            以下のボタンから招待を受け入れてください。
-          </Text>
+          <Text style={paragraph}>以下のボタンから招待を受け入れてください。</Text>
 
           <Section style={buttonContainer}>
             <Button style={button} href={inviteUrl}>

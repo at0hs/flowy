@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { Separator } from '@/components/ui/separator';
-import { UpdateProfileForm } from './update-profile-form';
-import { UpdatePasswordForm } from './update-password-form';
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { Separator } from "@/components/ui/separator";
+import { UpdateProfileForm } from "./update-profile-form";
+import { UpdatePasswordForm } from "./update-password-form";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -10,15 +10,15 @@ export default async function SettingsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  if (!user) redirect("/login");
 
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, username, email')
-    .eq('id', user.id)
+    .from("profiles")
+    .select("id, username, email")
+    .eq("id", user.id)
     .single();
 
-  if (!profile) redirect('/login');
+  if (!profile) redirect("/login");
 
   return (
     <div className="max-w-2xl mx-auto p-8">

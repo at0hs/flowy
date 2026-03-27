@@ -18,9 +18,7 @@ export async function sendInvitationEmail({
   projectName: string;
   inviteUrl: string;
 }) {
-  const html = await render(
-    InvitationEmail({ inviterName, projectName, inviteUrl })
-  );
+  const html = await render(InvitationEmail({ inviterName, projectName, inviteUrl }));
 
   const { error } = await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL ?? "Flowy <noreply@resend.dev>",

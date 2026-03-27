@@ -53,7 +53,14 @@ export function UpdateProfileForm({ profile }: Props) {
 
       <div className="space-y-2">
         <Label htmlFor="email">メールアドレス *</Label>
-        <Input id="email" name="email" type="email" defaultValue={profile.email} autoComplete="email" required />
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          defaultValue={profile.email}
+          autoComplete="email"
+          required
+        />
       </div>
 
       <div className="flex justify-end">

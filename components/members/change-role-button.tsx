@@ -64,7 +64,6 @@ export function ChangeRoleButton({
       setPendingRole(null);
     }
   };
-	logger.debug("ChangeRoleButton: name:", memberName, "currentRole:", currentRole, "isLastOwner:", isLastOwner);
 
   return (
     <>
@@ -90,11 +89,7 @@ export function ChangeRoleButton({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPendingRole(null)}
-              disabled={isLoading}
-            >
+            <Button variant="outline" onClick={() => setPendingRole(null)} disabled={isLoading}>
               キャンセル
             </Button>
             <Button onClick={() => applyRoleChange("member")} disabled={isLoading}>

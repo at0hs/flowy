@@ -53,7 +53,9 @@ export function DeleteTicketButton({ ticketId, projectId, ticketTitle }: Props) 
           <DialogHeader>
             <DialogTitle>チケットを削除しますか？</DialogTitle>
             <DialogDescription>
-              「{ticketTitle}」を削除します。<br/>この操作は取り消せません。
+              「{ticketTitle}」を削除します。
+              <br />
+              この操作は取り消せません。
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

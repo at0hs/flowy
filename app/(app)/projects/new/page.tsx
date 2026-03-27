@@ -27,7 +27,7 @@ export default function NewProjectPage() {
     }
 
     toast.success("プロジェクトを作成しました");
-		setIsLoading(false);
+    setIsLoading(false);
     router.push("/projects");
   };
 
@@ -40,7 +40,6 @@ export default function NewProjectPage() {
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-
             <div className="space-y-2">
               <Label htmlFor="name">プロジェクト名 *</Label>
               <Input

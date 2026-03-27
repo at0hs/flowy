@@ -29,10 +29,10 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-	// 招待リンクからの場合は何もしない
-	if (request.nextUrl.pathname.startsWith("/invite")) {
-		return supabaseResponse;
-	}
+  // 招待リンクからの場合は何もしない
+  if (request.nextUrl.pathname.startsWith("/invite")) {
+    return supabaseResponse;
+  }
 
   // セッションを取得する（この呼び出しでCookieが更新される）
   const {

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { ErrorDisplay } from '@/components/layout/error-display';
-import { logger } from '@/lib/logger';
+import { useEffect } from "react";
+import { ErrorDisplay } from "@/components/layout/error-display";
+import { logger } from "@/lib/logger";
 
 type Props = {
   error: Error & { digest?: string };

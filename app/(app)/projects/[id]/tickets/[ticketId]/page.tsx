@@ -41,7 +41,13 @@ export default async function TicketDetailPage({ params }: Props) {
   const priority = PRIORITY_MAP[ticket.priority as keyof typeof PRIORITY_MAP];
 
   const assignee = ticket.assignee_id
-    ? (await supabase.from("profiles").select("username, email").eq("id", ticket.assignee_id).single()).data
+    ? (
+        await supabase
+          .from("profiles")
+          .select("username, email")
+          .eq("id", ticket.assignee_id)
+          .single()
+      ).data
     : null;
 
   return (
