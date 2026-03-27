@@ -11,11 +11,10 @@ import { logger } from "@/lib/logger";
 export async function createInvitation(projectId: string, email: string): Promise<Invitation> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("invitations")
-    .insert({ project_id: projectId, email })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc("create_invitation", {
+    p_project_id: projectId,
+    p_email: email,
+  });
 
   if (error) {
     logger.error("Failed to create invitation:", error);

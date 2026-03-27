@@ -46,6 +46,10 @@ CREATE POLICY "invitations: owner can delete" ON invitations
   FOR DELETE TO authenticated
     USING (is_project_owner(project_id));
 
+CREATE POLICY "invitations: owner can update" ON invitations
+  FOR UPDATE TO authenticated
+    USING (is_project_owner(project_id));
+
 -- ----------------------------------------
 -- comments テーブル
 -- ----------------------------------------
@@ -209,12 +213,15 @@ BEGIN
   WHERE
     token = p_token
   FOR UPDATE;
+
   IF NOT FOUND THEN
     RAISE EXCEPTION '招待が見つかりません';
   END IF;
+
   IF v_invitation.status = 'accepted' THEN
     RAISE EXCEPTION 'この招待はすでに使用されています';
   END IF;
+
   IF v_invitation.status = 'expired' OR v_invitation.expires_at < NOW() THEN
     UPDATE
       invitations
@@ -240,3 +247,49 @@ END;
 $$
 LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION create_invitation(p_project_id uuid, p_email text)
+  RETURNS invitations
+  AS $$
+DECLARE
+  v_invitation invitations%ROWTYPE;
+BEGIN
+  --- トランザクション処理
+  --- 招待を正常なレコードに更新する
+  FOR v_invitation IN
+  SELECT
+    *
+  FROM
+    invitations
+  WHERE
+    email = p_email
+    AND project_id = p_project_id
+  FOR UPDATE LOOP
+    --- 承認済みは気にしない
+    CONTINUE
+    WHEN v_invitation.status = 'accepted'
+      OR v_invitation.status = 'expired';
+    --- すでに招待が存在する
+    IF v_invitation.status = 'pending' AND v_invitation.expires_at > now() THEN
+      RAISE EXCEPTION 'すでに招待が存在します';
+    END IF;
+    --- 期限切れなのに放置
+    IF v_invitation.status = 'pending' AND v_invitation.expires_at < now() THEN
+      UPDATE
+        invitations
+      SET
+        status = 'expired'
+      WHERE
+        id = v_invitation.id;
+    END IF;
+  END LOOP;
+  --- 招待を作成
+  INSERT INTO invitations(project_id, email)
+    VALUES (p_project_id, p_email)
+  RETURNING
+    * INTO v_invitation;
+
+  RETURN v_invitation;
+END;
+$$
+LANGUAGE plpgsql SET search_path = public;

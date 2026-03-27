@@ -263,6 +263,24 @@ export type Database = {
         Args: { p_token: string; p_user_id: string };
         Returns: undefined;
       };
+      create_invitation: {
+        Args: { p_email: string; p_project_id: string };
+        Returns: {
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          project_id: string;
+          status: Database["public"]["Enums"]["invitation_status"];
+          token: string;
+        };
+        SetofOptions: {
+          from: "*";
+          to: "invitations";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
       is_email_registered: { Args: { p_email: string }; Returns: boolean };
       is_project_member: { Args: { project_id: string }; Returns: boolean };
       is_project_owner: { Args: { project_id: string }; Returns: boolean };
