@@ -19,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { updateMemberRole } from "@/app/(app)/projects/actions";
-import { logger } from "@/lib/logger";
 
 type Props = {
   projectId: string;
