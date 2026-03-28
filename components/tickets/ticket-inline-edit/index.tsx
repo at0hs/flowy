@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
 import { Ticket } from "@/types";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 import { updateTicketField } from "@/app/(app)/projects/[id]/actions";
@@ -74,8 +73,6 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
           disabled={isPending}
         />
       </div>
-
-      <Separator className="mb-4" />
 
       {/* プロパティグリッド */}
       <div className="grid grid-cols-[7rem_1fr] gap-y-1 items-start text-sm">

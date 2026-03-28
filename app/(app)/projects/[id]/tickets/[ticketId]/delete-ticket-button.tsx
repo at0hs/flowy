@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Trash2Icon } from "lucide-react";
 
 type Props = {
   ticketId: string;
@@ -44,8 +45,8 @@ export function DeleteTicketButton({ ticketId, projectId, ticketTitle }: Props) 
 
   return (
     <>
-      <Button variant="destructive" onClick={() => setIsDialogOpen(true)}>
-        削除
+      <Button variant="ghost" onClick={() => setIsDialogOpen(true)}>
+        <Trash2Icon className="text-red-400" />
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

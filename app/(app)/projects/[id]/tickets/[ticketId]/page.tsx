@@ -31,10 +31,18 @@ export default async function TicketDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto p-8">
-      {/* 戻るリンク */}
-      <Link href={`/projects/${id}`} className="text-sm text-muted-foreground hover:underline">
-        ← チケット一覧
-      </Link>
+      {/* ヘッダ */}
+      <div className="flex items-center">
+        {/* 戻るリンク */}
+        <Link href={`/projects/${id}`} className="text-sm text-muted-foreground hover:underline">
+          ← チケット一覧
+        </Link>
+        <div className="ml-auto">
+          <DeleteTicketButton ticketId={ticketId} projectId={id} ticketTitle={ticket.title} />
+        </div>
+      </div>
+
+      <Separator className="mb-6" />
 
       {/* インライン編集パネル（タイトル・ステータス・優先度・説明・担当者） */}
       <TicketInlineEditPanel
@@ -44,17 +52,12 @@ export default async function TicketDetailPage({ params }: Props) {
         currentUserId={user.id}
       />
 
-      <Separator className="mb-6" />
+      <Separator className="my-6" />
 
       {/* メタ情報 */}
-      <div className="text-sm text-muted-foreground space-y-1">
-        <p>作成日：{new Date(ticket.created_at).toLocaleDateString("ja-JP")}</p>
-        <p>更新日：{new Date(ticket.updated_at).toLocaleDateString("ja-JP")}</p>
-      </div>
-
-      {/* 削除ボタン */}
-      <div className="mt-6">
-        <DeleteTicketButton ticketId={ticketId} projectId={id} ticketTitle={ticket.title} />
+      <div className="text-xs text-muted-foreground space-y-1">
+        <p>作成日：{formatRelativeTime(ticket.created_at)}</p>
+        <p>更新日：{formatRelativeTime(ticket.updated_at)}</p>
       </div>
 
       <Separator className="my-6" />
@@ -63,4 +66,14 @@ export default async function TicketDetailPage({ params }: Props) {
       <CommentList comments={comments} ticketId={ticketId} currentUserId={user.id} />
     </div>
   );
+}
+
+// @todo utilsとして切り出す？
+function formatRelativeTime(dateStr: string): string {
+  const diffSec = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diffSec < 60) return `${diffSec}秒前`;
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}分前`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}時間前`;
+  if (diffSec < 86400 * 30) return `${Math.floor(diffSec / 86400)}日前`;
+  return new Date(dateStr).toLocaleString("ja-JP");
 }
