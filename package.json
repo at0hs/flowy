@@ -18,7 +18,8 @@
     "sb:status": "supabase status",
     "sb:reset": "supabase db reset",
     "sb:push": "supabase db push",
-    "sb:migration-up": "supabase migration up",
+    "sb:lint": "supabase db lint",
+    "sb:migration": "npm run sb:reset && npm run sb:lint && npm run gen:types",
     "email:dev": "email dev --dir emails"
   },
   "dependencies": {

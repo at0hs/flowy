@@ -293,3 +293,27 @@ BEGIN
 END;
 $$
 LANGUAGE plpgsql SET search_path = public;
+
+-- ----------------------------------------
+-- プロジェクトメンバー削除 SECURITY DEFINER関数
+-- プロジェクトメンバーの削除と対応するチケットの作成者をNULLに更新
+-- ----------------------------------------
+CREATE OR REPLACE FUNCTION remove_member_from_project(p_project_id uuid, p_member_id uuid, p_user_id uuid)
+RETURNS void as $$
+BEGIN
+  -- 呼び出し者がオーナーであることを確認
+  IF NOT is_project_owner(p_project_id) THEN
+    RAISE EXCEPTION '権限がありません';
+  END IF;
+
+  DELETE FROM project_members
+    WHERE id = p_member_id AND project_id = p_project_id;
+  --- チケットの担当者を更新
+  UPDATE tickets SET assignee_id = NULL
+    WHERE project_id = p_project_id AND assignee_id = p_user_id;
+  --- コメントを更新
+  UPDATE comments SET user_id = NULL
+    WHERE user_id = p_user_id
+    AND ticket_id IN (SELECT id FROM tickets WHERE project_id = p_project_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

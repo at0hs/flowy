@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { removeProjectMember, clearMemberComments } from "@/app/(app)/projects/actions";
+import { removeProjectMember } from "@/app/(app)/projects/actions";
 
 type Props = {
   projectId: string;
@@ -28,8 +28,7 @@ export function DeleteMemberButton({ projectId, memberId, userId, memberName }: 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      await removeProjectMember(projectId, memberId);
-      await clearMemberComments(projectId, userId);
+      await removeProjectMember(projectId, memberId, userId);
       toast.success("メンバーを削除しました");
       setOpen(false);
     } catch (error) {

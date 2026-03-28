@@ -106,83 +106,20 @@ export async function searchProfiles(email: string, projectId: string): Promise<
   return (data ?? []) as Profile[];
 }
 
-export async function removeProjectMember(projectId: string, memberId: string) {
+export async function removeProjectMember(projectId: string, memberId: string, userId: string) {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  // 削除対象メンバーの user_id を取得
-  const { data: member, error: fetchError } = await supabase
-    .from("project_members")
-    .select("user_id")
-    .eq("id", memberId)
-    .eq("project_id", projectId)
-    .single();
-
-  if (fetchError || !member) {
-    logger.error("Failed to fetch project member:", fetchError);
-    throw new Error("メンバーの削除に失敗しました");
-  }
-
-  const { error } = await supabase
-    .from("project_members")
-    .delete()
-    .eq("id", memberId)
-    .eq("project_id", projectId);
-
+  const { error } = await supabase.rpc("remove_member_from_project", {
+    p_project_id: projectId,
+    p_member_id: memberId,
+    p_user_id: userId,
+  });
   if (error) {
-    logger.error("Failed to remove project member:", error);
-    throw new Error("メンバーの削除に失敗しました");
-  }
-
-  // 削除されたメンバーがアサインされていたチケットの assignee_id を NULL に
-  const { error: ticketError } = await supabase
-    .from("tickets")
-    .update({ assignee_id: null })
-    .eq("project_id", projectId)
-    .eq("assignee_id", member.user_id);
-
-  if (ticketError) {
-    logger.error("Failed to clear assignee_id from tickets:", ticketError);
-    throw new Error("メンバーの削除に失敗しました");
+    throw new Error(error.message);
   }
 
   revalidatePath(`/projects/${projectId}/members`);
   revalidatePath(`/projects/${projectId}`);
-}
-
-/**
- * 削除されたメンバーのコメントの user_id を NULL に更新
- * @param projectId プロジェクトID
- * @param userId 削除されたメンバーのユーザーID
- */
-export async function clearMemberComments(projectId: string, userId: string) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const { data: tickets } = await supabase.from("tickets").select("id").eq("project_id", projectId);
-
-  const ticketIds = tickets?.map((t) => t.id) ?? [];
-
-  if (ticketIds.length > 0) {
-    const { error } = await supabase
-      .from("comments")
-      .update({ user_id: null })
-      .eq("user_id", userId)
-      .in("ticket_id", ticketIds);
-
-    if (error) {
-      logger.error("Failed to clear user_id from comments:", error);
-      throw new Error("コメントの更新に失敗しました");
-    }
-  }
 }
 
 /**

@@ -284,6 +284,10 @@ export type Database = {
       is_email_registered: { Args: { p_email: string }; Returns: boolean };
       is_project_member: { Args: { project_id: string }; Returns: boolean };
       is_project_owner: { Args: { project_id: string }; Returns: boolean };
+      remove_member_from_project: {
+        Args: { p_member_id: string; p_project_id: string; p_user_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       invitation_status: "pending" | "accepted" | "expired";
