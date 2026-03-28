@@ -10,6 +10,14 @@ import {
 } from "@/components/ui/select";
 import { Ticket } from "@/types";
 
+// 推奨: コンポーネント外
+const PRIORITIES = [
+  { value: "low", icon: ChevronsDownIcon, iconColor: "text-blue-400", label: "低" },
+  { value: "medium", icon: EqualIcon, iconColor: "text-orange-300", label: "中" },
+  { value: "high", icon: ChevronUpIcon, iconColor: "text-red-400", label: "高" },
+  { value: "urgent", icon: ChevronsUpIcon, iconColor: "text-red-400", label: "緊急" },
+] as const;
+
 type Props = {
   value: Ticket["priority"];
   onSave: (value: Ticket["priority"]) => Promise<void>;
@@ -29,27 +37,14 @@ export function InlinePriority({ value, onSave, disabled }: Props) {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="low">
-          <div className="flex items-center gap-2">
-            <ChevronsDownIcon className="w-4 h-4 text-blue-400 stroke-[3px]" />低
-          </div>
-        </SelectItem>
-        <SelectItem value="medium">
-          <div className="flex items-center gap-2">
-            <EqualIcon className="w-4 h-4 text-orange-300 stroke-[3px]" />中
-          </div>
-        </SelectItem>
-        <SelectItem value="high">
-          <div className="flex items-center gap-2">
-            <ChevronUpIcon className="w-4 h-4 text-red-400 stroke-[3px]" />高
-          </div>
-        </SelectItem>
-        <SelectItem value="urgent">
-          <div className="flex items-center gap-2">
-            <ChevronsUpIcon className="w-4 h-4 text-red-400 stroke-[3px]" />
-            緊急
-          </div>
-        </SelectItem>
+        {PRIORITIES.map((priority) => (
+          <SelectItem key={priority.value} value={priority.value}>
+            <div className="flex items-center gap-2">
+              <priority.icon className={`w-4 h-4 stroke-[3px] ${priority.iconColor}`} />
+              {priority.label}
+            </div>
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

@@ -83,15 +83,18 @@ export async function TicketTable({ tickets }: Props) {
                   {assigneeName ?? <span className="text-muted-foreground italic">担当者なし</span>}
                 </td>
                 <td className="flex items-center gap-2 px-6 py-3">
-                  <priority.icon size={16} className={`${priority.iconColor} stroke-[3px]`} />
+                  <priority.icon className={`w-4 h-4 stroke-[3px] ${priority.iconColor}`} />
                   {priority.label}
                 </td>
                 <td className="px-6 py-3">
-                  <Badge variant={status.variant} className={`${status.color}/20 text-primary rounded-sm`}>{status.label}</Badge>
+                  <Badge
+                    variant={status.variant}
+                    className={`${status.color}/20 text-primary rounded-sm`}
+                  >
+                    {status.label}
+                  </Badge>
                 </td>
-                <td className="px-6 py-3 text-muted-foreground">
-                  {formatDate(ticket.created_at)}
-                </td>
+                <td className="px-6 py-3 text-muted-foreground">{formatDate(ticket.created_at)}</td>
               </tr>
             );
           })}

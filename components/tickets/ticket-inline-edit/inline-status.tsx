@@ -47,9 +47,9 @@ export function InlineStatus({ value, onSave, disabled }: Props) {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="todo">TODO</SelectItem>
-        <SelectItem value="in_progress">進行中</SelectItem>
-        <SelectItem value="done">完了</SelectItem>
+        <SelectItem value="todo">{STATUS_MAP["todo"].label}</SelectItem>
+        <SelectItem value="in_progress">{STATUS_MAP["in_progress"].label}</SelectItem>
+        <SelectItem value="done">{STATUS_MAP["done"].label}</SelectItem>
       </SelectContent>
     </Select>
   );
