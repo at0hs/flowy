@@ -47,7 +47,7 @@ export function InlineAssignee({ value, currentUserId, members, onSave, disabled
           ))}
         </SelectContent>
       </Select>
-      {!value && currentUserId && !disabled && (
+      {currentUserId && !disabled && value !== currentUserId && (
         <button
           type="button"
           onClick={handleAssignToSelf}

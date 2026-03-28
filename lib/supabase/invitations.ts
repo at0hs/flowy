@@ -43,7 +43,7 @@ export async function verifyInvitationToken(token: string): Promise<InvitationVe
     .single();
 
   if (error || !data) {
-    return { isValid: false, invitation: null, error: "招待が見つかりません" };
+    return { isValid: false, invitation: null, error: "招待リンクが無効です。" };
   }
 
   if (data.status === "accepted") {

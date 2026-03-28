@@ -79,7 +79,10 @@ export default async function MembersPage({ params }: Props) {
                       isLastOwner={member.role === "owner" && ownerCount === 1}
                     />
                   ) : (
-                    <Badge variant={member.role === "owner" ? "default" : "secondary"}>
+                    <Badge
+                      variant={member.role === "owner" ? "default" : "secondary"}
+                      className="rounded-sm"
+                    >
                       {member.role === "owner" ? "オーナー" : "メンバー"}
                     </Badge>
                   )}
