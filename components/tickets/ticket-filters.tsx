@@ -8,11 +8,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "../ui/button";
+import { LoaderCircleIcon, RotateCcwIcon } from "lucide-react";
+import { useTransition } from "react";
 
 export function TicketFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   // クエリパラメータを更新する関数
   const updateParams = (key: string, value: string) => {
@@ -27,6 +31,12 @@ export function TicketFilters() {
 
     // URLを更新（ページ遷移ではなくURLだけ変わる）
     router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const handleReload = () => {
+    startTransition(async () => {
+      router.refresh();
+    });
   };
 
   return (
@@ -77,6 +87,10 @@ export function TicketFilters() {
           <SelectItem value="asc">作成日（古い順）</SelectItem>
         </SelectContent>
       </Select>
+
+      <Button variant="ghost" className="ml-auto" onClick={handleReload} disabled={isPending}>
+        {isPending ? <LoaderCircleIcon className="animate-spin" /> : <RotateCcwIcon />}
+      </Button>
     </div>
   );
 }

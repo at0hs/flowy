@@ -11,7 +11,7 @@ import { Ticket } from "@/types";
 
 const STATUS_MAP = {
   todo: {
-    label: "To Do",
+    label: "TODO",
     className: "bg-slate-500/20 text-black hover:bg-slate-500/30",
   },
   in_progress: {

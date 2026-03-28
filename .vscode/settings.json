@@ -24,4 +24,17 @@
 	"editor.wordWrap": "on",
 	"files.eol": "\n",
 	"editor.detectIndentation": false,
+	"sqltools.connections": [
+		{
+			"ssh": "Disabled",
+			"previewLimit": 50,
+			"server": "127.0.0.1",
+			"port": 54322,
+			"driver": "PostgreSQL",
+			"name": "supabase local",
+			"database": "postgres",
+			"username": "postgres",
+			"password": "postgres"
+		}
+	],
 }
