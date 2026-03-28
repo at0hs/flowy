@@ -50,12 +50,12 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
 
     if (result?.error) {
       setErrorMessage(result.error);
-      setIsLoading(false);
     } else {
       setOpen(false);
       setAssigneeId("none");
       router.refresh();
     }
+    setIsLoading(false);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
