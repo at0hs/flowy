@@ -317,3 +317,32 @@ BEGIN
     AND ticket_id IN (SELECT id FROM tickets WHERE project_id = p_project_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- ----------------------------------------
+-- moddatetime 拡張機能を有効化
+-- ----------------------------------------
+CREATE EXTENSION IF NOT EXISTS "moddatetime";
+
+-- ----------------------------------------
+-- projects テーブルの updated_at 自動更新トリガー
+-- ----------------------------------------
+CREATE TRIGGER handle_updated_at
+  BEFORE UPDATE ON projects
+  FOR EACH ROW
+  EXECUTE FUNCTION moddatetime('updated_at');
+
+-- ----------------------------------------
+-- tickets テーブルの updated_at 自動更新トリガー
+-- ----------------------------------------
+CREATE TRIGGER handle_updated_at
+  BEFORE UPDATE ON tickets
+  FOR EACH ROW
+  EXECUTE FUNCTION moddatetime('updated_at');
+
+-- ----------------------------------------
+-- comments テーブルの updated_at 自動更新トリガー
+-- ----------------------------------------
+CREATE TRIGGER handle_updated_at
+  BEFORE UPDATE ON comments
+  FOR EACH ROW
+  EXECUTE FUNCTION moddatetime('updated_at');
