@@ -21,7 +21,8 @@
 		"plpgsql",
 		"Redmine",
 		"shadcn",
-		"SUPABASE"
+		"SUPABASE",
+		"timestamptz"
 	],
 	"editor.wordWrap": "on",
 	"files.eol": "\n",
