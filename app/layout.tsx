@@ -13,9 +13,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const faviconPath =
+  process.env.NEXT_PUBLIC_APP_ENV === "production" ? "/favicon-prod.svg" : "/favicon-dev.svg";
+
 export const metadata: Metadata = {
   title: "Flowy",
   description: "Jira-like ticket management app",
+  icons: {
+    icon: faviconPath,
+  },
 };
 
 export default function RootLayout({
