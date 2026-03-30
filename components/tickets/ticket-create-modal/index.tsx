@@ -6,7 +6,7 @@ import { createTicket } from "@/app/(app)/projects/[id]/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -37,6 +37,7 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [assigneeId, setAssigneeId] = useState<string>("none");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,6 +46,8 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
 
     const formData = new FormData(e.currentTarget);
     formData.set("assignee_id", assigneeId === "none" ? "" : assigneeId);
+    const isDescriptionEmpty = !description || description === "<p></p>";
+    formData.set("description", isDescriptionEmpty ? "" : description);
 
     const result = await createTicket(projectId, formData);
 
@@ -53,6 +56,7 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
     } else {
       setOpen(false);
       setAssigneeId("none");
+      setDescription("");
       router.refresh();
     }
     setIsLoading(false);
@@ -62,6 +66,7 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
     if (!nextOpen) {
       setErrorMessage("");
       setAssigneeId("none");
+      setDescription("");
     }
     setOpen(nextOpen);
   };
@@ -88,8 +93,12 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
 
             {/* 説明 */}
             <div className="space-y-2">
-              <Label htmlFor="modal-description">説明</Label>
-              <Textarea id="modal-description" name="description" rows={3} />
+              <Label>説明</Label>
+              <RichTextEditor
+                value={description}
+                onChange={setDescription}
+                placeholder="説明を入力..."
+              />
             </div>
 
             <Separator />

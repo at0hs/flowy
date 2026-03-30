@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { RichTextContent } from "@/components/editor/rich-text-content";
 
 type Props = {
   value: string | null;
@@ -21,8 +22,8 @@ export function InlineDescription({ value, onSave, disabled }: Props) {
   }
 
   async function handleSave() {
-    const trimmed = draft.trim();
-    const newValue = trimmed || null;
+    const isEmpty = !draft || draft === "<p></p>";
+    const newValue = isEmpty ? null : draft;
     await onSave(newValue);
     setIsEditing(false);
   }
@@ -35,13 +36,7 @@ export function InlineDescription({ value, onSave, disabled }: Props) {
   if (isEditing) {
     return (
       <div className="space-y-2">
-        <Textarea
-          autoFocus
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          rows={4}
-          className="resize-none"
-        />
+        <RichTextEditor value={draft} onChange={setDraft} placeholder="説明を入力..." />
         <div className="flex gap-2">
           <Button type="button" size="sm" onClick={handleSave}>
             保存
@@ -62,7 +57,7 @@ export function InlineDescription({ value, onSave, disabled }: Props) {
       }`}
     >
       {value ? (
-        <p className="text-sm whitespace-pre-wrap">{value}</p>
+        <RichTextContent html={value} />
       ) : (
         <p className="text-sm text-muted-foreground italic">説明を追加...</p>
       )}
