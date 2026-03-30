@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
@@ -10,6 +11,7 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   placeholder?: string;
   editable?: boolean;
+  maxHeight?: string;
 }
 
 export function RichTextEditor({
@@ -17,6 +19,7 @@ export function RichTextEditor({
   onChange,
   placeholder = "内容を入力...",
   editable = true,
+  maxHeight = "50rem",
 }: RichTextEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -43,10 +46,15 @@ export function RichTextEditor({
     },
   });
 
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(editable);
+  }, [editor, editable]);
+
   return (
     <div className="border border-border rounded-md overflow-hidden">
       {editable && <EditorToolbar editor={editor} />}
-      <div className="overflow-y-auto max-h-200">
+      <div className="overflow-y-auto" style={{ maxHeight }}>
         <EditorContent editor={editor} />
       </div>
     </div>

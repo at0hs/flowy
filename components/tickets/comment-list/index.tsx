@@ -7,7 +7,6 @@ import { CommentWithProfile } from "@/lib/supabase/comments";
 import { addComment, editComment, removeComment } from "@/app/(app)/projects/[id]/actions";
 import { SquarePen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { RichTextContent } from "@/components/editor/rich-text-content";
 
 type Props = {
   comments: CommentWithProfile[];
@@ -35,7 +36,7 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
   const router = useRouter();
 
   const handlePost = () => {
-    if (!newBody.trim()) return;
+    if (isHtmlEmpty(newBody)) return;
     startPostTransition(async () => {
       const result = await addComment(ticketId, newBody);
       if ("error" in result) {
@@ -49,7 +50,7 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
   };
 
   const handleEditSave = (commentId: string) => {
-    if (!editBody.trim()) return;
+    if (isHtmlEmpty(editBody)) return;
     startEditTransition(async () => {
       const result = await editComment(commentId, editBody);
       if ("error" in result) {
@@ -80,22 +81,41 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
 
       {/* 投稿フォーム */}
       <div className="space-y-2 pb-10">
-        <Textarea
-          placeholder="コメントを入力..."
-          value={newBody}
-          onChange={(e) => setNewBody(e.target.value)}
-          rows={3}
-          disabled={isPostPending}
-          onClick={() => setNewCommentWriting(true)}
-        />
-        {newCommentWriting && (
-          <div className="flex justify-end gap-1">
-            <Button size="sm" onClick={handlePost} disabled={isPostPending || !newBody.trim()}>
-              {isPostPending ? "投稿中..." : "投稿"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setNewCommentWriting(false)}>
-              キャンセル
-            </Button>
+        {newCommentWriting ? (
+          <>
+            <RichTextEditor
+              value={newBody}
+              onChange={setNewBody}
+              placeholder="コメントを入力..."
+              maxHeight="16rem"
+              editable={!isPostPending}
+            />
+            <div className="flex justify-end gap-1">
+              <Button
+                size="sm"
+                onClick={handlePost}
+                disabled={isPostPending || isHtmlEmpty(newBody)}
+              >
+                {isPostPending ? "投稿中..." : "投稿"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNewCommentWriting(false);
+                  setNewBody("");
+                }}
+              >
+                キャンセル
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div
+            onClick={() => setNewCommentWriting(true)}
+            className="rounded-md border border-border p-3 min-h-20 transition-colors cursor-pointer hover:bg-muted/30"
+          >
+            <p className="text-sm text-muted-foreground italic">コメントを入力</p>
           </div>
         )}
       </div>
@@ -173,20 +193,17 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
 
               {editingId === comment.id ? (
                 <div className="space-y-2">
-                  <Textarea
+                  <RichTextEditor
                     value={editBody}
-                    onChange={(e) => setEditBody(e.target.value)}
-                    rows={3}
-                    disabled={isEditPending}
-                    onKeyDown={(e) => {
-                      if (e.key === "Escape") setEditingId(null);
-                    }}
+                    onChange={setEditBody}
+                    maxHeight="16rem"
+                    editable={!isEditPending}
                   />
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       onClick={() => handleEditSave(comment.id)}
-                      disabled={isEditPending || !editBody.trim()}
+                      disabled={isEditPending || isHtmlEmpty(editBody)}
                     >
                       {isEditPending ? "保存中..." : "保存"}
                     </Button>
@@ -201,7 +218,9 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
                   </div>
                 </div>
               ) : (
-                <div className="pl-4 min-h-6 whitespace-pre-wrap">{comment.body}</div>
+                <div className="pl-4 min-h-6 whitespace-pre-wrap">
+                  <RichTextContent html={comment.body} />
+                </div>
               )}
             </div>
           ))}
@@ -209,6 +228,10 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
       )}
     </div>
   );
+}
+
+function isHtmlEmpty(html: string): boolean {
+  return html.replace(/<[^>]*>/g, "").trim() === "";
 }
 
 function formatAbsoluteDate(dateStr: string): string {
