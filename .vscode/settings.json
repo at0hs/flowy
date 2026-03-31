@@ -18,6 +18,7 @@
 		"fkey",
 		"flowy",
 		"ilike",
+		"moddatetime",
 		"plpgsql",
 		"Redmine",
 		"shadcn",
