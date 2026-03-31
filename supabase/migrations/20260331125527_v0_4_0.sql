@@ -39,3 +39,13 @@ CREATE TRIGGER handle_updated_at
   BEFORE UPDATE ON comments
   FOR EACH ROW
   EXECUTE FUNCTION extensions.moddatetime('updated_at');
+
+-- ----------------------------------------
+-- comments テーブルに reply_to_id カラムを追加（コメント返信機能）
+-- comments テーブルにソフトデリートカラムを追加
+-- 返信先コメントが削除された場合は NULL に設定
+-- 返信が存在するコメントを物理削除せず「削除済み」として扱う
+-- ----------------------------------------
+ALTER TABLE comments
+  ADD COLUMN reply_to_id uuid    REFERENCES comments(id) ON DELETE SET NULL,
+  ADD COLUMN is_deleted  boolean NOT NULL DEFAULT false;

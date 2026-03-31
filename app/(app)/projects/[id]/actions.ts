@@ -6,7 +6,7 @@ import { ticketSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { Ticket } from "@/types";
-import { createComment, updateComment, deleteComment } from "@/lib/supabase/comments";
+import { createComment, updateComment, deleteComment, createReply } from "@/lib/supabase/comments";
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -156,6 +156,29 @@ export async function addComment(
   } catch (err) {
     logger.error("Failed to add comment:", err);
     return { error: "コメントの投稿に失敗しました" };
+  }
+}
+
+export async function addReply(
+  ticketId: string,
+  body: string,
+  replyToId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const trimmed = body.trim();
+  if (!trimmed) return { error: "コメントを入力してください" };
+
+  try {
+    await createReply(ticketId, user.id, trimmed, replyToId);
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to add reply:", err);
+    return { error: "返信の投稿に失敗しました" };
   }
 }
 

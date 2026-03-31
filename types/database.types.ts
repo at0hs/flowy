@@ -33,6 +33,8 @@ export type Database = {
           body: string;
           created_at: string;
           id: string;
+          is_deleted: boolean;
+          reply_to_id: string | null;
           ticket_id: string;
           updated_at: string;
           user_id: string | null;
@@ -41,6 +43,8 @@ export type Database = {
           body: string;
           created_at?: string;
           id?: string;
+          is_deleted?: boolean;
+          reply_to_id?: string | null;
           ticket_id: string;
           updated_at?: string;
           user_id?: string | null;
@@ -49,11 +53,20 @@ export type Database = {
           body?: string;
           created_at?: string;
           id?: string;
+          is_deleted?: boolean;
+          reply_to_id?: string | null;
           ticket_id?: string;
           updated_at?: string;
           user_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "comments_reply_to_id_fkey";
+            columns: ["reply_to_id"];
+            isOneToOne: false;
+            referencedRelation: "comments";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "comments_ticket_id_fkey";
             columns: ["ticket_id"];
