@@ -7,6 +7,7 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { Ticket } from "@/types";
 import { createComment, updateComment, deleteComment, createReply } from "@/lib/supabase/comments";
+import { addWatch, removeWatch } from "@/lib/supabase/watches";
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -241,5 +242,41 @@ export async function removeComment(
   } catch (err) {
     logger.error("Failed to delete comment:", err);
     return { error: "コメントの削除に失敗しました" };
+  }
+}
+
+export async function watchTicket(
+  ticketId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  try {
+    await addWatch(ticketId, user.id);
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to watch ticket:", err);
+    return { error: "ウォッチの登録に失敗しました" };
+  }
+}
+
+export async function unwatchTicket(
+  ticketId: string
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  try {
+    await removeWatch(ticketId, user.id);
+    return { success: true };
+  } catch (err) {
+    logger.error("Failed to unwatch ticket:", err);
+    return { error: "ウォッチの解除に失敗しました" };
   }
 }

@@ -9,6 +9,8 @@ import { getComments } from "@/lib/supabase/comments";
 import { CommentList } from "@/components/tickets/comment-list";
 import { getSubtickets } from "@/lib/supabase/tickets";
 import { SubtaskSection } from "@/components/tickets/subtask-section";
+import { isWatching } from "@/lib/supabase/watches";
+import { TicketWatchButton } from "@/components/tickets/ticket-watch-button";
 
 type Props = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -31,8 +33,10 @@ export default async function TicketDetailPage({ params }: Props) {
 
   if (!ticket) notFound();
 
-  // サブタスクは親チケット（parent_id が null）のみ取得対象
-  const subtickets = ticket.parent_id === null ? await getSubtickets(ticketId) : [];
+  const [subtickets, watching] = await Promise.all([
+    ticket.parent_id === null ? getSubtickets(ticketId) : Promise.resolve([]),
+    isWatching(ticketId, user.id),
+  ]);
 
   return (
     <div className="max-w-2xl mx-auto p-8">
@@ -42,7 +46,8 @@ export default async function TicketDetailPage({ params }: Props) {
         <Link href={`/projects/${id}`} className="text-sm text-muted-foreground hover:underline">
           ← チケット一覧
         </Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <TicketWatchButton ticketId={ticketId} isWatching={watching} />
           <DeleteTicketButton ticketId={ticketId} projectId={id} ticketTitle={ticket.title} />
         </div>
       </div>

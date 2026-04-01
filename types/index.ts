@@ -7,6 +7,7 @@ export type ProjectMember = Database["public"]["Tables"]["project_members"]["Row
 export type Ticket = Database["public"]["Tables"]["tickets"]["Row"];
 export type Invitation = Database["public"]["Tables"]["invitations"]["Row"];
 export type Comment = Database["public"]["Tables"]["comments"]["Row"];
+export type TicketWatch = Database["public"]["Tables"]["ticket_watches"]["Row"];
 
 // ENUM型をエクスポート
 export type ProjectRole = Database["public"]["Enums"]["project_role"];

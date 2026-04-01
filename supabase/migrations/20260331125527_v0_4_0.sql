@@ -52,3 +52,48 @@ ALTER TABLE comments
 
 ALTER TABLE tickets
   ADD COLUMN parent_id uuid REFERENCES tickets(id) ON DELETE CASCADE;
+
+-- ----------------------------------------
+-- ticket_watches テーブルを作成（チケットウォッチ機能）
+-- ----------------------------------------
+CREATE TABLE ticket_watches (
+  id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id  uuid        NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+  user_id    uuid        NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (ticket_id, user_id)
+);
+
+ALTER TABLE ticket_watches ENABLE ROW LEVEL SECURITY;
+
+-- 自分のウォッチレコードのみ読み取り可
+CREATE POLICY "ticket_watches_select" ON ticket_watches
+  FOR SELECT TO authenticated
+  USING (user_id = (SELECT(auth.uid())));
+
+-- 自分のウォッチレコードのみ作成可
+CREATE POLICY "ticket_watches_insert" ON ticket_watches
+  FOR INSERT TO authenticated
+  WITH CHECK (user_id = (SELECT(auth.uid())));
+
+-- 自分のウォッチレコードのみ削除可
+CREATE POLICY "ticket_watches_delete" ON ticket_watches
+  FOR DELETE TO authenticated
+  USING (user_id = (SELECT(auth.uid())));
+
+-- ----------------------------------------
+-- チケット作成時に作成者を自動ウォッチする関数・トリガーを作成
+-- ----------------------------------------
+CREATE OR REPLACE FUNCTION auto_watch_on_ticket_create()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO ticket_watches (ticket_id, user_id)
+  VALUES (NEW.id, auth.uid())
+  ON CONFLICT (ticket_id, user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER on_ticket_created
+  AFTER INSERT ON tickets
+  FOR EACH ROW EXECUTE FUNCTION auto_watch_on_ticket_create();
