@@ -26,8 +26,30 @@ export async function createTicket(projectId: string, formData: FormData) {
   const assigneeIdRaw = formData.get("assignee_id") as string | null;
   const assigneeId = assigneeIdRaw && assigneeIdRaw.trim() !== "" ? assigneeIdRaw : null;
 
+  const parentIdRaw = formData.get("parent_id") as string | null;
+  const parentId = parentIdRaw && parentIdRaw.trim() !== "" ? parentIdRaw : null;
+
+  // T28: 孫チケット作成を禁止する（親チケットが既に子チケットの場合はエラー）
+  if (parentId) {
+    const { data: parentTicket, error: parentError } = await supabase
+      .from("tickets")
+      .select("parent_id")
+      .eq("id", parentId)
+      .single();
+
+    if (parentError) {
+      logger.error("Failed to fetch parent ticket:", parentError);
+      return { error: "親チケットの取得に失敗しました" };
+    }
+
+    if (parentTicket.parent_id !== null) {
+      return { error: "サブタスクにはサブタスクを作成できません" };
+    }
+  }
+
   const { error } = await supabase.from("tickets").insert({
     project_id: projectId,
+    parent_id: parentId,
     title: data.title,
     description: data.description || null,
     status: data.status,

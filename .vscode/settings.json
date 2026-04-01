@@ -22,6 +22,8 @@
 		"plpgsql",
 		"Redmine",
 		"shadcn",
+		"Subticket",
+		"subtickets",
 		"SUPABASE",
 		"timestamptz"
 	],

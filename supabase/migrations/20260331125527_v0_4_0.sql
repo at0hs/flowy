@@ -49,3 +49,6 @@ CREATE TRIGGER handle_updated_at
 ALTER TABLE comments
   ADD COLUMN reply_to_id uuid    REFERENCES comments(id) ON DELETE SET NULL,
   ADD COLUMN is_deleted  boolean NOT NULL DEFAULT false;
+
+ALTER TABLE tickets
+  ADD COLUMN parent_id uuid REFERENCES tickets(id) ON DELETE CASCADE;

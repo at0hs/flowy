@@ -222,6 +222,7 @@ export type Database = {
           created_at: string;
           description: string | null;
           id: string;
+          parent_id: string | null;
           priority: Database["public"]["Enums"]["ticket_priority"];
           project_id: string;
           status: Database["public"]["Enums"]["ticket_status"];
@@ -233,6 +234,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           id?: string;
+          parent_id?: string | null;
           priority?: Database["public"]["Enums"]["ticket_priority"];
           project_id: string;
           status?: Database["public"]["Enums"]["ticket_status"];
@@ -244,6 +246,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           id?: string;
+          parent_id?: string | null;
           priority?: Database["public"]["Enums"]["ticket_priority"];
           project_id?: string;
           status?: Database["public"]["Enums"]["ticket_status"];
@@ -256,6 +259,13 @@ export type Database = {
             columns: ["assignee_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tickets_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
             referencedColumns: ["id"];
           },
           {

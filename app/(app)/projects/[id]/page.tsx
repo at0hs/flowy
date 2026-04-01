@@ -43,11 +43,17 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).single();
   if (!project) notFound();
 
-  const [members, ticketExistsResult] = await Promise.all([
+  const [members, rootTicketsResult] = await Promise.all([
     getProjectMembers(id),
-    supabase.from("tickets").select("id").eq("project_id", id).limit(1),
+    supabase
+      .from("tickets")
+      .select("id, title")
+      .eq("project_id", id)
+      .is("parent_id", null)
+      .order("created_at", { ascending: true }),
   ]);
-  const notExistsTicket = !ticketExistsResult.data || ticketExistsResult.data.length === 0;
+  const notExistsTicket = !rootTicketsResult.data || rootTicketsResult.data.length === 0;
+  const rootTickets = rootTicketsResult.data ?? [];
 
   // チケット取得クエリを組み立てる
   let query = supabase
@@ -65,6 +71,21 @@ export default async function TicketsPage({ params, searchParams }: Props) {
 
   if (error) logger.error(error);
 
+  // 担当者プロフィールを一括取得
+  const assigneeIds = [
+    ...new Set((tickets ?? []).map((t) => t.assignee_id).filter(Boolean)),
+  ] as string[];
+  const assigneeMap: Record<string, string> = {};
+  if (assigneeIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, username, email")
+      .in("id", assigneeIds);
+    profiles?.forEach((p) => {
+      assigneeMap[p.id] = p.username || p.email || "";
+    });
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="flex justify-between items-center mb-2">
@@ -74,7 +95,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
           </Link>
           <h1 className="text-2xl font-bold mt-1">{project.name}</h1>
         </div>
-        <TicketCreateModal projectId={id} members={members} />
+        <TicketCreateModal projectId={id} members={members} rootTickets={rootTickets} />
       </div>
 
       {project.description && (
@@ -88,11 +109,13 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       </Suspense>
 
       {tickets && tickets.length > 0 ? (
-        <TicketTable tickets={tickets} />
+        <TicketTable tickets={tickets} assigneeMap={assigneeMap} />
       ) : (
-        <div className="text-center py-16 text-muted-foreground">
+        <div className="text-sm text-center py-16 text-muted-foreground">
           <p className="mb-4">チケットがありません</p>
-          {notExistsTicket && <TicketCreateModal projectId={id} members={members} />}
+          {notExistsTicket && (
+            <TicketCreateModal projectId={id} members={members} rootTickets={rootTickets} />
+          )}
         </div>
       )}
     </div>

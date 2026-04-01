@@ -7,6 +7,8 @@ import { TicketInlineEditPanel } from "@/components/tickets/ticket-inline-edit";
 import { getProjectMembers } from "@/lib/supabase/members";
 import { getComments } from "@/lib/supabase/comments";
 import { CommentList } from "@/components/tickets/comment-list";
+import { getSubtickets } from "@/lib/supabase/tickets";
+import { SubtaskSection } from "@/components/tickets/subtask-section";
 
 type Props = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -28,6 +30,9 @@ export default async function TicketDetailPage({ params }: Props) {
   ]);
 
   if (!ticket) notFound();
+
+  // サブタスクは親チケット（parent_id が null）のみ取得対象
+  const subtickets = ticket.parent_id === null ? await getSubtickets(ticketId) : [];
 
   return (
     <div className="max-w-2xl mx-auto p-8">
@@ -59,6 +64,19 @@ export default async function TicketDetailPage({ params }: Props) {
         <p>作成日：{formatRelativeTime(ticket.created_at)}</p>
         <p>更新日：{formatRelativeTime(ticket.updated_at)}</p>
       </div>
+
+      {/* サブタスク（親チケットのみ表示） */}
+      {ticket.parent_id === null && (
+        <>
+          <Separator className="my-6" />
+          <SubtaskSection
+            parentTicketId={ticketId}
+            projectId={id}
+            subtickets={subtickets}
+            members={members}
+          />
+        </>
+      )}
 
       <Separator className="my-6" />
 

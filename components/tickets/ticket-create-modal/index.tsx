@@ -26,18 +26,33 @@ import {
 } from "@/components/ui/dialog";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 
+interface RootTicket {
+  id: string;
+  title: string;
+}
+
 interface TicketCreateModalProps {
   projectId: string;
   members: ProjectMemberWithProfile[];
+  rootTickets?: RootTicket[];
+  defaultParentId?: string;
+  triggerLabel?: string;
 }
 
-export function TicketCreateModal({ projectId, members }: TicketCreateModalProps) {
+export function TicketCreateModal({
+  projectId,
+  members,
+  rootTickets = [],
+  defaultParentId,
+  triggerLabel,
+}: TicketCreateModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [assigneeId, setAssigneeId] = useState<string>("none");
   const [description, setDescription] = useState("");
+  const [parentId, setParentId] = useState<string>(defaultParentId ?? "none");
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,6 +61,7 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
 
     const formData = new FormData(e.currentTarget);
     formData.set("assignee_id", assigneeId === "none" ? "" : assigneeId);
+    formData.set("parent_id", parentId === "none" ? "" : parentId);
     const isDescriptionEmpty = !description || description === "<p></p>";
     formData.set("description", isDescriptionEmpty ? "" : description);
 
@@ -56,6 +72,7 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
     } else {
       setOpen(false);
       setAssigneeId("none");
+      setParentId(defaultParentId ?? "none");
       setDescription("");
       router.refresh();
     }
@@ -66,6 +83,7 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
     if (!nextOpen) {
       setErrorMessage("");
       setAssigneeId("none");
+      setParentId(defaultParentId ?? "none");
       setDescription("");
     }
     setOpen(nextOpen);
@@ -74,7 +92,12 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button>+ チケット作成</Button>
+        <Button
+          variant={triggerLabel ? "outline" : "default"}
+          size={triggerLabel ? "sm" : "default"}
+        >
+          {triggerLabel ?? "+ チケット作成"}
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
         <DialogHeader>
@@ -120,6 +143,26 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
                 </SelectContent>
               </Select>
             </div>
+
+            {/* 親チケット */}
+            {rootTickets.length > 0 && (
+              <div className="space-y-2">
+                <Label>親チケット</Label>
+                <Select value={parentId} onValueChange={setParentId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="親チケットを選択" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">なし</SelectItem>
+                    {rootTickets.map((ticket) => (
+                      <SelectItem key={ticket.id} value={ticket.id}>
+                        {ticket.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <Separator />
 
@@ -170,7 +213,7 @@ export function TicketCreateModal({ projectId, members }: TicketCreateModalProps
 
           <DialogFooter className="mt-4">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "作成中..." : "作成する"}
+              {isLoading ? "作成中..." : "作成"}
             </Button>
           </DialogFooter>
         </form>
