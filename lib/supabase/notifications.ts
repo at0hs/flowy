@@ -2,15 +2,30 @@ import { createClient } from "./server";
 import { Notification, NotificationWithDetails } from "@/types";
 import { logger } from "@/lib/logger";
 
+/** 通知として扱う期間（日数） */
+const NOTIFICATION_RETENTION_DAYS = 30;
+
+function thirtyDaysAgo(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - NOTIFICATION_RETENTION_DAYS);
+  return d.toISOString();
+}
+
 /**
- * ユーザーの通知一覧を取得する（actor・ticket を JOIN、新しい順）
+ * ユーザーの通知一覧を取得する（actor・ticket を JOIN、新しい順、30日以内）
  * @param userId ユーザーID
+ * @param limit  取得件数上限（省略時はすべて取得）
+ * @param offset スキップ件数（ページング用、デフォルト 0）
  * @returns 通知一覧（詳細付き）
  */
-export async function getNotifications(userId: string): Promise<NotificationWithDetails[]> {
+export async function getNotifications(
+  userId: string,
+  limit?: number,
+  offset = 0
+): Promise<NotificationWithDetails[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("notifications")
     .select(
       `
@@ -20,7 +35,14 @@ export async function getNotifications(userId: string): Promise<NotificationWith
     `
     )
     .eq("user_id", userId)
+    .gte("created_at", thirtyDaysAgo())
     .order("created_at", { ascending: false });
+
+  if (limit !== undefined) {
+    query = query.range(offset, offset + limit - 1);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     logger.error("Failed to fetch notifications:", error);
@@ -31,7 +53,7 @@ export async function getNotifications(userId: string): Promise<NotificationWith
 }
 
 /**
- * ユーザーの未読通知数を取得する
+ * ユーザーの未読通知数を取得する（30日以内）
  * @param userId ユーザーID
  * @returns 未読通知数
  */
@@ -42,7 +64,8 @@ export async function getUnreadCount(userId: string): Promise<number> {
     .from("notifications")
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("is_read", false);
+    .eq("is_read", false)
+    .gte("created_at", thirtyDaysAgo());
 
   if (error) {
     logger.error("Failed to fetch unread notification count:", error);

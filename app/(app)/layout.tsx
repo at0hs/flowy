@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { getUserProjects, getUserProfile } from "@/lib/supabase/projects";
+import { getUnreadCount, getNotifications } from "@/lib/supabase/notifications";
 import { notFound } from "next/navigation";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -14,12 +15,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     notFound();
   }
 
-  const projects = await getUserProjects();
+  const [projects, unreadCount, notifications] = await Promise.all([
+    getUserProjects(),
+    getUnreadCount(userProfile.id),
+    getNotifications(userProfile.id, 20),
+  ]);
 
   return (
     <div className="flex h-screen bg-background">
       {/* サイドバー */}
-      <Sidebar projects={projects} userProfile={userProfile} />
+      <Sidebar
+        projects={projects}
+        userProfile={userProfile}
+        unreadCount={unreadCount}
+        notifications={notifications}
+      />
 
       {/* メインコンテンツエリア */}
       <div className="flex-1 flex flex-col overflow-hidden">

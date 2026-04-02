@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator";
 import { LogOut, Settings, ChevronDown, ChevronRight, Ticket, Users, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
+import { NotificationWithDetails } from "@/types";
 
 interface SidebarProps {
   projects: Array<{
@@ -18,9 +20,11 @@ interface SidebarProps {
     username: string;
     email: string;
   };
+  unreadCount: number;
+  notifications: NotificationWithDetails[];
 }
 
-export function Sidebar({ projects, userProfile }: SidebarProps) {
+export function Sidebar({ projects, userProfile, unreadCount, notifications }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -67,8 +71,15 @@ export function Sidebar({ projects, userProfile }: SidebarProps) {
     <aside className="w-64 bg-surface border-r border-border flex flex-col h-screen">
       {/* ユーザー情報セクション */}
       <div className="p-4 border-b border-border">
-        <div className="text-sm font-semibold text-foreground">{userProfile.username}</div>
-        <div className="text-xs text-muted-foreground mt-1">{userProfile.email}</div>
+        <div className="flex items-center justify-between">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-foreground truncate">
+              {userProfile.username}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1 truncate">{userProfile.email}</div>
+          </div>
+          <NotificationDropdown unreadCount={unreadCount} notifications={notifications} />
+        </div>
       </div>
 
       {/* プロジェクト一覧セクション */}
