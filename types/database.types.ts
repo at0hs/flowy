@@ -121,6 +121,61 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          actor_id: string | null;
+          created_at: string;
+          id: string;
+          is_read: boolean;
+          metadata: Json | null;
+          ticket_id: string | null;
+          type: Database["public"]["Enums"]["notification_type"];
+          user_id: string;
+        };
+        Insert: {
+          actor_id?: string | null;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          metadata?: Json | null;
+          ticket_id?: string | null;
+          type: Database["public"]["Enums"]["notification_type"];
+          user_id: string;
+        };
+        Update: {
+          actor_id?: string | null;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          metadata?: Json | null;
+          ticket_id?: string | null;
+          type?: Database["public"]["Enums"]["notification_type"];
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey";
+            columns: ["actor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -343,6 +398,15 @@ export type Database = {
       is_email_registered: { Args: { p_email: string }; Returns: boolean };
       is_project_member: { Args: { project_id: string }; Returns: boolean };
       is_project_owner: { Args: { project_id: string }; Returns: boolean };
+      notify_watchers: {
+        Args: {
+          p_actor_id: string;
+          p_metadata?: Json;
+          p_ticket_id: string;
+          p_type: Database["public"]["Enums"]["notification_type"];
+        };
+        Returns: undefined;
+      };
       remove_member_from_project: {
         Args: { p_member_id: string; p_project_id: string; p_user_id: string };
         Returns: undefined;
@@ -350,6 +414,13 @@ export type Database = {
     };
     Enums: {
       invitation_status: "pending" | "accepted" | "expired";
+      notification_type:
+        | "assigned"
+        | "assignee_changed"
+        | "comment_added"
+        | "status_changed"
+        | "priority_changed"
+        | "mention";
       project_role: "owner" | "member";
       ticket_priority: "low" | "medium" | "high" | "urgent";
       ticket_status: "todo" | "in_progress" | "done";
@@ -482,6 +553,14 @@ export const Constants = {
   public: {
     Enums: {
       invitation_status: ["pending", "accepted", "expired"],
+      notification_type: [
+        "assigned",
+        "assignee_changed",
+        "comment_added",
+        "status_changed",
+        "priority_changed",
+        "mention",
+      ],
       project_role: ["owner", "member"],
       ticket_priority: ["low", "medium", "high", "urgent"],
       ticket_status: ["todo", "in_progress", "done"],

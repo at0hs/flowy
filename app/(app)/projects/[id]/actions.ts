@@ -6,6 +6,7 @@ import { ticketSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { Ticket } from "@/types";
+import { Json } from "@/types/database.types";
 import { createComment, updateComment, deleteComment, createReply } from "@/lib/supabase/comments";
 import { addWatch, removeWatch } from "@/lib/supabase/watches";
 
@@ -48,19 +49,36 @@ export async function createTicket(projectId: string, formData: FormData) {
     }
   }
 
-  const { error } = await supabase.from("tickets").insert({
-    project_id: projectId,
-    parent_id: parentId,
-    title: data.title,
-    description: data.description || null,
-    status: data.status,
-    priority: data.priority,
-    assignee_id: assigneeId,
-  });
+  const { data: newTicket, error } = await supabase
+    .from("tickets")
+    .insert({
+      project_id: projectId,
+      parent_id: parentId,
+      title: data.title,
+      description: data.description || null,
+      status: data.status,
+      priority: data.priority,
+      assignee_id: assigneeId,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     logger.error(error);
     return { error: "チケットの作成に失敗しました" };
+  }
+
+  // 担当者が設定されており、自分以外の場合は `assigned` 通知を発行
+  if (assigneeId && assigneeId !== user.id) {
+    const { error: notifyError } = await supabase.from("notifications").insert({
+      user_id: assigneeId,
+      actor_id: user.id,
+      ticket_id: newTicket.id,
+      type: "assigned" as const,
+    });
+    if (notifyError) {
+      logger.warn("Failed to send assigned notification:", notifyError);
+    }
   }
 
   return { success: true, projectId };
@@ -124,9 +142,33 @@ export async function updateTicket(ticketId: string, projectId: string, formData
 type TicketFieldUpdate =
   | { field: "title"; value: string }
   | { field: "description"; value: string | null }
-  | { field: "status"; value: Ticket["status"] }
-  | { field: "priority"; value: Ticket["priority"] }
-  | { field: "assignee_id"; value: string | null };
+  | { field: "status"; value: Ticket["status"]; prevValue?: Ticket["status"] }
+  | { field: "priority"; value: Ticket["priority"]; prevValue?: Ticket["priority"] }
+  | { field: "assignee_id"; value: string | null; prevValue?: string | null };
+
+type NotifyWatchersType =
+  | "assignee_changed"
+  | "status_changed"
+  | "priority_changed"
+  | "comment_added";
+
+async function callNotifyWatchers(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ticketId: string,
+  type: NotifyWatchersType,
+  actorId: string,
+  metadata?: Json
+) {
+  const { error } = await supabase.rpc("notify_watchers", {
+    p_ticket_id: ticketId,
+    p_type: type,
+    p_actor_id: actorId,
+    p_metadata: metadata ?? null,
+  });
+  if (error) {
+    logger.warn(`Failed to send ${type} notification:`, error);
+  }
+}
 
 export async function updateTicketField(
   ticketId: string,
@@ -157,6 +199,37 @@ export async function updateTicketField(
     return { error: "チケットの更新に失敗しました" };
   }
 
+  if (update.field === "assignee_id" && update.value !== update.prevValue) {
+    // 新担当者が設定されており、自分以外の場合は `assigned` 通知を発行
+    if (update.value && update.value !== user.id) {
+      const { error: notifyError } = await supabase.from("notifications").insert({
+        user_id: update.value,
+        actor_id: user.id,
+        ticket_id: ticketId,
+        type: "assigned" as const,
+      });
+      if (notifyError) logger.warn("Failed to send assigned notification:", notifyError);
+    }
+    await callNotifyWatchers(supabase, ticketId, "assignee_changed", user.id, {
+      old_assignee_id: update.prevValue ?? null,
+      new_assignee_id: update.value ?? null,
+    });
+  }
+
+  if (update.field === "status" && update.value !== update.prevValue) {
+    await callNotifyWatchers(supabase, ticketId, "status_changed", user.id, {
+      old_status: update.prevValue ?? null,
+      new_status: update.value,
+    });
+  }
+
+  if (update.field === "priority" && update.value !== update.prevValue) {
+    await callNotifyWatchers(supabase, ticketId, "priority_changed", user.id, {
+      old_priority: update.prevValue ?? null,
+      new_priority: update.value,
+    });
+  }
+
   return { success: true };
 }
 
@@ -175,11 +248,25 @@ export async function addComment(
 
   try {
     await createComment(ticketId, user.id, trimmed);
-    return { success: true };
   } catch (err) {
     logger.error("Failed to add comment:", err);
     return { error: "コメントの投稿に失敗しました" };
   }
+
+  // コメント投稿後、ウォッチ中のユーザーに `comment_added` 通知を発行
+  const { error: notifyError } = await supabase.rpc("notify_watchers", {
+    p_ticket_id: ticketId,
+    p_type: "comment_added",
+    p_actor_id: user.id,
+    p_metadata: {
+      comment: body,
+    },
+  });
+  if (notifyError) {
+    logger.warn("Failed to send comment_added notification:", notifyError);
+  }
+
+  return { success: true };
 }
 
 export async function addReply(
@@ -198,11 +285,22 @@ export async function addReply(
 
   try {
     await createReply(ticketId, user.id, trimmed, replyToId);
-    return { success: true };
   } catch (err) {
     logger.error("Failed to add reply:", err);
     return { error: "返信の投稿に失敗しました" };
   }
+
+  // 返信投稿後、ウォッチ中のユーザーに `comment_added` 通知を発行
+  const { error: notifyError } = await supabase.rpc("notify_watchers", {
+    p_ticket_id: ticketId,
+    p_type: "comment_added",
+    p_actor_id: user.id,
+  });
+  if (notifyError) {
+    logger.warn("Failed to send comment_added notification:", notifyError);
+  }
+
+  return { success: true };
 }
 
 export async function editComment(

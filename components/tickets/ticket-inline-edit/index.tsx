@@ -57,7 +57,9 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
       <div className="mb-3">
         <InlineStatus
           value={localTicket.status}
-          onSave={(v) => save({ field: "status", value: v }, { status: v })}
+          onSave={(v) =>
+            save({ field: "status", value: v, prevValue: localTicket.status }, { status: v })
+          }
           disabled={isPending}
         />
       </div>
@@ -82,7 +84,12 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
           value={localTicket.assignee_id}
           currentUserId={currentUserId}
           members={members}
-          onSave={(v) => save({ field: "assignee_id", value: v }, { assignee_id: v })}
+          onSave={(v) =>
+            save(
+              { field: "assignee_id", value: v, prevValue: localTicket.assignee_id },
+              { assignee_id: v }
+            )
+          }
           disabled={isPending}
         />
 
@@ -91,7 +98,12 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
         <div>
           <InlinePriority
             value={localTicket.priority}
-            onSave={(v) => save({ field: "priority", value: v }, { priority: v })}
+            onSave={(v) =>
+              save(
+                { field: "priority", value: v, prevValue: localTicket.priority },
+                { priority: v }
+              )
+            }
             disabled={isPending}
           />
         </div>
