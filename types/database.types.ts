@@ -395,6 +395,13 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      get_ticket_watcher_emails: {
+        Args: { p_exclude_user_id: string; p_ticket_id: string };
+        Returns: {
+          email: string;
+          user_id: string;
+        }[];
+      };
       is_email_registered: { Args: { p_email: string }; Returns: boolean };
       is_project_member: { Args: { project_id: string }; Returns: boolean };
       is_project_owner: { Args: { project_id: string }; Returns: boolean };

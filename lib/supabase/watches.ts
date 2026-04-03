@@ -69,6 +69,32 @@ export async function removeWatch(ticketId: string, userId: string): Promise<voi
 }
 
 /**
+ * チケットをウォッチしているユーザーのメールアドレス一覧を取得する
+ * SECURITY DEFINER 関数経由で RLS をバイパスして取得する
+ * @param ticketId チケットID
+ * @param excludeUserId 除外するユーザーID（通知発行者）
+ * @returns ウォッチ中のユーザー { user_id, email } の配列
+ */
+export async function getWatcherEmails(
+  ticketId: string,
+  excludeUserId: string
+): Promise<{ user_id: string; email: string }[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("get_ticket_watcher_emails", {
+    p_ticket_id: ticketId,
+    p_exclude_user_id: excludeUserId,
+  });
+
+  if (error) {
+    logger.error("Failed to fetch watcher emails:", error);
+    throw error;
+  }
+
+  return (data ?? []) as { user_id: string; email: string }[];
+}
+
+/**
  * チケットをウォッチしているユーザーID一覧を取得する
  * 通知発行時にウォッチャーを特定するために使用する
  * @param ticketId チケットID

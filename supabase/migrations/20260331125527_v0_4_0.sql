@@ -170,3 +170,23 @@ CREATE POLICY "notifications_update" ON notifications
 CREATE POLICY "notifications_insert" ON notifications
   FOR INSERT TO authenticated
   WITH CHECK (actor_id = (SELECT auth.uid()));
+
+-- ----------------------------------------
+-- get_ticket_watcher_emails: SECURITY DEFINER 関数を追加
+-- 指定チケットをウォッチしているユーザーの (user_id, email) 一覧を返す
+-- 通知メール送信時にメールアドレスを取得するために使用する
+-- ----------------------------------------
+CREATE OR REPLACE FUNCTION get_ticket_watcher_emails(
+  p_ticket_id       uuid,
+  p_exclude_user_id uuid
+)
+RETURNS TABLE(user_id uuid, email text) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT tw.user_id, p.email
+  FROM ticket_watches tw
+  JOIN profiles p ON p.id = tw.user_id
+  WHERE tw.ticket_id = p_ticket_id
+    AND tw.user_id != p_exclude_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

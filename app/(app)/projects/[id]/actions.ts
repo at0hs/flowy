@@ -8,7 +8,111 @@ import { z } from "zod";
 import { Ticket } from "@/types";
 import { Json } from "@/types/database.types";
 import { createComment, updateComment, deleteComment, createReply } from "@/lib/supabase/comments";
-import { addWatch, removeWatch } from "@/lib/supabase/watches";
+import { addWatch, removeWatch, getWatcherEmails } from "@/lib/supabase/watches";
+import { sendNotificationEmail } from "@/lib/email";
+import type { NotificationEmailProps } from "@/emails/notification";
+
+// ステータスの日本語ラベル
+const STATUS_LABELS: Record<string, string> = {
+  todo: "TODO",
+  in_progress: "進行中",
+  done: "完了",
+};
+
+// 優先度の日本語ラベル
+const PRIORITY_LABELS: Record<string, string> = {
+  low: "低",
+  medium: "中",
+  high: "高",
+  urgent: "緊急",
+};
+
+/** HTMLタグを除去する（メール本文用） */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").trim();
+}
+
+/**
+ * メール通知に必要なコンテキスト（チケット情報・操作者名・チケットURL）を取得する
+ */
+async function fetchNotificationEmailContext(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ticketId: string,
+  actorId: string
+): Promise<{ ticketTitle: string; ticketUrl: string; actorName: string } | null> {
+  const [{ data: ticket }, { data: actor }] = await Promise.all([
+    supabase.from("tickets").select("title, project_id").eq("id", ticketId).single(),
+    supabase.from("profiles").select("username").eq("id", actorId).single(),
+  ]);
+  if (!ticket || !actor) return null;
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3111";
+  return {
+    ticketTitle: ticket.title,
+    ticketUrl: `${base}/projects/${ticket.project_id}/tickets/${ticketId}`,
+    actorName: actor.username,
+  };
+}
+
+/**
+ * 担当者割り当て通知メールを1人のユーザーに送信する
+ */
+async function sendAssignedNotificationEmail(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ticketId: string,
+  actorId: string,
+  assigneeId: string,
+  oldAssigneeName?: string
+): Promise<void> {
+  try {
+    const [ctx, { data: assignee }] = await Promise.all([
+      fetchNotificationEmailContext(supabase, ticketId, actorId),
+      supabase.from("profiles").select("email").eq("id", assigneeId).single(),
+    ]);
+    if (!ctx || !assignee?.email) return;
+    await sendNotificationEmail({
+      to: assignee.email,
+      type: "assigned",
+      actorName: ctx.actorName,
+      ticketTitle: ctx.ticketTitle,
+      ticketUrl: ctx.ticketUrl,
+      oldAssigneeName,
+    });
+  } catch (err) {
+    logger.warn("Failed to send assigned notification email:", err);
+  }
+}
+
+/**
+ * ウォッチャー全員に通知メールを送信する
+ */
+async function sendNotificationEmailToWatchers(
+  ticketId: string,
+  actorId: string,
+  buildProps: (ctx: {
+    ticketTitle: string;
+    ticketUrl: string;
+    actorName: string;
+  }) => NotificationEmailProps
+): Promise<void> {
+  try {
+    const supabase = await createClient();
+    const [ctx, watchers] = await Promise.all([
+      fetchNotificationEmailContext(supabase, ticketId, actorId),
+      getWatcherEmails(ticketId, actorId),
+    ]);
+    if (!ctx || watchers.length === 0) return;
+    const props = buildProps(ctx);
+    await Promise.all(
+      watchers.map(({ email }) =>
+        sendNotificationEmail({ ...props, to: email }).catch((err) =>
+          logger.warn("Failed to send notification email:", err)
+        )
+      )
+    );
+  } catch (err) {
+    logger.warn("Failed to send watcher notification emails:", err);
+  }
+}
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -79,6 +183,7 @@ export async function createTicket(projectId: string, formData: FormData) {
     if (notifyError) {
       logger.warn("Failed to send assigned notification:", notifyError);
     }
+    await sendAssignedNotificationEmail(supabase, newTicket.id, user.id, assigneeId);
   }
 
   return { success: true, projectId };
@@ -209,11 +314,39 @@ export async function updateTicketField(
         type: "assigned" as const,
       });
       if (notifyError) logger.warn("Failed to send assigned notification:", notifyError);
+      // 旧担当者名を取得してメール送信（旧担当者がいた場合のみ）
+      const oldAssigneeName = update.prevValue
+        ? (await supabase.from("profiles").select("username").eq("id", update.prevValue).single())
+            .data?.username
+        : undefined;
+      await sendAssignedNotificationEmail(
+        supabase,
+        ticketId,
+        user.id,
+        update.value,
+        oldAssigneeName
+      );
     }
     await callNotifyWatchers(supabase, ticketId, "assignee_changed", user.id, {
       old_assignee_id: update.prevValue ?? null,
       new_assignee_id: update.value ?? null,
     });
+    // ウォッチャーへ assignee_changed メールを送信
+    const [{ data: oldAssignee }, { data: newAssignee }] = await Promise.all([
+      update.prevValue
+        ? supabase.from("profiles").select("username").eq("id", update.prevValue).single()
+        : Promise.resolve({ data: null }),
+      update.value
+        ? supabase.from("profiles").select("username").eq("id", update.value).single()
+        : Promise.resolve({ data: null }),
+    ]);
+    await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+      type: "assignee_changed" as const,
+      ...ctx,
+      fieldLabel: "担当者",
+      oldValue: oldAssignee?.username ?? "なし",
+      newValue: newAssignee?.username ?? "なし",
+    }));
   }
 
   if (update.field === "status" && update.value !== update.prevValue) {
@@ -221,6 +354,13 @@ export async function updateTicketField(
       old_status: update.prevValue ?? null,
       new_status: update.value,
     });
+    await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+      type: "status_changed" as const,
+      ...ctx,
+      fieldLabel: "ステータス",
+      oldValue: STATUS_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
+      newValue: STATUS_LABELS[update.value] ?? update.value,
+    }));
   }
 
   if (update.field === "priority" && update.value !== update.prevValue) {
@@ -228,6 +368,13 @@ export async function updateTicketField(
       old_priority: update.prevValue ?? null,
       new_priority: update.value,
     });
+    await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+      type: "priority_changed" as const,
+      ...ctx,
+      fieldLabel: "優先度",
+      oldValue: PRIORITY_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
+      newValue: PRIORITY_LABELS[update.value] ?? update.value,
+    }));
   }
 
   return { success: true };
@@ -265,6 +412,11 @@ export async function addComment(
   if (notifyError) {
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
+  await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+    type: "comment_added" as const,
+    ...ctx,
+    commentBody: stripHtml(trimmed),
+  }));
 
   return { success: true };
 }
@@ -299,6 +451,11 @@ export async function addReply(
   if (notifyError) {
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
+  await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+    type: "comment_added" as const,
+    ...ctx,
+    commentBody: stripHtml(trimmed),
+  }));
 
   return { success: true };
 }
