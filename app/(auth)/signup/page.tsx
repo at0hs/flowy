@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { logger } from "@/lib/logger";
-import { acceptInvitationAction } from "@/app/(auth)/actions";
+import { confirmEmailAndAcceptInvitationAction } from "@/app/(auth)/actions";
 
 function SignupForm() {
   const router = useRouter();
@@ -35,6 +35,7 @@ function SignupForm() {
 
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSignup = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -56,18 +57,48 @@ function SignupForm() {
       return;
     }
 
-    // 招待トークンがある場合、プロジェクトメンバーに自動追加
+    // 招待トークンがある場合、メール認証スキップ + プロジェクトメンバーに自動追加
     if (token && data.user) {
       try {
-        await acceptInvitationAction(token, data.user.id);
+        await confirmEmailAndAcceptInvitationAction(token, data.user.id);
+        // メール確認済みにしたのでそのままサインインしてセッションを確立
+        await supabase.auth.signInWithPassword({ email, password });
       } catch (err) {
-        logger.error("failed to accept invitation: ", err);
-        // 招待受け入れに失敗しても登録自体は成功しているため、そのまま続行
+        logger.error("failed to confirm email or accept invitation: ", err);
+        // 失敗しても登録自体は成功しているため、そのまま続行
       }
+      router.push("/projects");
+      return;
     }
 
-    router.push("/projects");
+    // 通常サインアップ：確認メール送信済み画面を表示
+    setEmailSent(true);
+    setIsLoading(false);
   };
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-sm">
+          <CardHeader>
+            <CardTitle>確認メールを送信しました</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <p>
+              <span className="text-foreground font-bold">{email}</span>{" "}
+              に確認メールを送信しました。
+            </p>
+            <p>メール内のリンクをクリックして、メールアドレスを認証してください。</p>
+          </CardContent>
+          <CardFooter>
+            <p className="text-sm text-muted-foreground">
+              メールが届かない場合はスパムフォルダをご確認ください。
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center">
