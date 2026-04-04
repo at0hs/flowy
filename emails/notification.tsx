@@ -19,6 +19,7 @@ export type NotificationEmailProps =
       actorName: string;
       ticketTitle: string;
       ticketUrl: string;
+      projectName: string;
       oldAssigneeName?: string;
     }
   | {
@@ -26,6 +27,7 @@ export type NotificationEmailProps =
       actorName: string;
       ticketTitle: string;
       ticketUrl: string;
+      projectName: string;
       fieldLabel: string;
       oldValue: string;
       newValue: string;
@@ -35,6 +37,7 @@ export type NotificationEmailProps =
       actorName: string;
       ticketTitle: string;
       ticketUrl: string;
+      projectName: string;
       commentBody: string;
     };
 
@@ -54,6 +57,7 @@ function AssignedEmail({
   actorName = "田中太郎",
   ticketTitle = "ログイン画面のバリデーションを修正する",
   ticketUrl = "http://localhost:3111/projects/xxx/tickets/yyy",
+  projectName = "サンプルプロジェクト",
   oldAssigneeName,
 }: Extract<NotificationEmailProps, { type: "assigned" }>) {
   return (
@@ -65,6 +69,7 @@ function AssignedEmail({
           <Text style={brand}>Flowy</Text>
 
           <Heading style={heading}>チケットに割り当てられました</Heading>
+          <Text style={projectLabel}>{projectName}</Text>
 
           <Text style={paragraph}>
             <strong>{actorName}</strong>さんがあなたを「
@@ -102,6 +107,7 @@ function ChangeEmail({
   actorName = "田中太郎",
   ticketTitle = "ログイン画面のバリデーションを修正する",
   ticketUrl = "http://localhost:3111/projects/xxx/tickets/yyy",
+  projectName = "サンプルプロジェクト",
   fieldLabel = "ステータス",
   oldValue = "TODO",
   newValue = "進行中",
@@ -120,6 +126,7 @@ function ChangeEmail({
           <Text style={brand}>Flowy</Text>
 
           <Heading style={heading}>チケットが更新されました</Heading>
+          <Text style={projectLabel}>{projectName}</Text>
 
           <Text style={paragraph}>
             <strong>{actorName}</strong>さんが「<strong>{ticketTitle}</strong>」の
@@ -155,6 +162,7 @@ function CommentAddedEmail({
   actorName = "田中太郎",
   ticketTitle = "ログイン画面のバリデーションを修正する",
   ticketUrl = "http://localhost:3111/projects/xxx/tickets/yyy",
+  projectName = "サンプルプロジェクト",
   commentBody = "確認しました。修正内容に問題ありません。",
 }: Extract<NotificationEmailProps, { type: "comment_added" }>) {
   const truncated = commentBody.length > 100 ? commentBody.slice(0, 100) + "…" : commentBody;
@@ -168,6 +176,7 @@ function CommentAddedEmail({
           <Text style={brand}>Flowy</Text>
 
           <Heading style={heading}>新しいコメントがあります</Heading>
+          <Text style={projectLabel}>{projectName}</Text>
 
           <Text style={paragraph}>
             <strong>{actorName}</strong>さんが「<strong>{ticketTitle}</strong>
@@ -220,6 +229,12 @@ const heading: React.CSSProperties = {
   fontSize: "22px",
   fontWeight: "700",
   color: "#09090b",
+  margin: "0 0 6px",
+};
+
+const projectLabel: React.CSSProperties = {
+  fontSize: "13px",
+  color: "#a1a1aa",
   margin: "0 0 20px",
 };
 

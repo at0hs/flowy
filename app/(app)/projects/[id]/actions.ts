@@ -39,17 +39,28 @@ async function fetchNotificationEmailContext(
   supabase: Awaited<ReturnType<typeof createClient>>,
   ticketId: string,
   actorId: string
-): Promise<{ ticketTitle: string; ticketUrl: string; actorName: string } | null> {
+): Promise<{
+  ticketTitle: string;
+  ticketUrl: string;
+  actorName: string;
+  projectName: string;
+} | null> {
   const [{ data: ticket }, { data: actor }] = await Promise.all([
-    supabase.from("tickets").select("title, project_id").eq("id", ticketId).single(),
+    supabase
+      .from("tickets")
+      .select("title, project_id, projects(name)")
+      .eq("id", ticketId)
+      .single(),
     supabase.from("profiles").select("username").eq("id", actorId).single(),
   ]);
   if (!ticket || !actor) return null;
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3111";
+  const project = ticket.projects as { name: string } | null;
   return {
     ticketTitle: ticket.title,
     ticketUrl: `${base}/projects/${ticket.project_id}/tickets/${ticketId}`,
     actorName: actor.username,
+    projectName: project?.name ?? "",
   };
 }
 
@@ -75,6 +86,7 @@ async function sendAssignedNotificationEmail(
       actorName: ctx.actorName,
       ticketTitle: ctx.ticketTitle,
       ticketUrl: ctx.ticketUrl,
+      projectName: ctx.projectName,
       oldAssigneeName,
     });
   } catch (err) {
@@ -92,6 +104,7 @@ async function sendNotificationEmailToWatchers(
     ticketTitle: string;
     ticketUrl: string;
     actorName: string;
+    projectName: string;
   }) => NotificationEmailProps
 ): Promise<void> {
   try {
