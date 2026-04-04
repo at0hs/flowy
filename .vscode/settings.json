@@ -12,7 +12,8 @@
 		".git/{index,*refs,*HEAD}",
 		".vscode",
 		".vscode-insiders",
-		".gitignore"
+		".gitignore",
+		"*.toml"
 	],
 	"cSpell.words": [
 		"fkey",

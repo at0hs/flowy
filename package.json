@@ -20,7 +20,8 @@
     "sb:push": "supabase db push",
     "sb:lint": "supabase db lint",
     "sb:migration": "npm run sb:reset && npm run sb:lint && npm run gen:types",
-    "email:dev": "email dev --dir emails"
+    "email:dev": "email dev --dir emails",
+    "build:emails": "tsx scripts/build-emails.ts"
   },
   "dependencies": {
     "@react-email/components": "^1.0.10",
@@ -60,7 +61,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "@react-email/render": "^1.0.6",
     "supabase": "^2.84.4",
+    "tsx": "^4.19.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

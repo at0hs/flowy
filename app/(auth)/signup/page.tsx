@@ -42,11 +42,13 @@ function SignupForm() {
     setErrorMessage("");
     setIsLoading(true);
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3111";
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { username: username },
+        emailRedirectTo: `${appUrl}/login`,
       },
     });
 
