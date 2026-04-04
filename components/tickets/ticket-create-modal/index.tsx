@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 import { Ticket } from "@/types";
@@ -140,6 +141,7 @@ export function TicketCreateModal({
       <DialogContent className="sm:max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>チケット作成</DialogTitle>
+          <DialogDescription>必須フィールドにはアスタリスクが付いています *</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
@@ -152,61 +154,9 @@ export function TicketCreateModal({
               <Input id="modal-title" name="title" required />
             </div>
 
-            {/* 説明 */}
-            <div className="space-y-2">
-              <Label>説明</Label>
-              <RichTextEditor
-                value={description}
-                onChange={setDescription}
-                placeholder="説明を入力..."
-              />
-            </div>
-
-            <Separator />
-
-            {/* 担当者 */}
-            <div className="flex items-center gap-4">
-              <Label className="w-24 shrink-0 text-muted-foreground">担当者</Label>
-              <Select value={assigneeId} onValueChange={setAssigneeId}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="担当者を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">未選択（担当者なし）</SelectItem>
-                  {members.map((member) => (
-                    <SelectItem key={member.user_id} value={member.user_id}>
-                      {member.profile.username || member.profile.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* 親チケット */}
-            {rootTickets.length > 0 && (
-              <div className="flex items-center gap-4">
-                <Label className="w-24 shrink-0 text-muted-foreground">親チケット</Label>
-                <Select value={parentId} onValueChange={setParentId}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="親チケットを選択" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">なし</SelectItem>
-                    {rootTickets.map((ticket) => (
-                      <SelectItem key={ticket.id} value={ticket.id}>
-                        {ticket.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <Separator />
-
             {/* ステータス */}
             <div className="flex items-center gap-4">
-              <Label className="w-24 shrink-0 text-muted-foreground">ステータス *</Label>
+              <Label className="w-24 shrink-0">ステータス *</Label>
               <Select value={status} onValueChange={(v) => setStatus(v as Ticket["status"])}>
                 <SelectTrigger
                   className={`w-auto h-7 px-3 text-xs font-medium border-0 shadow-none rounded-sm gap-1 transition-colors ${currentStatus.className}`}
@@ -223,11 +173,39 @@ export function TicketCreateModal({
               </Select>
             </div>
 
+            {/* 説明 */}
+            <div className="space-y-2">
+              <Label>説明</Label>
+              <RichTextEditor
+                value={description}
+                onChange={setDescription}
+                placeholder="説明を入力..."
+              />
+            </div>
+
+            {/* 担当者 */}
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0 text-muted-foreground">担当者</Label>
+              <Select value={assigneeId} onValueChange={setAssigneeId}>
+                <SelectTrigger className="w-80">
+                  <SelectValue placeholder="担当者を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">未選択（担当者なし）</SelectItem>
+                  {members.map((member) => (
+                    <SelectItem key={member.user_id} value={member.user_id}>
+                      {member.profile.username || member.profile.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* 優先度 */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0 text-muted-foreground">優先度 *</Label>
               <Select value={priority} onValueChange={(v) => setPriority(v as Ticket["priority"])}>
-                <SelectTrigger className="min-w-30 w-auto h-8 px-2 border-0 shadow-none bg-transparent hover:bg-muted rounded-sm gap-1.5 transition-colors focus:ring-0 focus-visible:ring-0 [&>svg:last-child]:hidden">
+                <SelectTrigger className="w-80">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -243,6 +221,28 @@ export function TicketCreateModal({
               </Select>
             </div>
           </div>
+
+          <Separator className="my-6" />
+
+          {/* 親チケット */}
+          {rootTickets.length > 0 && (
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0 text-muted-foreground">親チケット</Label>
+              <Select value={parentId} onValueChange={setParentId}>
+                <SelectTrigger className="w-80 overflow-hidden *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate">
+                  <SelectValue placeholder="親チケットを選択" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  <SelectItem value="none">なし</SelectItem>
+                  {rootTickets.map((ticket) => (
+                    <SelectItem key={ticket.id} value={ticket.id}>
+                      <span className="block truncate max-w-80">{ticket.title}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <DialogFooter className="mt-4">
             <Button type="submit" disabled={isLoading}>

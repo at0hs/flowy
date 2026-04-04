@@ -100,14 +100,14 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
 
   return (
     <div className="border rounded-lg overflow-hidden">
-      <table className="w-full">
+      <table className="w-full table-fixed">
         <thead>
           <tr className="border-b bg-muted/50">
-            <th className="px-6 py-3 text-left text-sm font-semibold">タイトル</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">担当者</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">優先度</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">ステータス</th>
-            <th className="px-6 py-3 text-left text-sm font-semibold">作成日</th>
+            <th className="w-[40%] px-6 py-3 text-left text-sm font-semibold">タイトル</th>
+            <th className="w-[18%] px-6 py-3 text-left text-sm font-semibold">担当者</th>
+            <th className="w-[12%] px-6 py-3 text-left text-sm font-semibold">優先度</th>
+            <th className="w-[15%] px-6 py-3 text-left text-sm font-semibold">ステータス</th>
+            <th className="w-[15%] px-6 py-3 text-left text-sm font-semibold">作成日</th>
           </tr>
         </thead>
         <tbody>
@@ -120,7 +120,9 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
             return (
               <tr key={ticket.id} className="border-b hover:bg-muted/50 transition-colors text-sm">
                 <td className="px-6 py-3">
-                  <div className={`flex items-center gap-1 ${isChild ? "pl-8" : ""}`}>
+                  <div
+                    className={`flex items-center gap-1 overflow-hidden ${isChild ? "pl-8" : ""}`}
+                  >
                     {hasChildren && (
                       <button
                         onClick={() => toggleCollapse(ticket.id)}
@@ -138,9 +140,9 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
                     )}
                     <Link
                       href={`/projects/${ticket.project_id}/tickets/${ticket.id}`}
-                      className="font-medium text-primary hover:underline"
+                      className="min-w-0 truncate font-medium text-primary hover:underline"
                     >
-                      {ticket.title.length > 14 ? `${ticket.title.slice(0, 14)}...` : ticket.title}
+                      {ticket.title}
                     </Link>
                   </div>
                 </td>
