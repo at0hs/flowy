@@ -140,7 +140,7 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
                       href={`/projects/${ticket.project_id}/tickets/${ticket.id}`}
                       className="font-medium text-primary hover:underline"
                     >
-                      {ticket.title}
+                      {ticket.title.length > 14 ? `${ticket.title.slice(0, 14)}...` : ticket.title}
                     </Link>
                   </div>
                 </td>

@@ -9,6 +9,7 @@ import { Suspense } from "react";
 import { ticketsQuerySchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { getProjectMembers } from "@/lib/supabase/members";
+import { ArrowLeft } from "lucide-react";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -88,14 +89,18 @@ export default async function TicketsPage({ params, searchParams }: Props) {
 
   return (
     <div className="max-w-4xl mx-auto p-8">
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <Link href="/projects" className="text-sm text-muted-foreground hover:underline">
-            ← プロジェクト一覧
-          </Link>
+      <div className="flex flex-col mb-2">
+        <Link
+          href="/projects"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:underline w-fit"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          プロジェクト一覧
+        </Link>
+        <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold mt-1">{project.name}</h1>
+          <TicketCreateModal projectId={id} members={members} rootTickets={rootTickets} />
         </div>
-        <TicketCreateModal projectId={id} members={members} rootTickets={rootTickets} />
       </div>
 
       {project.description && (

@@ -304,67 +304,6 @@ function CommentItem({
             {formatCommentDate(comment.created_at, comment.updated_at)}
           </span>
         </span>
-        <div className="flex items-center gap-1">
-          {/* 返信ボタン（編集中は非表示） */}
-          {!isEditing && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 px-2 text-xs text-muted-foreground"
-              onClick={() => onReplyRequest(rootId)}
-            >
-              <CornerDownRight className="h-3 w-3 mr-1" />
-              返信
-            </Button>
-          )}
-
-          {/* 編集・削除ボタン（自分のコメントのみ） */}
-          {comment.user_id === currentUserId && !isEditing && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={() => onEditStart(comment.id, comment.body)}
-                disabled={isEditPending}
-              >
-                <SquarePen className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-destructive hover:text-destructive"
-                onClick={() => onDeleteRequest(comment.id)}
-                disabled={isDeletePending}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-              <Dialog
-                open={deleteTargetId === comment.id}
-                onOpenChange={(open) => !open && onDeleteCancel()}
-              >
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>コメントを削除しますか？</DialogTitle>
-                    <DialogDescription>この操作は取り消せません。</DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={onDeleteCancel} disabled={isDeletePending}>
-                      キャンセル
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => onDeleteConfirm(comment.id)}
-                      disabled={isDeletePending}
-                    >
-                      {isDeletePending ? "削除中..." : "削除"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </>
-          )}
-        </div>
       </div>
 
       {isEditing ? (
@@ -393,6 +332,67 @@ function CommentItem({
           <RichTextContent html={comment.body} />
         </div>
       )}
+      <div className="flex items-center ml-2 gap-1">
+        {/* 返信ボタン（編集中は非表示） */}
+        {!isEditing && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs text-muted-foreground"
+            onClick={() => onReplyRequest(rootId)}
+          >
+            <CornerDownRight className="h-3 w-3 mr-1" />
+            返信
+          </Button>
+        )}
+
+        {/* 編集・削除ボタン（自分のコメントのみ） */}
+        {comment.user_id === currentUserId && !isEditing && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onEditStart(comment.id, comment.body)}
+              disabled={isEditPending}
+            >
+              <SquarePen className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onDeleteRequest(comment.id)}
+              disabled={isDeletePending}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+            <Dialog
+              open={deleteTargetId === comment.id}
+              onOpenChange={(open) => !open && onDeleteCancel()}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>コメントを削除しますか？</DialogTitle>
+                  <DialogDescription>この操作は取り消せません。</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={onDeleteCancel} disabled={isDeletePending}>
+                    キャンセル
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => onDeleteConfirm(comment.id)}
+                    disabled={isDeletePending}
+                  >
+                    {isDeletePending ? "削除中..." : "削除"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
+      </div>
     </div>
   );
 }

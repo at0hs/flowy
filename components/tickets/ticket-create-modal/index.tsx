@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/editor/rich-text-editor";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -16,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { EqualIcon, ChevronsDownIcon, ChevronUpIcon, ChevronsUpIcon, Plus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,33 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
+import { Ticket } from "@/types";
+
+const STATUS_OPTIONS: { value: Ticket["status"]; label: string; className: string }[] = [
+  { value: "todo", label: "TODO", className: "bg-slate-500/20 text-black hover:bg-slate-500/30" },
+  {
+    value: "in_progress",
+    label: "進行中",
+    className: "bg-blue-500/20 text-black hover:bg-blue-500/30",
+  },
+  {
+    value: "done",
+    label: "完了",
+    className: "bg-green-500/20 text-black hover:bg-green-500/30",
+  },
+];
+
+const PRIORITY_OPTIONS: {
+  value: Ticket["priority"];
+  label: string;
+  icon: React.ElementType;
+  iconColor: string;
+}[] = [
+  { value: "low", label: "低", icon: ChevronsDownIcon, iconColor: "text-blue-400" },
+  { value: "medium", label: "中", icon: EqualIcon, iconColor: "text-orange-300" },
+  { value: "high", label: "高", icon: ChevronUpIcon, iconColor: "text-red-400" },
+  { value: "urgent", label: "緊急", icon: ChevronsUpIcon, iconColor: "text-red-400" },
+];
 
 interface RootTicket {
   id: string;
@@ -53,6 +80,8 @@ export function TicketCreateModal({
   const [assigneeId, setAssigneeId] = useState<string>("none");
   const [description, setDescription] = useState("");
   const [parentId, setParentId] = useState<string>(defaultParentId ?? "none");
+  const [status, setStatus] = useState<Ticket["status"]>("todo");
+  const [priority, setPriority] = useState<Ticket["priority"]>("medium");
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,6 +91,8 @@ export function TicketCreateModal({
     const formData = new FormData(e.currentTarget);
     formData.set("assignee_id", assigneeId === "none" ? "" : assigneeId);
     formData.set("parent_id", parentId === "none" ? "" : parentId);
+    formData.set("status", status);
+    formData.set("priority", priority);
     const isDescriptionEmpty = !description || description === "<p></p>";
     formData.set("description", isDescriptionEmpty ? "" : description);
 
@@ -73,6 +104,8 @@ export function TicketCreateModal({
       setOpen(false);
       setAssigneeId("none");
       setParentId(defaultParentId ?? "none");
+      setStatus("todo");
+      setPriority("medium");
       setDescription("");
       router.refresh();
     }
@@ -84,10 +117,14 @@ export function TicketCreateModal({
       setErrorMessage("");
       setAssigneeId("none");
       setParentId(defaultParentId ?? "none");
+      setStatus("todo");
+      setPriority("medium");
       setDescription("");
     }
     setOpen(nextOpen);
   };
+
+  const currentStatus = STATUS_OPTIONS.find((s) => s.value === status)!;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -96,10 +133,11 @@ export function TicketCreateModal({
           variant={triggerLabel ? "outline" : "default"}
           size={triggerLabel ? "sm" : "default"}
         >
-          {triggerLabel ?? "+ チケット作成"}
+          <Plus />
+          {triggerLabel ?? "チケット作成"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
+      <DialogContent className="sm:max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>チケット作成</DialogTitle>
         </DialogHeader>
@@ -127,10 +165,10 @@ export function TicketCreateModal({
             <Separator />
 
             {/* 担当者 */}
-            <div className="space-y-2">
-              <Label>担当者</Label>
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0 text-muted-foreground">担当者</Label>
               <Select value={assigneeId} onValueChange={setAssigneeId}>
-                <SelectTrigger>
+                <SelectTrigger className="flex-1">
                   <SelectValue placeholder="担当者を選択" />
                 </SelectTrigger>
                 <SelectContent>
@@ -146,10 +184,10 @@ export function TicketCreateModal({
 
             {/* 親チケット */}
             {rootTickets.length > 0 && (
-              <div className="space-y-2">
-                <Label>親チケット</Label>
+              <div className="flex items-center gap-4">
+                <Label className="w-24 shrink-0 text-muted-foreground">親チケット</Label>
                 <Select value={parentId} onValueChange={setParentId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="flex-1">
                     <SelectValue placeholder="親チケットを選択" />
                   </SelectTrigger>
                   <SelectContent>
@@ -167,47 +205,42 @@ export function TicketCreateModal({
             <Separator />
 
             {/* ステータス */}
-            <div className="space-y-3">
-              <Label>ステータス *</Label>
-              <RadioGroup name="status" defaultValue="todo">
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="todo" id="modal-todo" />
-                  <Label htmlFor="modal-todo">TODO</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="in_progress" id="modal-in_progress" />
-                  <Label htmlFor="modal-in_progress">進行中</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="done" id="modal-done" />
-                  <Label htmlFor="modal-done">完了</Label>
-                </div>
-              </RadioGroup>
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0 text-muted-foreground">ステータス *</Label>
+              <Select value={status} onValueChange={(v) => setStatus(v as Ticket["status"])}>
+                <SelectTrigger
+                  className={`w-auto h-7 px-3 text-xs font-medium border-0 shadow-none rounded-sm gap-1 transition-colors ${currentStatus.className}`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <Separator />
-
             {/* 優先度 */}
-            <div className="space-y-3">
-              <Label>優先度 *</Label>
-              <RadioGroup name="priority" defaultValue="medium">
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="low" id="modal-low" />
-                  <Label htmlFor="modal-low">低</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="medium" id="modal-medium" />
-                  <Label htmlFor="modal-medium">中</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="high" id="modal-high" />
-                  <Label htmlFor="modal-high">高</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="urgent" id="modal-urgent" />
-                  <Label htmlFor="modal-urgent">緊急</Label>
-                </div>
-              </RadioGroup>
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0 text-muted-foreground">優先度 *</Label>
+              <Select value={priority} onValueChange={(v) => setPriority(v as Ticket["priority"])}>
+                <SelectTrigger className="min-w-30 w-auto h-8 px-2 border-0 shadow-none bg-transparent hover:bg-muted rounded-sm gap-1.5 transition-colors focus:ring-0 focus-visible:ring-0 [&>svg:last-child]:hidden">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRIORITY_OPTIONS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      <div className="flex items-center gap-2">
+                        <p.icon className={`w-4 h-4 stroke-[3px] ${p.iconColor}`} />
+                        {p.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

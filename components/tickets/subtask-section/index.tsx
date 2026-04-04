@@ -31,7 +31,7 @@ export function SubtaskSection({
           projectId={projectId}
           members={members}
           defaultParentId={parentTicketId}
-          triggerLabel="+ サブタスクを追加"
+          triggerLabel="サブタスクを追加"
         />
       </div>
 
