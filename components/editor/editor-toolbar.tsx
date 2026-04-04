@@ -64,7 +64,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.h1)}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        aria-label="見出し1"
+        tooltip="見出し1 (Ctrl+Alt+1)"
       >
         <Heading1 className="h-4 w-4" />
       </Button>
@@ -74,7 +74,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.h2)}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        aria-label="見出し2"
+        tooltip="見出し2 (Ctrl+Alt+2)"
       >
         <Heading2 className="h-4 w-4" />
       </Button>
@@ -84,7 +84,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.h3)}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        aria-label="見出し3"
+        tooltip="見出し3 (Ctrl+Alt+3)"
       >
         <Heading3 className="h-4 w-4" />
       </Button>
@@ -98,7 +98,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.bold)}
         onClick={() => editor.chain().focus().toggleBold().run()}
-        aria-label="太字"
+        tooltip="太字 (Ctrl+B)"
       >
         <Bold className="h-4 w-4" />
       </Button>
@@ -108,7 +108,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.italic)}
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        aria-label="斜体"
+        tooltip="斜体 (Ctrl+I)"
       >
         <Italic className="h-4 w-4" />
       </Button>
@@ -118,7 +118,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.strike)}
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        aria-label="取り消し線"
+        tooltip="取り消し線 (Ctrl+Shift+X)"
       >
         <Strikethrough className="h-4 w-4" />
       </Button>
@@ -132,7 +132,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.bulletList)}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        aria-label="箇条書きリスト"
+        tooltip="箇条書きリスト (Ctrl+Shift+8)"
       >
         <List className="h-4 w-4" />
       </Button>
@@ -142,7 +142,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.orderedList)}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        aria-label="番号付きリスト"
+        tooltip="番号付きリスト (Ctrl+Shift+7)"
       >
         <ListOrdered className="h-4 w-4" />
       </Button>
@@ -156,7 +156,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.codeBlock)}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        aria-label="コードブロック"
+        tooltip="コードブロック (Ctrl+Alt+C)"
       >
         <Code2 className="h-4 w-4" />
       </Button>
@@ -166,7 +166,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.blockquote)}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        aria-label="引用"
+        tooltip="引用 (Ctrl+Shift+B)"
       >
         <Quote className="h-4 w-4" />
       </Button>
@@ -186,7 +186,7 @@ function TableInsertItem({ editor }: { editor: Editor }) {
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" size="sm" variant="ghost" aria-label="テーブル挿入">
+        <Button type="button" size="sm" variant="ghost" tooltip="テーブル挿入">
           <Table2 className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -290,7 +290,7 @@ function LinkToolbarItem({ editor }: { editor: Editor }) {
           variant="ghost"
           className={getActiveClass(isLinkActive)}
           onClick={openLinkPopover}
-          aria-label="リンク"
+          tooltip="リンク"
         >
           <Link className="h-4 w-4" />
         </Button>
@@ -380,7 +380,7 @@ function TableActionToolbar({ editor }: { editor: Editor }) {
         size="sm"
         variant="ghost"
         onClick={() => editor.chain().focus().addRowAfter().run()}
-        aria-label="行を追加"
+        tooltip="行を追加（選択行の下）"
       >
         <SquarePlusIcon className="h-4 w-4" />
       </Button>
@@ -389,7 +389,7 @@ function TableActionToolbar({ editor }: { editor: Editor }) {
         size="sm"
         variant="ghost"
         onClick={() => editor.chain().focus().deleteRow().run()}
-        aria-label="行を削除"
+        tooltip="行を削除"
       >
         <SquareMinusIcon className="h-4 w-4" />
       </Button>
@@ -400,7 +400,7 @@ function TableActionToolbar({ editor }: { editor: Editor }) {
         size="sm"
         variant="ghost"
         onClick={() => editor.chain().focus().addColumnAfter().run()}
-        aria-label="列を追加"
+        tooltip="列を追加（選択列の右）"
       >
         <SquarePlusIcon className="h-4 w-4" />
       </Button>
@@ -409,7 +409,7 @@ function TableActionToolbar({ editor }: { editor: Editor }) {
         size="sm"
         variant="ghost"
         onClick={() => editor.chain().focus().deleteColumn().run()}
-        aria-label="列を削除"
+        tooltip="列を削除"
       >
         <SquareMinusIcon className="h-4 w-4" />
       </Button>
@@ -419,7 +419,7 @@ function TableActionToolbar({ editor }: { editor: Editor }) {
         size="sm"
         variant="ghost"
         onClick={() => editor.chain().focus().deleteTable().run()}
-        aria-label="テーブル削除"
+        tooltip="テーブルを削除"
       >
         <Trash2 className="h-4 w-4" />
       </Button>

@@ -332,17 +332,17 @@ function CommentItem({
           <RichTextContent html={comment.body} />
         </div>
       )}
-      <div className="flex items-center ml-2 gap-1">
+      <div className="flex items-center ml-2.5 gap-1">
         {/* 返信ボタン（編集中は非表示） */}
         {!isEditing && (
           <Button
             variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-xs text-muted-foreground"
+            size="icon"
+            className="h-6 w-6 text-muted-foreground"
             onClick={() => onReplyRequest(rootId)}
+            tooltip="返信"
           >
-            <CornerDownRight className="h-3 w-3 mr-1" />
-            返信
+            <CornerDownRight className="h-3.5 w-3.5" />
           </Button>
         )}
 
@@ -352,18 +352,20 @@ function CommentItem({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-6 w-6 text-muted-foreground"
               onClick={() => onEditStart(comment.id, comment.body)}
               disabled={isEditPending}
+              tooltip="編集"
             >
               <SquarePen className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-6 w-6 text-muted-foreground"
               onClick={() => onDeleteRequest(comment.id)}
               disabled={isDeletePending}
+              tooltip="削除"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
