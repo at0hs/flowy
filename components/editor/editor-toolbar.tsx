@@ -30,13 +30,30 @@ interface EditorToolbarProps {
   editor: Editor | null;
 }
 
+const getActiveClass = (isActive: boolean) =>
+  isActive
+    ? "bg-primary/15 text-primary ring-1 ring-inset ring-primary/30 hover:bg-primary/20 hover:text-primary"
+    : "";
+
 /**
  * 基本的なテキスト編集ツールバー（見出し・装飾・リスト・ブロック）
- * ステートレスコンポーネント
  */
 function PrimaryToolbar({ editor }: { editor: Editor }) {
-  const getButtonVariant = (isActive: boolean) =>
-    isActive ? ("secondary" as const) : ("ghost" as const);
+  const activeStates = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      h1: ctx.editor?.isActive("heading", { level: 1 }) ?? false,
+      h2: ctx.editor?.isActive("heading", { level: 2 }) ?? false,
+      h3: ctx.editor?.isActive("heading", { level: 3 }) ?? false,
+      bold: ctx.editor?.isActive("bold") ?? false,
+      italic: ctx.editor?.isActive("italic") ?? false,
+      strike: ctx.editor?.isActive("strike") ?? false,
+      bulletList: ctx.editor?.isActive("bulletList") ?? false,
+      orderedList: ctx.editor?.isActive("orderedList") ?? false,
+      codeBlock: ctx.editor?.isActive("codeBlock") ?? false,
+      blockquote: ctx.editor?.isActive("blockquote") ?? false,
+    }),
+  });
 
   return (
     <>
@@ -44,7 +61,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("heading", { level: 1 }))}
+        variant="ghost"
+        className={getActiveClass(activeStates.h1)}
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         aria-label="見出し1"
       >
@@ -53,7 +71,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("heading", { level: 2 }))}
+        variant="ghost"
+        className={getActiveClass(activeStates.h2)}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         aria-label="見出し2"
       >
@@ -62,7 +81,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("heading", { level: 3 }))}
+        variant="ghost"
+        className={getActiveClass(activeStates.h3)}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         aria-label="見出し3"
       >
@@ -75,7 +95,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("bold"))}
+        variant="ghost"
+        className={getActiveClass(activeStates.bold)}
         onClick={() => editor.chain().focus().toggleBold().run()}
         aria-label="太字"
       >
@@ -84,7 +105,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("italic"))}
+        variant="ghost"
+        className={getActiveClass(activeStates.italic)}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         aria-label="斜体"
       >
@@ -93,7 +115,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("strike"))}
+        variant="ghost"
+        className={getActiveClass(activeStates.strike)}
         onClick={() => editor.chain().focus().toggleStrike().run()}
         aria-label="取り消し線"
       >
@@ -106,7 +129,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("bulletList"))}
+        variant="ghost"
+        className={getActiveClass(activeStates.bulletList)}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         aria-label="箇条書きリスト"
       >
@@ -115,7 +139,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("orderedList"))}
+        variant="ghost"
+        className={getActiveClass(activeStates.orderedList)}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         aria-label="番号付きリスト"
       >
@@ -128,7 +153,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("codeBlock"))}
+        variant="ghost"
+        className={getActiveClass(activeStates.codeBlock)}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         aria-label="コードブロック"
       >
@@ -137,7 +163,8 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
       <Button
         type="button"
         size="sm"
-        variant={getButtonVariant(editor.isActive("blockquote"))}
+        variant="ghost"
+        className={getActiveClass(activeStates.blockquote)}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         aria-label="引用"
       >
@@ -217,6 +244,10 @@ function LinkToolbarItem({ editor }: { editor: Editor }) {
   const [linkUrl, setLinkUrl] = useState("");
   const [linkText, setLinkText] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const isLinkActive = useEditorState({
+    editor,
+    selector: (ctx) => ctx.editor?.isActive("link") ?? false,
+  });
 
   function applyLink() {
     if (!linkUrl) {
@@ -250,16 +281,14 @@ function LinkToolbarItem({ editor }: { editor: Editor }) {
     setIsOpen(true);
   }
 
-  const getButtonVariant = (isActive: boolean) =>
-    isActive ? ("secondary" as const) : ("ghost" as const);
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           type="button"
           size="sm"
-          variant={getButtonVariant(editor.isActive("link"))}
+          variant="ghost"
+          className={getActiveClass(isLinkActive)}
           onClick={openLinkPopover}
           aria-label="リンク"
         >
@@ -295,7 +324,7 @@ function LinkToolbarItem({ editor }: { editor: Editor }) {
             <Button type="button" size="sm" onClick={applyLink}>
               適用
             </Button>
-            {editor.isActive("link") && (
+            {isLinkActive && (
               <Button
                 type="button"
                 size="sm"
