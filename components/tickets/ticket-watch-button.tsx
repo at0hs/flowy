@@ -29,21 +29,20 @@ export function TicketWatchButton({ ticketId, isWatching }: TicketWatchButtonPro
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       size="sm"
       onClick={handleClick}
       disabled={isPending}
       className="gap-1.5"
+      tooltip={isWatching ? "ウォッチ解除" : "ウォッチ"}
     >
       {isWatching ? (
         <>
           <EyeOff className="h-4 w-4" />
-          ウォッチ解除
         </>
       ) : (
         <>
           <Eye className="h-4 w-4" />
-          ウォッチ
         </>
       )}
     </Button>

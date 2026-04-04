@@ -73,7 +73,13 @@ function AssignedEmail({
 
           <Section style={changeBox}>
             <Text style={changeLabel}>変更内容</Text>
-            <Text style={changeValue}>担当者: {oldAssigneeName ?? "なし"} → あなた</Text>
+            <Text style={changeValue}>
+              担当者:{" "}
+              <span style={{ color: "#a1a1aa", textDecoration: "line-through" }}>
+                {oldAssigneeName ?? "なし"}
+              </span>{" "}
+              → あなた
+            </Text>
           </Section>
 
           <Section style={buttonContainer}>
@@ -123,7 +129,9 @@ function ChangeEmail({
           <Section style={changeBox}>
             <Text style={changeLabel}>変更内容</Text>
             <Text style={changeValue}>
-              {fieldLabel}: {oldValue} → {newValue}
+              {fieldLabel}:{" "}
+              <span style={{ color: "#a1a1aa", textDecoration: "line-through" }}>{oldValue}</span> →{" "}
+              {newValue}
             </Text>
           </Section>
 

@@ -118,7 +118,7 @@ function PrimaryToolbar({ editor }: { editor: Editor }) {
         variant="ghost"
         className={getActiveClass(activeStates.strike)}
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        tooltip="取り消し線 (Ctrl+Shift+X)"
+        tooltip="取り消し線 (Ctrl+Shift+S)"
       >
         <Strikethrough className="h-4 w-4" />
       </Button>

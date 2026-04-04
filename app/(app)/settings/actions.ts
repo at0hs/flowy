@@ -39,7 +39,13 @@ export async function updateProfile(formData: FormData) {
   // メールアドレスが変更された場合は auth.users を更新
   // profiles.email はトリガー（on_auth_user_email_updated）によって自動同期される
   if (emailChanged) {
-    const { error: authError } = await supabase.auth.updateUser({ email: email.trim() });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3111";
+    const { error: authError } = await supabase.auth.updateUser(
+      { email: email.trim() },
+      {
+        emailRedirectTo: `${appUrl}/login`,
+      }
+    );
     if (authError) {
       logger.error("Failed to update auth email:", authError);
       return { error: "メールアドレスの更新に失敗しました" };

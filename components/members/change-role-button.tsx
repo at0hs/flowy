@@ -74,7 +74,7 @@ export function ChangeRoleButton({
           <SelectItem value="owner">オーナー</SelectItem>
           <SelectItem value="member" disabled={isLastOwner}>
             メンバー
-            {isLastOwner && "（最後のオーナーは降格不可）"}
+            {isLastOwner && "（最後のオーナーは変更不可）"}
           </SelectItem>
         </SelectContent>
       </Select>
