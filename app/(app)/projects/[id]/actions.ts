@@ -213,7 +213,7 @@ export async function deleteTicket(ticketId: string, projectId: string) {
   const { error } = await supabase.from("tickets").delete().eq("id", ticketId);
 
   if (error) {
-    console.error(error);
+    logger.error("Failed to delete ticket:", error.message);
     return { error: "チケットの削除に失敗しました" };
   }
 
@@ -250,7 +250,7 @@ export async function updateTicket(ticketId: string, projectId: string, formData
     .eq("id", ticketId);
 
   if (error) {
-    console.error(error);
+    logger.error("Failed to update ticket:", error);
     return { error: "チケットの更新に失敗しました" };
   }
 

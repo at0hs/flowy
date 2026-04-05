@@ -114,11 +114,13 @@ app/
 │   └── actions.ts   # signOut
 ├── (app)/           # アプリ本体（認証ガード済み）
 │   ├── layout.tsx   # サイドバー、Toaster
+│   ├── notifications/
+│   │   └── actions.ts            # 通知既読・全既読 Server Actions
 │   ├── projects/
 │   │   ├── actions.ts            # プロジェクト・メンバー・招待関連 Server Actions
 │   │   ├── new/
 │   │   └── [id]/
-│   │       ├── actions.ts        # チケット関連 Server Actions
+│   │       ├── actions.ts        # チケット・ウォッチ・通知関連 Server Actions
 │   │       ├── edit/
 │   │       ├── members/          # メンバー管理UI
 │   │       └── tickets/[ticketId]/
@@ -129,14 +131,24 @@ components/
 ├── layout/
 ├── sidebar/
 ├── projects/
+├── editor/
+│   ├── rich-text-editor.tsx  # Tiptap エディタ本体（固定ツールバー付き）
+│   ├── editor-toolbar.tsx    # 固定ツールバーコンポーネント
+│   └── rich-text-content.tsx # HTML表示用（DOMPurify でサニタイズして dangerouslySetInnerHTML）
+├── notifications/
+│   ├── notification-bell.tsx      # ベルアイコン + 未読数バッジ
+│   └── notification-dropdown.tsx  # 通知一覧ドロップダウン（無限スクロール）
 ├── tickets/
 │   ├── ticket-table.tsx
 │   ├── ticket-filters.tsx
+│   ├── ticket-watch-button.tsx    # ウォッチ/解除ボタン（楽観的更新）
 │   ├── ticket-create-modal/  # チケット作成モーダル (Dialog ベース)
+│   ├── subtask-section/      # サブタスク一覧 + 追加ボタン（チケット詳細用）
+│   ├── comment-list/         # コメント一覧・投稿・返信・編集・削除
 │   └── ticket-inline-edit/   # チケット詳細インライン編集
 │       ├── index.tsx          # 楽観的更新ロジック
 │       ├── inline-title.tsx
-│       ├── inline-description.tsx
+│       ├── inline-description.tsx  # Tiptap エディタ使用
 │       ├── inline-status.tsx
 │       ├── inline-assignee.tsx
 │       └── inline-priority.tsx
@@ -146,13 +158,17 @@ components/
     └── change-role-button.tsx
 lib/
 ├── supabase/
-│   ├── client.ts       # ブラウザ用クライアント (createBrowserClient)
-│   ├── server.ts       # サーバー用クライアント (createServerClient + cookies())
-│   ├── projects.ts     # プロジェクト・プロフィール取得関数
-│   ├── members.ts      # メンバー取得・権限確認 (getProjectMembers, isProjectOwner)
-│   ├── comments.ts     # コメント CRUD (CommentWithProfile 型を含む)
-│   └── invitations.ts  # 招待トークン検証・受け入れ
-├── email.ts          # Resend API 経由メール送信 (sendInvitationEmail)
+│   ├── client.ts         # ブラウザ用クライアント (createBrowserClient)
+│   ├── server.ts         # サーバー用クライアント (createServerClient + cookies())
+│   ├── admin.ts          # Supabase Admin クライアント（サービスロールキー使用）
+│   ├── projects.ts       # プロジェクト・プロフィール取得関数
+│   ├── members.ts        # メンバー取得・権限確認 (getProjectMembers, isProjectOwner)
+│   ├── tickets.ts        # チケット取得関数
+│   ├── comments.ts       # コメント CRUD (CommentWithProfile 型を含む)
+│   ├── invitations.ts    # 招待トークン検証・受け入れ
+│   ├── watches.ts        # ウォッチ取得・操作関数
+│   └── notifications.ts  # 通知取得・既読更新関数
+├── email.ts          # Resend API 経由メール送信
 ├── utils.ts          # cn() 関数
 ├── logger.ts         # 環境別ロギングユーティリティ
 └── validations.ts    # Zod バリデーションスキーマ
@@ -160,7 +176,10 @@ types/
 ├── database.types.ts  # supabase gen types で自動生成
 └── index.ts           # 型エクスポート (Profile, Project, Ticket, Invitation, Comment 等)
 emails/
-└── invitation.tsx     # React Email テンプレート
+├── invitation.tsx       # 招待メールテンプレート
+├── notification.tsx     # 通知メールテンプレート
+├── confirm-signup.tsx   # サインアップ確認メールテンプレート
+└── change-email.tsx     # メールアドレス変更確認テンプレート
 proxy.ts             # 認証ミドルウェア (Next.js middleware)
 supabase/
 └── migrations/      # タイムスタンプ付きSQLマイグレーション
@@ -179,6 +198,9 @@ supabase/
 - **楽観的更新**: `useTransition` + Server Action。即座にローカル状態を更新し、失敗時はロールバック → `router.refresh()` で再検証
 - **モーダル + Server Action**: `Dialog` コンポーネント + FormData で Server Action を呼び出すパターン（ticket-create-modal）
 - **メール送信フロー**: Server Action 内で招待レコード作成 → `lib/email.ts` 経由で Resend 送信 → 失敗時は招待レコード削除（ロールバック）
+- **リッチテキスト**: Tiptap で編集、HTML文字列として保存。表示時は `rich-text-content.tsx` が DOMPurify でサニタイズしてから `dangerouslySetInnerHTML` で描画
+- **通知発行**: Server Action 内でチケット更新後に `notify_watchers()` SECURITY DEFINER関数を呼び出してウォッチユーザーへ一括通知レコード挿入。担当者割り当ては直接 `notifications` テーブルに INSERT
+- **ウォッチ**: `ticket_watches` テーブルで管理。チケット作成時にトリガーで作成者を自動ウォッチ。`ticket-watch-button.tsx` で楽観的更新
 
 ### UI / Styling
 
@@ -197,13 +219,15 @@ supabase/
 | `profiles` | ユーザープロフィール (auth.usersと1:1, `username`, `email`) |
 | `projects` | プロジェクト (`owner_id` で RLS 制御) |
 | `project_members` | プロジェクトメンバー (`role: 'owner' \| 'member'`) |
-| `tickets` | チケット (`status: todo/in_progress/done`, `priority: low/medium/high/urgent`, `assignee_id`) |
+| `tickets` | チケット (`status: todo/in_progress/done`, `priority: low/medium/high/urgent`, `assignee_id`, `parent_id`) |
 | `invitations` | プロジェクト招待 (`token`, `status: pending/accepted/expired`, 有効期限付き) |
-| `comments` | チケットコメント (`ticket_id`, `author_id`, `content`) |
+| `comments` | チケットコメント (`reply_to_id` で返信対応、`is_deleted` でソフトデリート) |
+| `ticket_watches` | チケットウォッチ (`ticket_id`, `user_id`, UNIQUE制約) |
+| `notifications` | 通知 (`type`, `is_read`, `actor_id`, `metadata` jsonb、30日表示制限) |
 
 - 全テーブルでRLS (Row Level Security) 有効。`project_members` をベースに多層的なポリシーを実装
 - サインアップ時にDBトリガーで `profiles` レコードを自動生成（`raw_user_meta_data` から `username` を取得）
-- `SECURITY DEFINER` 関数を使用：`is_email_registered()`（未認証ユーザーが profiles 参照可）、`accept_invitation()`（RLS をバイパスしてアトミックに招待受け入れ）
+- `SECURITY DEFINER` 関数：`accept_invitation()`, `create_invitation()`, `remove_member_from_project()`, `notify_watchers()`, `is_email_registered()`, `is_project_member()`, `is_project_owner()`
 - マイグレーションは `supabase/migrations/` にタイムスタンプ付きSQLで管理
 - `types/database.types.ts` は `npm run gen:types` で再生成
 
