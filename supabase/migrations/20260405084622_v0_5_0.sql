@@ -43,3 +43,22 @@ CREATE TRIGGER handle_updated_at
 -- ----------------------------------------
 ALTER TABLE profiles
   ADD COLUMN slack_webhook_url text;
+
+-- ----------------------------------------
+-- T04-1: ユーザー登録時に notification_settings レコードを自動生成
+-- handle_new_user 関数を修正して、profiles と同時に notification_settings も作成
+-- ----------------------------------------
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles(id, email, username)
+    VALUES(NEW.id, NEW.email, NEW.raw_user_meta_data ->> 'username');
+
+  -- notification_settings レコードを自動生成（全デフォルト値）
+  INSERT INTO public.notification_settings(user_id)
+    VALUES(NEW.id)
+    ON CONFLICT (user_id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;

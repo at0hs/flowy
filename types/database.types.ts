@@ -121,6 +121,56 @@ export type Database = {
           },
         ];
       };
+      notification_settings: {
+        Row: {
+          created_at: string;
+          email_assigned: boolean;
+          email_assignee_changed: boolean;
+          email_comment_added: boolean;
+          email_deadline: boolean;
+          email_mention: boolean;
+          email_priority_changed: boolean;
+          email_status_changed: boolean;
+          id: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          email_assigned?: boolean;
+          email_assignee_changed?: boolean;
+          email_comment_added?: boolean;
+          email_deadline?: boolean;
+          email_mention?: boolean;
+          email_priority_changed?: boolean;
+          email_status_changed?: boolean;
+          id?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          email_assigned?: boolean;
+          email_assignee_changed?: boolean;
+          email_comment_added?: boolean;
+          email_deadline?: boolean;
+          email_mention?: boolean;
+          email_priority_changed?: boolean;
+          email_status_changed?: boolean;
+          id?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: true;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notifications: {
         Row: {
           actor_id: string | null;
@@ -181,18 +231,21 @@ export type Database = {
           created_at: string;
           email: string;
           id: string;
+          slack_webhook_url: string | null;
           username: string;
         };
         Insert: {
           created_at?: string;
           email: string;
           id: string;
+          slack_webhook_url?: string | null;
           username: string;
         };
         Update: {
           created_at?: string;
           email?: string;
           id?: string;
+          slack_webhook_url?: string | null;
           username?: string;
         };
         Relationships: [];
@@ -312,6 +365,7 @@ export type Database = {
           assignee_id: string | null;
           created_at: string;
           description: string | null;
+          due_date: string | null;
           id: string;
           parent_id: string | null;
           priority: Database["public"]["Enums"]["ticket_priority"];
@@ -324,6 +378,7 @@ export type Database = {
           assignee_id?: string | null;
           created_at?: string;
           description?: string | null;
+          due_date?: string | null;
           id?: string;
           parent_id?: string | null;
           priority?: Database["public"]["Enums"]["ticket_priority"];
@@ -336,6 +391,7 @@ export type Database = {
           assignee_id?: string | null;
           created_at?: string;
           description?: string | null;
+          due_date?: string | null;
           id?: string;
           parent_id?: string | null;
           priority?: Database["public"]["Enums"]["ticket_priority"];
@@ -427,7 +483,8 @@ export type Database = {
         | "comment_added"
         | "status_changed"
         | "priority_changed"
-        | "mention";
+        | "mention"
+        | "deadline";
       project_role: "owner" | "member";
       ticket_priority: "low" | "medium" | "high" | "urgent";
       ticket_status: "todo" | "in_progress" | "done";
@@ -567,6 +624,7 @@ export const Constants = {
         "status_changed",
         "priority_changed",
         "mention",
+        "deadline",
       ],
       project_role: ["owner", "member"],
       ticket_priority: ["low", "medium", "high", "urgent"],

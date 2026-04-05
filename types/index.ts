@@ -17,6 +17,9 @@ export type InvitationStatus = Database["public"]["Enums"]["invitation_status"];
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export type NotificationType = Database["public"]["Enums"]["notification_type"];
 
+// 通知設定
+export type NotificationSetting = Database["public"]["Tables"]["notification_settings"]["Row"];
+
 // UI表示用（actor と ticket を JOIN した拡張型）
 export type NotificationWithDetails = Notification & {
   actor: { username: string } | null;
