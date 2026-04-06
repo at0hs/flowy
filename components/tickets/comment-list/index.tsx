@@ -20,16 +20,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RichTextEditor } from "@/components/editor/rich-text-editor";
+import { RichTextEditor, type MentionMember } from "@/components/editor/rich-text-editor";
 import { RichTextContent } from "@/components/editor/rich-text-content";
 
 type Props = {
   comments: CommentWithProfile[];
   ticketId: string;
   currentUserId: string;
+  members?: MentionMember[];
 };
 
-export function CommentList({ comments, ticketId, currentUserId }: Props) {
+export function CommentList({ comments, ticketId, currentUserId, members }: Props) {
   const [newBody, setNewBody] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
@@ -113,6 +114,7 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
 
   const commonItemProps = {
     currentUserId,
+    members,
     editingId,
     editBody,
     deleteTargetId,
@@ -148,6 +150,7 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
               placeholder="コメントを入力..."
               maxHeight="16rem"
               editable={!isPostPending}
+              members={members}
             />
             <div className="flex justify-end gap-1">
               <Button
@@ -215,6 +218,7 @@ export function CommentList({ comments, ticketId, currentUserId }: Props) {
                           placeholder="返信を入力..."
                           maxHeight="12rem"
                           editable={!isReplyPending}
+                          members={members}
                         />
                         <div className="flex justify-end gap-1">
                           <Button
@@ -252,6 +256,7 @@ type CommentItemProps = {
   comment: CommentWithProfile;
   rootId: string;
   currentUserId: string;
+  members?: MentionMember[];
   editingId: string | null;
   editBody: string;
   deleteTargetId: string | null;
@@ -271,6 +276,7 @@ function CommentItem({
   comment,
   rootId,
   currentUserId,
+  members,
   editingId,
   editBody,
   deleteTargetId,
@@ -313,6 +319,7 @@ function CommentItem({
             onChange={onEditBodyChange}
             maxHeight="16rem"
             editable={!isEditPending}
+            members={members}
           />
           <div className="flex gap-2">
             <Button

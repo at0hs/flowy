@@ -28,7 +28,8 @@
 		"Subticket",
 		"subtickets",
 		"SUPABASE",
-		"timestamptz"
+		"timestamptz",
+		"tiptap"
 	],
 	"editor.wordWrap": "on",
 	"files.eol": "\n",

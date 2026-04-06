@@ -91,7 +91,12 @@ export default async function TicketDetailPage({ params }: Props) {
       <Separator className="my-6" />
 
       {/* コメント */}
-      <CommentList comments={comments} ticketId={ticketId} currentUserId={user.id} />
+      <CommentList
+        comments={comments}
+        ticketId={ticketId}
+        currentUserId={user.id}
+        members={members.map((m) => ({ id: m.user_id, label: m.profile.username }))}
+      />
     </div>
   );
 }

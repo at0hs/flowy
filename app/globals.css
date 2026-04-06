@@ -207,3 +207,67 @@
   outline: none;
   font-size: 0.875rem;
 }
+
+/* メンションバッジ（エディタ内・表示両用） */
+.mention {
+  display: inline-block;
+  background-color: oklch(54.646% 0.23799 265.476);
+  color: var(--primary-foreground);
+  border-radius: 1.5rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 14px;
+  cursor: default;
+  user-select: all;
+}
+
+.dark .mention {
+  background-color: oklch(73.311% 0.12414 266.092);
+  color: oklch(19.913% 0.02226 260.486);
+}
+
+/* メンション候補ポップアップ */
+.tiptap-mention-popup {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  min-width: 160px;
+  max-width: 240px;
+}
+
+.tiptap-mention-empty {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.tiptap-mention-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--foreground);
+  border: none;
+  outline: none;
+  transition: background 0.1s;
+}
+
+.tiptap-mention-item:hover,
+.tiptap-mention-item--selected {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* tippy デフォルトスタイルリセット（.tiptap-mention テーマ用） */
+.tippy-box[data-theme="tiptap-mention"] {
+  background: transparent;
+  box-shadow: none;
+}
+.tippy-box[data-theme="tiptap-mention"] > .tippy-content {
+  padding: 0;
+}

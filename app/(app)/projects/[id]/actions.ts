@@ -7,7 +7,13 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { Ticket } from "@/types";
 import { Json } from "@/types/database.types";
-import { createComment, updateComment, deleteComment, createReply } from "@/lib/supabase/comments";
+import {
+  createComment,
+  updateComment,
+  deleteComment,
+  createReply,
+  extractMentionedUserIds,
+} from "@/lib/supabase/comments";
 import { addWatch, removeWatch, getWatcherEmails } from "@/lib/supabase/watches";
 import { sendNotificationEmail } from "@/lib/email";
 import type { NotificationEmailProps } from "@/emails/notification";
@@ -124,6 +130,32 @@ async function sendNotificationEmailToWatchers(
     );
   } catch (err) {
     logger.warn("Failed to send watcher notification emails:", err);
+  }
+}
+
+/**
+ * コメント本文のメンション対象ユーザーに `mention` 通知を発行する
+ * 自分自身へのメンションは除外する
+ */
+async function sendMentionNotifications(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  ticketId: string,
+  actorId: string,
+  html: string
+): Promise<void> {
+  const mentionedIds = extractMentionedUserIds(html).filter((id) => id !== actorId);
+  if (mentionedIds.length === 0) return;
+
+  const records = mentionedIds.map((userId) => ({
+    user_id: userId,
+    actor_id: actorId,
+    ticket_id: ticketId,
+    type: "mention" as const,
+  }));
+
+  const { error } = await supabase.from("notifications").insert(records);
+  if (error) {
+    logger.warn("Failed to send mention notifications:", error);
   }
 }
 
@@ -431,6 +463,9 @@ export async function addComment(
     commentBody: stripHtml(trimmed),
   }));
 
+  // メンションされたユーザーに `mention` 通知を発行（ウォッチ不要・常時通知）
+  await sendMentionNotifications(supabase, ticketId, user.id, trimmed);
+
   return { success: true };
 }
 
@@ -469,6 +504,9 @@ export async function addReply(
     ...ctx,
     commentBody: stripHtml(trimmed),
   }));
+
+  // メンションされたユーザーに `mention` 通知を発行（ウォッチ不要・常時通知）
+  await sendMentionNotifications(supabase, ticketId, user.id, trimmed);
 
   return { success: true };
 }

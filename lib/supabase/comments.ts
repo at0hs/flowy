@@ -188,6 +188,17 @@ export async function updateComment(commentId: string, body: string): Promise<Co
 }
 
 /**
+ * HTML内の data-mention-id 属性からメンションされたユーザーIDを抽出する
+ * サーバーサイドでDOMが使えないため正規表現で処理する
+ * @param html コメント本文（HTML文字列）
+ * @returns メンションされたユーザーIDの配列（重複なし）
+ */
+export function extractMentionedUserIds(html: string): string[] {
+  const matches = html.matchAll(/data-mention-id="([^"]+)"/g);
+  return [...new Set([...matches].map((m) => m[1]))];
+}
+
+/**
  * コメントを削除する
  * 返信が存在する場合はソフトデリート（is_deleted = true）、存在しない場合は物理削除
  * @param commentId コメントID
