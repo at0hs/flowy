@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Project } from "@/types";
 import { toast } from "sonner";
+import { formatDate } from "@/lib/date";
 
 type Props = {
   project: Project;
@@ -66,9 +67,7 @@ export function ProjectCard({ project, isOwner }: Props) {
         </CardContent>
 
         <CardFooter className="flex justify-between items-center">
-          <Badge variant="outline">
-            {new Date(project.created_at).toLocaleDateString("ja-JP")}
-          </Badge>
+          <Badge variant="outline">{formatDate(project.created_at)}</Badge>
 
           <div className="flex gap-2">
             {isOwner && (

@@ -11,6 +11,7 @@ import {
   ChevronRightIcon,
   EqualIcon,
 } from "lucide-react";
+import { formatDateTime } from "@/lib/date";
 
 const STATUS_MAP = {
   todo: { label: "TODO", color: "bg-slate-500", variant: "default" },
@@ -36,16 +37,6 @@ type Props = {
 
 export function TicketTable({ tickets, assigneeMap }: Props) {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   // 親子関係を構築
   const { roots, childrenByParent } = useMemo(() => {
@@ -161,7 +152,9 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
                     {status.label}
                   </Badge>
                 </td>
-                <td className="px-6 py-3 text-muted-foreground">{formatDate(ticket.created_at)}</td>
+                <td className="px-6 py-3 text-muted-foreground">
+                  {formatDateTime(ticket.created_at)}
+                </td>
               </tr>
             );
           })}

@@ -12,6 +12,7 @@ import { SubtaskSection } from "@/components/tickets/subtask-section";
 import { isWatching } from "@/lib/supabase/watches";
 import { TicketWatchButton } from "@/components/tickets/ticket-watch-button";
 import { ArrowLeft } from "lucide-react";
+import { formatRelativeTime } from "@/lib/date";
 
 type Props = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -99,14 +100,4 @@ export default async function TicketDetailPage({ params }: Props) {
       />
     </div>
   );
-}
-
-// @todo utilsとして切り出す？
-function formatRelativeTime(dateStr: string): string {
-  const diffSec = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (diffSec < 60) return `${diffSec}秒前`;
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}分前`;
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}時間前`;
-  if (diffSec < 86400 * 30) return `${Math.floor(diffSec / 86400)}日前`;
-  return new Date(dateStr).toLocaleString("ja-JP");
 }

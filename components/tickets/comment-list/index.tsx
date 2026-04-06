@@ -20,6 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { differenceInMilliseconds } from "date-fns";
+import { formatRelativeTime } from "@/lib/date";
 import { RichTextEditor, type MentionMember } from "@/components/editor/rich-text-editor";
 import { RichTextContent } from "@/components/editor/rich-text-content";
 
@@ -410,27 +412,8 @@ function isHtmlEmpty(html: string): boolean {
   return html.replace(/<[^>]*>/g, "").trim() === "";
 }
 
-function formatAbsoluteDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatRelativeTime(dateStr: string): string {
-  const diffSec = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (diffSec < 60) return `${diffSec}秒前`;
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}分前`;
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}時間前`;
-  if (diffSec < 86400 * 30) return `${Math.floor(diffSec / 86400)}日前`;
-  return formatAbsoluteDate(dateStr);
-}
-
 function formatCommentDate(createdAt: string, updatedAt: string): string {
-  const isEdited = new Date(updatedAt).getTime() - new Date(createdAt).getTime() > 1000;
+  const isEdited = differenceInMilliseconds(new Date(updatedAt), new Date(createdAt)) > 1000;
   const base = formatRelativeTime(createdAt);
   return isEdited ? `${base}（編集済み）` : base;
 }
