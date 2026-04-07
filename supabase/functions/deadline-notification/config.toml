@@ -1,0 +1,5 @@
+# Edge Function: deadline-notification
+# cronジョブ設定：毎日AM8:00 JST（= UTC 23:00）に実行
+
+[cron]
+schedule = "0 23 * * *"

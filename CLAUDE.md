@@ -101,7 +101,7 @@ npm run gen:types    # Generate TypeScript types from Supabase schema
 
 ## Architecture
 
-**Flowy** はJira風のチケット管理Webアプリ。Next.js App Router + Supabase (PostgreSQL + Auth) で構成される。
+**Flowy** はJira風のチケット管理Webアプリ。Next.js 16 App Router + Supabase (PostgreSQL + Auth) で構成される。
 
 ### Directory layout
 
@@ -234,11 +234,3 @@ supabase/
 ### Auth flow
 
 - `proxy.ts` がミドルウェアとして動作：未認証ユーザーを `/login` へ、認証済みユーザーが `/` `/login` `/signup` アクセス時は `/projects` へリダイレクト
-
-## Code Style
-
-Prettierの設定:
-- `singleQuote: false`, `semi: true`, `printWidth: 100`
-- `trailingComma: "es5"`, `endOfLine: "lf"`
-
-TypeScriptはstrict modeで動作。パスエイリアス `@/*` でプロジェクトルートを参照。

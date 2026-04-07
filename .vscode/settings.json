@@ -1,50 +1,70 @@
 {
-	"[sql]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.tabSize": 2,
-		"editor.insertSpaces": true
-	},
-	"cSpell.ignorePaths": [
-		"package*.json",
-		"node_modules",
-		"vscode-extension",
-		".git/{info,lfs,logs,refs,objects}/**",
-		".git/{index,*refs,*HEAD}",
-		".vscode",
-		".vscode-insiders",
-		".gitignore",
-		"*.toml"
-	],
-	"cSpell.words": [
-		"fkey",
-		"flowy",
-		"ilike",
-		"moddatetime",
-		"nums",
-		"plpgsql",
-		"Redmine",
-		"Setof",
-		"shadcn",
-		"Subticket",
-		"subtickets",
-		"SUPABASE",
-		"timestamptz",
-		"tiptap"
-	],
-	"editor.wordWrap": "on",
-	"files.eol": "\n",
-	"editor.detectIndentation": false,
-	"sqltools.connections": [
-		{
-			"ssh": "Disabled",
-			"previewLimit": 50,
-			"server": "127.0.0.1",
-			"port": 54322,
-			"driver": "PostgreSQL",
-			"name": "supabase local",
-			"database": "postgres",
-			"username": "postgres",
-			"password": "postgres"
-		}
-	],
+  "[sql]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
+  },
+  "cSpell.ignorePaths": [
+    "package*.json",
+    "node_modules",
+    "vscode-extension",
+    ".git/{info,lfs,logs,refs,objects}/**",
+    ".git/{index,*refs,*HEAD}",
+    ".vscode",
+    ".vscode-insiders",
+    ".gitignore",
+    "*.toml"
+  ],
+  "cSpell.words": [
+    "fkey",
+    "flowy",
+    "ilike",
+    "moddatetime",
+    "nums",
+    "plpgsql",
+    "Redmine",
+    "Setof",
+    "shadcn",
+    "Subticket",
+    "subtickets",
+    "SUPABASE",
+    "timestamptz",
+    "tiptap"
+  ],
+  "deno.enable": false,
+  "deno.enablePaths": [
+    "supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": [
+    "bare-node-builtins",
+    "byonm",
+    "sloppy-imports",
+    "unsafe-proto",
+    "webgpu",
+    "broadcast-channel",
+    "worker-options",
+    "cron",
+    "kv",
+    "ffi",
+    "fs",
+    "http",
+    "net"
+  ],
+  "editor.detectIndentation": false,
+  "editor.wordWrap": "on",
+  "files.eol": "\n",
+  "sqltools.connections": [
+    {
+      "database": "postgres",
+      "driver": "PostgreSQL",
+      "name": "supabase local",
+      "password": "postgres",
+      "port": 54322,
+      "previewLimit": 50,
+      "server": "127.0.0.1",
+      "ssh": "Disabled",
+      "username": "postgres"
+    }
+  ]
 }
