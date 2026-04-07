@@ -11,7 +11,8 @@ import {
   ChevronRightIcon,
   EqualIcon,
 } from "lucide-react";
-import { formatDateTime } from "@/lib/date";
+import { formatDateTime, formatDate } from "@/lib/date";
+import { isAfter, parseISO, startOfDay } from "date-fns";
 
 const STATUS_MAP = {
   todo: { label: "TODO", color: "bg-slate-500", variant: "default" },
@@ -94,11 +95,12 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
       <table className="w-full table-fixed">
         <thead>
           <tr className="border-b bg-muted/50">
-            <th className="w-[40%] px-6 py-3 text-left text-sm font-semibold">タイトル</th>
-            <th className="w-[18%] px-6 py-3 text-left text-sm font-semibold">担当者</th>
-            <th className="w-[12%] px-6 py-3 text-left text-sm font-semibold">優先度</th>
-            <th className="w-[15%] px-6 py-3 text-left text-sm font-semibold">ステータス</th>
-            <th className="w-[15%] px-6 py-3 text-left text-sm font-semibold">作成日</th>
+            <th className="w-[35%] px-6 py-1 text-left text-sm font-semibold">タイトル</th>
+            <th className="w-[15%] px-6 py-1 text-left text-sm font-semibold">担当者</th>
+            <th className="w-[12%] px-6 py-1 text-left text-sm font-semibold">優先度</th>
+            <th className="w-[13%] px-6 py-1 text-left text-sm font-semibold">ステータス</th>
+            <th className="w-[12%] px-6 py-1 text-left text-sm font-semibold">期限</th>
+            <th className="w-[13%] px-6 py-1 text-left text-sm font-semibold">作成日</th>
           </tr>
         </thead>
         <tbody>
@@ -110,7 +112,7 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
 
             return (
               <tr key={ticket.id} className="border-b hover:bg-muted/50 transition-colors text-sm">
-                <td className="px-6 py-3">
+                <td className="px-6 py-1">
                   <div
                     className={`flex items-center gap-1 overflow-hidden ${isChild ? "pl-8" : ""}`}
                   >
@@ -137,14 +139,14 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
                     </Link>
                   </div>
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-6 py-1">
                   {assigneeName ?? <span className="text-muted-foreground italic">担当者なし</span>}
                 </td>
-                <td className="flex items-center gap-2 px-6 py-3">
+                <td className="flex items-center gap-2 px-6 py-3 ">
                   <priority.icon className={`w-4 h-4 stroke-[3px] ${priority.iconColor}`} />
                   {priority.label}
                 </td>
-                <td className="px-6 py-3">
+                <td className="px-6 py-1">
                   <Badge
                     variant={status.variant}
                     className={`${status.color}/20 text-primary rounded-sm`}
@@ -152,7 +154,22 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
                     {status.label}
                   </Badge>
                 </td>
-                <td className="px-6 py-3 text-muted-foreground">
+                <td className="px-6 py-1">
+                  {ticket.due_date ? (
+                    <span
+                      className={
+                        isAfter(startOfDay(new Date()), parseISO(ticket.due_date))
+                          ? "text-red-500"
+                          : ""
+                      }
+                    >
+                      {formatDate(ticket.due_date)}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">なし</span>
+                  )}
+                </td>
+                <td className="px-6 py-1 text-muted-foreground">
                   {formatDateTime(ticket.created_at)}
                 </td>
               </tr>

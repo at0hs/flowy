@@ -180,6 +180,9 @@ export async function createTicket(projectId: string, formData: FormData) {
   const parentIdRaw = formData.get("parent_id") as string | null;
   const parentId = parentIdRaw && parentIdRaw.trim() !== "" ? parentIdRaw : null;
 
+  const dueDateRaw = formData.get("due_date") as string | null;
+  const dueDate = dueDateRaw && dueDateRaw.trim() !== "" ? dueDateRaw : null;
+
   // T28: 孫チケット作成を禁止する（親チケットが既に子チケットの場合はエラー）
   if (parentId) {
     const { data: parentTicket, error: parentError } = await supabase
@@ -208,6 +211,7 @@ export async function createTicket(projectId: string, formData: FormData) {
       status: data.status,
       priority: data.priority,
       assignee_id: assigneeId,
+      due_date: dueDate,
     })
     .select("id")
     .single();
@@ -294,7 +298,8 @@ type TicketFieldUpdate =
   | { field: "description"; value: string | null }
   | { field: "status"; value: Ticket["status"]; prevValue?: Ticket["status"] }
   | { field: "priority"; value: Ticket["priority"]; prevValue?: Ticket["priority"] }
-  | { field: "assignee_id"; value: string | null; prevValue?: string | null };
+  | { field: "assignee_id"; value: string | null; prevValue?: string | null }
+  | { field: "due_date"; value: string | null };
 
 type NotifyWatchersType =
   | "assignee_changed"

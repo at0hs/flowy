@@ -15,7 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EqualIcon, ChevronsDownIcon, ChevronUpIcon, ChevronsUpIcon, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  EqualIcon,
+  ChevronsDownIcon,
+  ChevronUpIcon,
+  ChevronsUpIcon,
+  Plus,
+  CalendarIcon,
+  X,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +37,8 @@ import {
 } from "@/components/ui/dialog";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 import { Ticket } from "@/types";
+import { ja } from "date-fns/locale";
+import { format } from "date-fns";
 
 const STATUS_OPTIONS: { value: Ticket["status"]; label: string; className: string }[] = [
   { value: "todo", label: "TODO", className: "bg-slate-500/20 text-black hover:bg-slate-500/30" },
@@ -83,6 +95,8 @@ export function TicketCreateModal({
   const [parentId, setParentId] = useState<string>(defaultParentId ?? "none");
   const [status, setStatus] = useState<Ticket["status"]>("todo");
   const [priority, setPriority] = useState<Ticket["priority"]>("medium");
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [dueDateOpen, setDueDateOpen] = useState(false);
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,6 +110,7 @@ export function TicketCreateModal({
     formData.set("priority", priority);
     const isDescriptionEmpty = !description || description === "<p></p>";
     formData.set("description", isDescriptionEmpty ? "" : description);
+    formData.set("due_date", dueDate ? format(dueDate, "yyyy-MM-dd") : "");
 
     const result = await createTicket(projectId, formData);
 
@@ -108,6 +123,7 @@ export function TicketCreateModal({
       setStatus("todo");
       setPriority("medium");
       setDescription("");
+      setDueDate(undefined);
       router.refresh();
     }
     setIsLoading(false);
@@ -121,6 +137,7 @@ export function TicketCreateModal({
       setStatus("todo");
       setPriority("medium");
       setDescription("");
+      setDueDate(undefined);
     }
     setOpen(nextOpen);
   };
@@ -219,6 +236,47 @@ export function TicketCreateModal({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* 期限 */}
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0 text-muted-foreground">期限</Label>
+              <div className="flex items-center gap-2">
+                <Popover open={dueDateOpen} onOpenChange={setDueDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-52 justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                      {dueDate ? (
+                        format(dueDate, "yyyy年MM月dd日", { locale: ja })
+                      ) : (
+                        <span className="text-muted-foreground">日付を選択</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={(date) => {
+                        setDueDate(date);
+                        setDueDateOpen(false);
+                      }}
+                      locale={ja}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {dueDate && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setDueDate(undefined)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

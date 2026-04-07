@@ -11,6 +11,7 @@ import { InlineDescription } from "./inline-description";
 import { InlineStatus } from "./inline-status";
 import { InlinePriority } from "./inline-priority";
 import { InlineAssignee } from "./inline-assignee";
+import { InlineDueDate } from "./inline-due-date";
 
 type Props = {
   ticket: Ticket;
@@ -107,6 +108,14 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
             disabled={isPending}
           />
         </div>
+
+        {/* 期限 */}
+        <span className="text-muted-foreground pt-1.5">期限</span>
+        <InlineDueDate
+          value={localTicket.due_date}
+          onSave={(v) => save({ field: "due_date", value: v }, { due_date: v })}
+          disabled={isPending}
+        />
       </div>
     </div>
   );
