@@ -17,6 +17,17 @@ import {
 import { addWatch, removeWatch, getWatcherEmails } from "@/lib/supabase/watches";
 import { sendNotificationEmail } from "@/lib/email";
 import type { NotificationEmailProps } from "@/emails/notification";
+import { isEmailNotificationEnabled } from "@/lib/supabase/notification-settings";
+
+// 通知タイプとnotification_settingsフィールドのマッピング
+const EMAIL_SETTING_FIELD = {
+  assignee_changed: "email_assignee_changed",
+  comment_added: "email_comment_added",
+  status_changed: "email_status_changed",
+  priority_changed: "email_priority_changed",
+} as const;
+
+type WatcherNotificationType = keyof typeof EMAIL_SETTING_FIELD;
 
 // ステータスの日本語ラベル
 const STATUS_LABELS: Record<string, string> = {
@@ -81,11 +92,12 @@ async function sendAssignedNotificationEmail(
   oldAssigneeName?: string
 ): Promise<void> {
   try {
-    const [ctx, { data: assignee }] = await Promise.all([
+    const [ctx, { data: assignee }, enabled] = await Promise.all([
       fetchNotificationEmailContext(supabase, ticketId, actorId),
       supabase.from("profiles").select("email").eq("id", assigneeId).single(),
+      isEmailNotificationEnabled(assigneeId, "email_assigned"),
     ]);
-    if (!ctx || !assignee?.email) return;
+    if (!ctx || !assignee?.email || !enabled) return;
     await sendNotificationEmail({
       to: assignee.email,
       type: "assigned",
@@ -101,11 +113,12 @@ async function sendAssignedNotificationEmail(
 }
 
 /**
- * ウォッチャー全員に通知メールを送信する
+ * ウォッチャー全員に通知メールを送信する（メール通知設定がONのユーザーのみ）
  */
 async function sendNotificationEmailToWatchers(
   ticketId: string,
   actorId: string,
+  notificationType: WatcherNotificationType,
   buildProps: (ctx: {
     ticketTitle: string;
     ticketUrl: string;
@@ -115,18 +128,37 @@ async function sendNotificationEmailToWatchers(
 ): Promise<void> {
   try {
     const supabase = await createClient();
+    const settingField = EMAIL_SETTING_FIELD[notificationType];
+
     const [ctx, watchers] = await Promise.all([
       fetchNotificationEmailContext(supabase, ticketId, actorId),
       getWatcherEmails(ticketId, actorId),
     ]);
     if (!ctx || watchers.length === 0) return;
+
+    // ウォッチャー全員の通知設定を一括取得（1クエリ）
+    const watcherIds = watchers.map((w) => w.user_id);
+    const { data: settings } = await supabase
+      .from("notification_settings")
+      .select(`user_id, ${settingField}`)
+      .in("user_id", watcherIds);
+
+    // OFFのユーザーIDをSetで管理（レコードなし＝デフォルトON）
+    const disabledUserIds = new Set(
+      (settings ?? [])
+        .filter((s) => !(s as Record<string, unknown>)[settingField])
+        .map((s) => s.user_id)
+    );
+
     const props = buildProps(ctx);
     await Promise.all(
-      watchers.map(({ email }) =>
-        sendNotificationEmail({ ...props, to: email }).catch((err) =>
-          logger.warn("Failed to send notification email:", err)
+      watchers
+        .filter((w) => !disabledUserIds.has(w.user_id))
+        .map(({ email }) =>
+          sendNotificationEmail({ ...props, to: email }).catch((err) =>
+            logger.warn("Failed to send notification email:", err)
+          )
         )
-      )
     );
   } catch (err) {
     logger.warn("Failed to send watcher notification emails:", err);
@@ -156,6 +188,42 @@ async function sendMentionNotifications(
   const { error } = await supabase.from("notifications").insert(records);
   if (error) {
     logger.warn("Failed to send mention notifications:", error);
+  }
+
+  // メンションされたユーザーへメール通知を送信（email_mention=ONのユーザーのみ）
+  try {
+    const [ctx, { data: profiles }, { data: settings }] = await Promise.all([
+      fetchNotificationEmailContext(supabase, ticketId, actorId),
+      supabase.from("profiles").select("id, email").in("id", mentionedIds),
+      supabase
+        .from("notification_settings")
+        .select("user_id, email_mention")
+        .in("user_id", mentionedIds),
+    ]);
+    if (!ctx || !profiles) return;
+
+    // OFFのユーザーIDをSetで管理（レコードなし＝デフォルトON）
+    const disabledUserIds = new Set(
+      (settings ?? []).filter((s) => !s.email_mention).map((s) => s.user_id)
+    );
+
+    await Promise.all(
+      profiles
+        .filter((p) => !disabledUserIds.has(p.id))
+        .map(({ email }) =>
+          sendNotificationEmail({
+            to: email,
+            type: "mention",
+            actorName: ctx.actorName,
+            ticketTitle: ctx.ticketTitle,
+            ticketUrl: ctx.ticketUrl,
+            projectName: ctx.projectName,
+            commentBody: stripHtml(html),
+          }).catch((err) => logger.warn("Failed to send mention notification email:", err))
+        )
+    );
+  } catch (err) {
+    logger.warn("Failed to send mention notification emails:", err);
   }
 }
 
@@ -390,7 +458,7 @@ export async function updateTicketField(
         ? supabase.from("profiles").select("username").eq("id", update.value).single()
         : Promise.resolve({ data: null }),
     ]);
-    await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+    await sendNotificationEmailToWatchers(ticketId, user.id, "assignee_changed", (ctx) => ({
       type: "assignee_changed" as const,
       ...ctx,
       fieldLabel: "担当者",
@@ -404,7 +472,7 @@ export async function updateTicketField(
       old_status: update.prevValue ?? null,
       new_status: update.value,
     });
-    await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+    await sendNotificationEmailToWatchers(ticketId, user.id, "status_changed", (ctx) => ({
       type: "status_changed" as const,
       ...ctx,
       fieldLabel: "ステータス",
@@ -418,7 +486,7 @@ export async function updateTicketField(
       old_priority: update.prevValue ?? null,
       new_priority: update.value,
     });
-    await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+    await sendNotificationEmailToWatchers(ticketId, user.id, "priority_changed", (ctx) => ({
       type: "priority_changed" as const,
       ...ctx,
       fieldLabel: "優先度",
@@ -462,7 +530,7 @@ export async function addComment(
   if (notifyError) {
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
-  await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+  await sendNotificationEmailToWatchers(ticketId, user.id, "comment_added", (ctx) => ({
     type: "comment_added" as const,
     ...ctx,
     commentBody: stripHtml(trimmed),
@@ -504,7 +572,7 @@ export async function addReply(
   if (notifyError) {
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
-  await sendNotificationEmailToWatchers(ticketId, user.id, (ctx) => ({
+  await sendNotificationEmailToWatchers(ticketId, user.id, "comment_added", (ctx) => ({
     type: "comment_added" as const,
     ...ctx,
     commentBody: stripHtml(trimmed),

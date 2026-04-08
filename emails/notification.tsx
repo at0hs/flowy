@@ -39,6 +39,14 @@ export type NotificationEmailProps =
       ticketUrl: string;
       projectName: string;
       commentBody: string;
+    }
+  | {
+      type: "mention";
+      actorName: string;
+      ticketTitle: string;
+      ticketUrl: string;
+      projectName: string;
+      commentBody: string;
     };
 
 export default function NotificationEmail(props: NotificationEmailProps) {
@@ -47,6 +55,9 @@ export default function NotificationEmail(props: NotificationEmailProps) {
   }
   if (props.type === "comment_added") {
     return <CommentAddedEmail {...props} />;
+  }
+  if (props.type === "mention") {
+    return <MentionEmail {...props} />;
   }
   return <ChangeEmail {...props} />;
 }
@@ -181,6 +192,51 @@ function CommentAddedEmail({
           <Text style={paragraph}>
             <strong>{actorName}</strong>さんが「<strong>{ticketTitle}</strong>
             」にコメントしました。
+          </Text>
+
+          <Section style={commentBox}>
+            <Text style={commentText}>{truncated}</Text>
+          </Section>
+
+          <Section style={buttonContainer}>
+            <Button style={button} href={ticketUrl}>
+              コメントを確認する
+            </Button>
+          </Section>
+
+          <Hr style={hr} />
+          <Text style={footer}>このメールは Flowy から自動送信されています。</Text>
+        </Container>
+      </Body>
+    </Html>
+  );
+}
+
+// --- mention ---
+
+function MentionEmail({
+  actorName = "田中太郎",
+  ticketTitle = "ログイン画面のバリデーションを修正する",
+  ticketUrl = "http://localhost:3111/projects/xxx/tickets/yyy",
+  projectName = "サンプルプロジェクト",
+  commentBody = "ご確認をお願いします。",
+}: Extract<NotificationEmailProps, { type: "mention" }>) {
+  const truncated = commentBody.length > 100 ? commentBody.slice(0, 100) + "…" : commentBody;
+
+  return (
+    <Html lang="ja">
+      <Head />
+      <Preview>[Flowy] {actorName}さんにメンションされました</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Text style={brand}>Flowy</Text>
+
+          <Heading style={heading}>メンションされました</Heading>
+          <Text style={projectLabel}>{projectName}</Text>
+
+          <Text style={paragraph}>
+            <strong>{actorName}</strong>さんが「<strong>{ticketTitle}</strong>
+            」のコメントであなたをメンションしました。
           </Text>
 
           <Section style={commentBox}>

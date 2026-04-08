@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { upsertNotificationSettings } from "@/lib/supabase/notification-settings";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logger } from "@/lib/logger";
@@ -84,5 +85,34 @@ export async function updatePassword(formData: FormData) {
     return { error: "パスワードの変更に失敗しました" };
   }
 
+  return { success: true };
+}
+
+export async function updateNotificationSettings(formData: FormData) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const settings = {
+    email_assigned: formData.get("email_assigned") === "on",
+    email_assignee_changed: formData.get("email_assignee_changed") === "on",
+    email_comment_added: formData.get("email_comment_added") === "on",
+    email_status_changed: formData.get("email_status_changed") === "on",
+    email_priority_changed: formData.get("email_priority_changed") === "on",
+    email_mention: formData.get("email_mention") === "on",
+    email_deadline: formData.get("email_deadline") === "on",
+  };
+
+  try {
+    await upsertNotificationSettings(user.id, settings);
+  } catch {
+    logger.error("Failed to update notification settings");
+    return { error: "通知設定の更新に失敗しました" };
+  }
+
+  revalidatePath("/settings/notifications");
   return { success: true };
 }

@@ -48,6 +48,8 @@ function buildNotificationSubject(props: NotificationEmailProps): string {
       return `[Flowy] ${props.actorName}が優先度を変更しました`;
     case "comment_added":
       return `[Flowy] ${props.actorName}さんがコメントしました`;
+    case "mention":
+      return `[Flowy] ${props.actorName}さんにメンションされました`;
   }
 }
 
