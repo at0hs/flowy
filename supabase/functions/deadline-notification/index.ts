@@ -110,6 +110,9 @@ Deno.serve(async (_req) => {
           webhookUrl: assignee.slack_webhook_url,
           ticketTitle: ticket.title,
           ticketUrl,
+          projectName: project.name,
+          assigneeUsername: assignee.username,
+          dueDate: today,
         });
       }
 
@@ -177,15 +180,69 @@ async function sendSlackNotification(params: {
   webhookUrl: string;
   ticketTitle: string;
   ticketUrl: string;
+  projectName: string;
+  assigneeUsername: string;
+  dueDate: string;
 }) {
-  const { webhookUrl, ticketTitle, ticketUrl } = params;
-  const text = `本日が期限のチケットがあります\n<${ticketUrl}|${ticketTitle}>`;
+  const { webhookUrl, ticketTitle, ticketUrl, projectName, assigneeUsername, dueDate } = params;
+
+  const payload = {
+    blocks: [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: "📅 チケット期限通知",
+          emoji: true,
+        },
+      },
+      {
+        type: "divider",
+      },
+      {
+        type: "section",
+        text: {
+          type: "plain_text",
+          text: `${projectName}/${ticketTitle}`,
+          emoji: true,
+        },
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: `*期限日*\n${dueDate}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*担当者*\n${assigneeUsername}`,
+          },
+        ],
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "チケットを開く",
+              emoji: true,
+            },
+            url: ticketUrl,
+            style: "primary",
+          },
+        ],
+      },
+    ],
+  };
 
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {

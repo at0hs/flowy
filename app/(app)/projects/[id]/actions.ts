@@ -18,6 +18,7 @@ import { addWatch, removeWatch, getWatcherEmails } from "@/lib/supabase/watches"
 import { sendNotificationEmail } from "@/lib/email";
 import type { NotificationEmailProps } from "@/emails/notification";
 import { isEmailNotificationEnabled } from "@/lib/supabase/notification-settings";
+import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 
 // 通知タイプとnotification_settingsフィールドのマッピング
 const EMAIL_SETTING_FIELD = {
@@ -47,6 +48,78 @@ const PRIORITY_LABELS: Record<string, string> = {
 /** HTMLタグを除去する（メール本文用） */
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
+}
+
+/**
+ * 1ユーザーへ Slack 通知を送信する
+ * Webhook URL が設定されていない場合は何もしない
+ */
+async function sendSlackNotificationToUser(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  payload: Omit<SlackNotificationPayload, "webhookUrl">
+): Promise<void> {
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("slack_webhook_url")
+      .eq("id", userId)
+      .single();
+
+    if (!profile?.slack_webhook_url) return;
+
+    const slackPayload: SlackNotificationPayload = {
+      ...payload,
+      webhookUrl: profile.slack_webhook_url,
+    } as SlackNotificationPayload;
+
+    await sendSlackNotification(slackPayload);
+  } catch (err) {
+    logger.warn("Failed to send Slack notification to user:", err);
+  }
+}
+
+/**
+ * ウォッチ中のユーザー全員へ Slack 通知を送信する
+ * Webhook URL が設定されているユーザーのみに送信する
+ */
+async function sendSlackNotificationToWatchers(
+  ticketId: string,
+  actorId: string,
+  payload: Omit<SlackNotificationPayload, "webhookUrl">
+): Promise<void> {
+  try {
+    const supabase = await createClient();
+    const watchers = await getWatcherEmails(ticketId, actorId);
+
+    if (watchers.length === 0) return;
+
+    // ウォッチャーの Webhook URL を一括取得
+    const watcherIds = watchers.map((w) => w.user_id);
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, slack_webhook_url")
+      .in("id", watcherIds);
+
+    // Webhook URL が設定されているユーザーのみに送信
+    const watchersWithWebhook = (profiles ?? []).filter(
+      (p): p is { id: string; slack_webhook_url: string } => !!p.slack_webhook_url
+    );
+
+    await Promise.all(
+      watchersWithWebhook.map(({ slack_webhook_url }) => {
+        const slackPayload: SlackNotificationPayload = {
+          ...payload,
+          webhookUrl: slack_webhook_url,
+        } as SlackNotificationPayload;
+        return sendSlackNotification(slackPayload).catch((err) =>
+          logger.warn("Failed to send Slack notification to watcher:", err)
+        );
+      })
+    );
+  } catch (err) {
+    logger.warn("Failed to send Slack notifications to watchers:", err);
+  }
 }
 
 /**
@@ -107,6 +180,16 @@ async function sendAssignedNotificationEmail(
       projectName: ctx.projectName,
       oldAssigneeName,
     });
+
+    // Slack 通知を送信
+    await sendSlackNotificationToUser(supabase, assigneeId, {
+      type: "assigned",
+      ticketTitle: ctx.ticketTitle,
+      ticketUrl: ctx.ticketUrl,
+      actorName: ctx.actorName,
+      projectName: ctx.projectName,
+      ...(oldAssigneeName && { oldAssigneeName }),
+    } as Omit<SlackNotificationPayload, "webhookUrl">);
   } catch (err) {
     logger.warn("Failed to send assigned notification email:", err);
   }
@@ -190,11 +273,11 @@ async function sendMentionNotifications(
     logger.warn("Failed to send mention notifications:", error);
   }
 
-  // メンションされたユーザーへメール通知を送信（email_mention=ONのユーザーのみ）
+  // メンションされたユーザーへメール・Slack 通知を送信（email_mention=ONのユーザーのみ）
   try {
     const [ctx, { data: profiles }, { data: settings }] = await Promise.all([
       fetchNotificationEmailContext(supabase, ticketId, actorId),
-      supabase.from("profiles").select("id, email").in("id", mentionedIds),
+      supabase.from("profiles").select("id, email, slack_webhook_url").in("id", mentionedIds),
       supabase
         .from("notification_settings")
         .select("user_id, email_mention")
@@ -207,19 +290,43 @@ async function sendMentionNotifications(
       (settings ?? []).filter((s) => !s.email_mention).map((s) => s.user_id)
     );
 
+    const enabledProfiles = profiles.filter((p) => !disabledUserIds.has(p.id));
+
+    // メール通知を送信
     await Promise.all(
-      profiles
-        .filter((p) => !disabledUserIds.has(p.id))
-        .map(({ email }) =>
-          sendNotificationEmail({
-            to: email,
-            type: "mention",
-            actorName: ctx.actorName,
-            ticketTitle: ctx.ticketTitle,
-            ticketUrl: ctx.ticketUrl,
-            projectName: ctx.projectName,
-            commentBody: stripHtml(html),
-          }).catch((err) => logger.warn("Failed to send mention notification email:", err))
+      enabledProfiles.map(({ email }) =>
+        sendNotificationEmail({
+          to: email,
+          type: "mention",
+          actorName: ctx.actorName,
+          ticketTitle: ctx.ticketTitle,
+          ticketUrl: ctx.ticketUrl,
+          projectName: ctx.projectName,
+          commentBody: stripHtml(html),
+        }).catch((err) => logger.warn("Failed to send mention notification email:", err))
+      )
+    );
+
+    // Slack 通知を送信
+    const slackPayload = {
+      type: "mention",
+      ticketTitle: ctx.ticketTitle,
+      ticketUrl: ctx.ticketUrl,
+      actorName: ctx.actorName,
+      projectName: ctx.projectName,
+      commentBody: stripHtml(html),
+    } as Omit<SlackNotificationPayload, "webhookUrl">;
+
+    await Promise.all(
+      enabledProfiles
+        .filter((p): p is typeof p & { slack_webhook_url: string } => !!p.slack_webhook_url)
+        .map(({ slack_webhook_url }) =>
+          sendSlackNotification({
+            ...slackPayload,
+            webhookUrl: slack_webhook_url,
+          } as SlackNotificationPayload).catch((err) =>
+            logger.warn("Failed to send mention Slack notification:", err)
+          )
         )
     );
   } catch (err) {
@@ -465,6 +572,20 @@ export async function updateTicketField(
       oldValue: oldAssignee?.username ?? "なし",
       newValue: newAssignee?.username ?? "なし",
     }));
+
+    // ウォッチャーへ assignee_changed Slack 通知を送信
+    const ctx = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+    if (ctx) {
+      await sendSlackNotificationToWatchers(ticketId, user.id, {
+        type: "assignee_changed",
+        ticketTitle: ctx.ticketTitle,
+        ticketUrl: ctx.ticketUrl,
+        actorName: ctx.actorName,
+        projectName: ctx.projectName,
+        oldValue: oldAssignee?.username ?? "なし",
+        newValue: newAssignee?.username ?? "なし",
+      } as Omit<SlackNotificationPayload, "webhookUrl">);
+    }
   }
 
   if (update.field === "status" && update.value !== update.prevValue) {
@@ -479,6 +600,20 @@ export async function updateTicketField(
       oldValue: STATUS_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
       newValue: STATUS_LABELS[update.value] ?? update.value,
     }));
+
+    // ウォッチャーへ status_changed Slack 通知を送信
+    const ctxStatus = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+    if (ctxStatus) {
+      await sendSlackNotificationToWatchers(ticketId, user.id, {
+        type: "status_changed",
+        ticketTitle: ctxStatus.ticketTitle,
+        ticketUrl: ctxStatus.ticketUrl,
+        actorName: ctxStatus.actorName,
+        projectName: ctxStatus.projectName,
+        oldValue: STATUS_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
+        newValue: STATUS_LABELS[update.value] ?? update.value,
+      } as Omit<SlackNotificationPayload, "webhookUrl">);
+    }
   }
 
   if (update.field === "priority" && update.value !== update.prevValue) {
@@ -493,6 +628,20 @@ export async function updateTicketField(
       oldValue: PRIORITY_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
       newValue: PRIORITY_LABELS[update.value] ?? update.value,
     }));
+
+    // ウォッチャーへ priority_changed Slack 通知を送信
+    const ctxPriority = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+    if (ctxPriority) {
+      await sendSlackNotificationToWatchers(ticketId, user.id, {
+        type: "priority_changed",
+        ticketTitle: ctxPriority.ticketTitle,
+        ticketUrl: ctxPriority.ticketUrl,
+        actorName: ctxPriority.actorName,
+        projectName: ctxPriority.projectName,
+        oldValue: PRIORITY_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
+        newValue: PRIORITY_LABELS[update.value] ?? update.value,
+      } as Omit<SlackNotificationPayload, "webhookUrl">);
+    }
   }
 
   return { success: true };
@@ -536,6 +685,19 @@ export async function addComment(
     commentBody: stripHtml(trimmed),
   }));
 
+  // ウォッチャーへ comment_added Slack 通知を送信
+  const ctxComment = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+  if (ctxComment) {
+    await sendSlackNotificationToWatchers(ticketId, user.id, {
+      type: "comment_added",
+      ticketTitle: ctxComment.ticketTitle,
+      ticketUrl: ctxComment.ticketUrl,
+      actorName: ctxComment.actorName,
+      projectName: ctxComment.projectName,
+      commentBody: stripHtml(trimmed),
+    } as Omit<SlackNotificationPayload, "webhookUrl">);
+  }
+
   // メンションされたユーザーに `mention` 通知を発行（ウォッチ不要・常時通知）
   await sendMentionNotifications(supabase, ticketId, user.id, trimmed);
 
@@ -577,6 +739,19 @@ export async function addReply(
     ...ctx,
     commentBody: stripHtml(trimmed),
   }));
+
+  // ウォッチャーへ comment_added Slack 通知を送信
+  const ctxReply = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+  if (ctxReply) {
+    await sendSlackNotificationToWatchers(ticketId, user.id, {
+      type: "comment_added",
+      ticketTitle: ctxReply.ticketTitle,
+      ticketUrl: ctxReply.ticketUrl,
+      actorName: ctxReply.actorName,
+      projectName: ctxReply.projectName,
+      commentBody: stripHtml(trimmed),
+    } as Omit<SlackNotificationPayload, "webhookUrl">);
+  }
 
   // メンションされたユーザーに `mention` 通知を発行（ウォッチ不要・常時通知）
   await sendMentionNotifications(supabase, ticketId, user.id, trimmed);
