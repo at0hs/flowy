@@ -20,7 +20,7 @@
     "sb:push": "supabase db push",
     "sb:lint": "supabase db lint",
     "sb:migration": "npm run sb:reset && npm run sb:lint && npm run gen:types",
-		"sb:func-serve": "supabase functions serve",
+    "sb:func-serve": "supabase functions serve",
     "email:dev": "email dev --dir emails",
     "build:emails": "tsx scripts/build-emails.ts",
     "push:templates": "tsx scripts/push-resend-templates.ts"
@@ -29,6 +29,7 @@
     "@react-email/components": "^1.0.10",
     "@supabase/ssr": "^0.9.0",
     "@supabase/supabase-js": "^2.99.1",
+    "@tanstack/react-table": "^8.21.3",
     "@tiptap/extension-link": "^3.21.0",
     "@tiptap/extension-mention": "^3.22.2",
     "@tiptap/extension-table": "^3.21.0",
