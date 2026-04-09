@@ -5,7 +5,16 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, Settings, ChevronDown, ChevronRight, Ticket, Users } from "lucide-react";
+import {
+  LogOut,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  Ticket,
+  Users,
+  LayoutDashboard,
+  Layout,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
@@ -84,9 +93,14 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
 
       {/* プロジェクト一覧セクション */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+        <Link
+          href="/projects"
+          className="group flex items-center gap-1.5 px-1 py-1 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <LayoutDashboard className="h-3.5 w-3.5" />
           プロジェクト
-        </div>
+          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+        </Link>
         <nav className="space-y-1">
           {projects.length > 0 ? (
             projects.map((project) => {
