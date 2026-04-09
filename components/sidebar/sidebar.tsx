@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { LogOut, Settings, ChevronDown, ChevronRight, Ticket, Users, Home } from "lucide-react";
+import { LogOut, Settings, ChevronDown, ChevronRight, Ticket, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
 import { NotificationDropdown } from "@/components/notifications/notification-dropdown";
@@ -159,17 +159,10 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
 
       {/* メニューセクション */}
       <div className="p-4 space-y-2">
-        <Link href="/projects" className="w-full">
-          <Button variant="ghost" className="w-full justify-start text-foreground hover:bg-accent">
-            <Home className="mr-2 h-4 w-4" />
-            ホーム
-          </Button>
-        </Link>
-
         <Link href="/settings" className="w-full">
           <Button variant="ghost" className="w-full justify-start text-foreground hover:bg-accent">
             <Settings className="mr-2 h-4 w-4" />
-            アカウント設定
+            設定
           </Button>
         </Link>
 

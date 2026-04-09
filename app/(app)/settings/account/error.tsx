@@ -9,7 +9,7 @@ type Props = {
   reset: () => void;
 };
 
-export default function SettingsError({ error, reset }: Props) {
+export default function AccountSettingsError({ error, reset }: Props) {
   useEffect(() => {
     logger.error(error);
   }, [error]);
