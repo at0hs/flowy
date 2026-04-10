@@ -18,6 +18,7 @@ import { addWatch, removeWatch, getWatcherEmails } from "@/lib/supabase/watches"
 import { sendNotificationEmail } from "@/lib/email";
 import type { NotificationEmailProps } from "@/emails/notification";
 import { isEmailNotificationEnabled } from "@/lib/supabase/notification-settings";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 
 // 通知タイプとnotification_settingsフィールドのマッピング
@@ -220,8 +221,9 @@ async function sendNotificationEmailToWatchers(
     if (!ctx || watchers.length === 0) return;
 
     // ウォッチャー全員の通知設定を一括取得（1クエリ）
+    // 他ユーザーのレコードを読むため admin クライアントで RLS をバイパス
     const watcherIds = watchers.map((w) => w.user_id);
-    const { data: settings } = await supabase
+    const { data: settings } = await createAdminClient()
       .from("notification_settings")
       .select(`user_id, ${settingField}`)
       .in("user_id", watcherIds);
@@ -278,7 +280,8 @@ async function sendMentionNotifications(
     const [ctx, { data: profiles }, { data: settings }] = await Promise.all([
       fetchNotificationEmailContext(supabase, ticketId, actorId),
       supabase.from("profiles").select("id, email, slack_webhook_url").in("id", mentionedIds),
-      supabase
+      // 他ユーザーのレコードを読むため admin クライアントで RLS をバイパス
+      createAdminClient()
         .from("notification_settings")
         .select("user_id, email_mention")
         .in("user_id", mentionedIds),
@@ -289,7 +292,6 @@ async function sendMentionNotifications(
     const disabledUserIds = new Set(
       (settings ?? []).filter((s) => !s.email_mention).map((s) => s.user_id)
     );
-
     const enabledProfiles = profiles.filter((p) => !disabledUserIds.has(p.id));
 
     // メール通知を送信

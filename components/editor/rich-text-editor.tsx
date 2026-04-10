@@ -31,6 +31,20 @@ function buildMentionExtension(membersRef: React.RefObject<MentionMember[]>) {
         `@${node.attrs.label ?? node.attrs.id}`,
       ];
     },
+    parseHTML() {
+      return [
+        {
+          tag: "span[data-mention-id]",
+          getAttrs: (element) => {
+            if (typeof element === "string") return false;
+            const id = (element as HTMLElement).getAttribute("data-mention-id");
+            if (!id) return false;
+            const label = (element as HTMLElement).textContent?.replace(/^@/, "") ?? "";
+            return { id, label };
+          },
+        },
+      ];
+    },
   }).configure({
     HTMLAttributes: { class: "mention" },
     suggestion: {

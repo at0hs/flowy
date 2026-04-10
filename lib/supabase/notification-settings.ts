@@ -1,4 +1,5 @@
 import { createClient } from "./server";
+import { createAdminClient } from "./admin";
 import { NotificationSetting } from "@/types";
 import { logger } from "@/lib/logger";
 
@@ -78,7 +79,7 @@ export async function isEmailNotificationEnabled(
   userId: string,
   field: keyof NotificationSettingsFields
 ): Promise<boolean> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("notification_settings")
