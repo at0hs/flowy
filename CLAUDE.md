@@ -64,10 +64,10 @@ IMPORTANT:
 
 ## 参照ドキュメント
 必要に応じて、以下のドキュメントを参照してください。
-- 要件定義: @private-repo/requirements.md
-- アーキテクチャ、ディレクトリ構成、設計方針、環境構成: @private-repo/architecture.md
-- データベース設計書: @private-repo/database_design.md
-- 画面設計: @private-repo/screen_design.md
+- 要件定義: @flowy-doc/requirements.md
+- アーキテクチャ、ディレクトリ構成、設計方針、環境構成: @flowy-doc/architecture.md
+- データベース設計書: @flowy-doc/database_design.md
+- 画面設計: @flowy-doc/screen_design.md
 - コーディング規約: @.prettierrc
 
 ## Commands
