@@ -28,6 +28,54 @@ export type Database = {
   };
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          created_at: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          id: string;
+          mime_type: string;
+          ticket_id: string;
+          uploaded_by: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          file_name: string;
+          file_path: string;
+          file_size: number;
+          id?: string;
+          mime_type: string;
+          ticket_id: string;
+          uploaded_by?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: number;
+          id?: string;
+          mime_type?: string;
+          ticket_id?: string;
+          uploaded_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "attachments_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "attachments_uploaded_by_fkey";
+            columns: ["uploaded_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       comments: {
         Row: {
           body: string;
@@ -175,6 +223,7 @@ export type Database = {
         Row: {
           actor_id: string | null;
           created_at: string;
+          email_sent_at: string | null;
           id: string;
           is_read: boolean;
           metadata: Json | null;
@@ -185,6 +234,7 @@ export type Database = {
         Insert: {
           actor_id?: string | null;
           created_at?: string;
+          email_sent_at?: string | null;
           id?: string;
           is_read?: boolean;
           metadata?: Json | null;
@@ -195,6 +245,7 @@ export type Database = {
         Update: {
           actor_id?: string | null;
           created_at?: string;
+          email_sent_at?: string | null;
           id?: string;
           is_read?: boolean;
           metadata?: Json | null;
@@ -228,6 +279,10 @@ export type Database = {
       };
       profiles: {
         Row: {
+          ai_api_key: string | null;
+          ai_endpoint_url: string | null;
+          ai_model_name: string | null;
+          ai_provider: Database["public"]["Enums"]["ai_provider_type"] | null;
           created_at: string;
           email: string;
           id: string;
@@ -235,6 +290,10 @@ export type Database = {
           username: string;
         };
         Insert: {
+          ai_api_key?: string | null;
+          ai_endpoint_url?: string | null;
+          ai_model_name?: string | null;
+          ai_provider?: Database["public"]["Enums"]["ai_provider_type"] | null;
           created_at?: string;
           email: string;
           id: string;
@@ -242,6 +301,10 @@ export type Database = {
           username: string;
         };
         Update: {
+          ai_api_key?: string | null;
+          ai_endpoint_url?: string | null;
+          ai_model_name?: string | null;
+          ai_provider?: Database["public"]["Enums"]["ai_provider_type"] | null;
           created_at?: string;
           email?: string;
           id?: string;
@@ -433,6 +496,10 @@ export type Database = {
         Args: { p_token: string; p_user_id: string };
         Returns: undefined;
       };
+      can_access_attachment_ticket: {
+        Args: { ticket_id: string };
+        Returns: boolean;
+      };
       create_invitation: {
         Args: { p_email: string; p_project_id: string };
         Returns: {
@@ -476,6 +543,7 @@ export type Database = {
       };
     };
     Enums: {
+      ai_provider_type: "openai_compatible" | "ollama";
       invitation_status: "pending" | "accepted" | "expired";
       notification_type:
         | "assigned"
@@ -616,6 +684,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      ai_provider_type: ["openai_compatible", "ollama"],
       invitation_status: ["pending", "accepted", "expired"],
       notification_type: [
         "assigned",

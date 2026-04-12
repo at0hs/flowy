@@ -1,9 +1,13 @@
 -- ----------------------------------------
 -- AI機能の設定を追加
 -- ----------------------------------------
+CREATE TYPE ai_provider_type AS ENUM ('openai_compatible', 'ollama');
+
 ALTER TABLE profiles
-  ADD COLUMN ai_api_key text,
-  ADD COLUMN ai_endpoint_url text;
+  ADD COLUMN ai_provider    ai_provider_type,
+  ADD COLUMN ai_api_key     text,
+  ADD COLUMN ai_endpoint_url text,
+  ADD COLUMN ai_model_name  text;
 
 
 ALTER TABLE notifications
@@ -74,8 +78,8 @@ CREATE POLICY "attachments: project members can delete" ON attachments
 -- ----------------------------------------
 -- 添付ファイル用のバケットを作成
 -- ----------------------------------------
-INSERT INTO storage.buckets (id, name, public)
-  VALUES ('attachments', 'attachments', false);
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+  VALUES ('attachments', 'attachments', false, 30*1024*1024);
 
 -- プロジェクトのメンバーのみ操作可能
 -- パスから project_id を抽出して権限チェック（projects/{project_id}/tickets/...）

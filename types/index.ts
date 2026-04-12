@@ -8,10 +8,12 @@ export type Ticket = Database["public"]["Tables"]["tickets"]["Row"];
 export type Invitation = Database["public"]["Tables"]["invitations"]["Row"];
 export type Comment = Database["public"]["Tables"]["comments"]["Row"];
 export type TicketWatch = Database["public"]["Tables"]["ticket_watches"]["Row"];
+export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
 
 // ENUM型をエクスポート
 export type ProjectRole = Database["public"]["Enums"]["project_role"];
 export type InvitationStatus = Database["public"]["Enums"]["invitation_status"];
+export type AiProviderType = Database["public"]["Enums"]["ai_provider_type"];
 
 // 通知関連の型定義
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];
@@ -24,4 +26,9 @@ export type NotificationSetting = Database["public"]["Tables"]["notification_set
 export type NotificationWithDetails = Notification & {
   actor: { username: string } | null;
   ticket: { title: string; project_id: string } | null;
+};
+
+// 添付ファイル関連の拡張型
+export type AttachmentWithUploader = Attachment & {
+  uploader: Profile | null;
 };
