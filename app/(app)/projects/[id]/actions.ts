@@ -15,21 +15,7 @@ import {
   extractMentionedUserIds,
 } from "@/lib/supabase/comments";
 import { addWatch, removeWatch, getWatcherEmails } from "@/lib/supabase/watches";
-import { sendNotificationEmail } from "@/lib/email";
-import type { NotificationEmailProps } from "@/emails/notification";
-import { isEmailNotificationEnabled } from "@/lib/supabase/notification-settings";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
-
-// 通知タイプとnotification_settingsフィールドのマッピング
-const EMAIL_SETTING_FIELD = {
-  assignee_changed: "email_assignee_changed",
-  comment_added: "email_comment_added",
-  status_changed: "email_status_changed",
-  priority_changed: "email_priority_changed",
-} as const;
-
-type WatcherNotificationType = keyof typeof EMAIL_SETTING_FIELD;
 
 // ステータスの日本語ラベル
 const STATUS_LABELS: Record<string, string> = {
@@ -156,101 +142,6 @@ async function fetchNotificationEmailContext(
 }
 
 /**
- * 担当者割り当て通知メールを1人のユーザーに送信する
- */
-async function sendAssignedNotificationEmail(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  ticketId: string,
-  actorId: string,
-  assigneeId: string,
-  oldAssigneeName?: string
-): Promise<void> {
-  try {
-    const [ctx, { data: assignee }, enabled] = await Promise.all([
-      fetchNotificationEmailContext(supabase, ticketId, actorId),
-      supabase.from("profiles").select("email").eq("id", assigneeId).single(),
-      isEmailNotificationEnabled(assigneeId, "email_assigned"),
-    ]);
-    if (!ctx || !assignee?.email || !enabled) return;
-    await sendNotificationEmail({
-      to: assignee.email,
-      type: "assigned",
-      actorName: ctx.actorName,
-      ticketTitle: ctx.ticketTitle,
-      ticketUrl: ctx.ticketUrl,
-      projectName: ctx.projectName,
-      oldAssigneeName,
-    });
-
-    // Slack 通知を送信
-    await sendSlackNotificationToUser(supabase, assigneeId, {
-      type: "assigned",
-      ticketTitle: ctx.ticketTitle,
-      ticketUrl: ctx.ticketUrl,
-      actorName: ctx.actorName,
-      projectName: ctx.projectName,
-      ...(oldAssigneeName && { oldAssigneeName }),
-    } as Omit<SlackNotificationPayload, "webhookUrl">);
-  } catch (err) {
-    logger.warn("Failed to send assigned notification email:", err);
-  }
-}
-
-/**
- * ウォッチャー全員に通知メールを送信する（メール通知設定がONのユーザーのみ）
- */
-async function sendNotificationEmailToWatchers(
-  ticketId: string,
-  actorId: string,
-  notificationType: WatcherNotificationType,
-  buildProps: (ctx: {
-    ticketTitle: string;
-    ticketUrl: string;
-    actorName: string;
-    projectName: string;
-  }) => NotificationEmailProps
-): Promise<void> {
-  try {
-    const supabase = await createClient();
-    const settingField = EMAIL_SETTING_FIELD[notificationType];
-
-    const [ctx, watchers] = await Promise.all([
-      fetchNotificationEmailContext(supabase, ticketId, actorId),
-      getWatcherEmails(ticketId, actorId),
-    ]);
-    if (!ctx || watchers.length === 0) return;
-
-    // ウォッチャー全員の通知設定を一括取得（1クエリ）
-    // 他ユーザーのレコードを読むため admin クライアントで RLS をバイパス
-    const watcherIds = watchers.map((w) => w.user_id);
-    const { data: settings } = await createAdminClient()
-      .from("notification_settings")
-      .select(`user_id, ${settingField}`)
-      .in("user_id", watcherIds);
-
-    // OFFのユーザーIDをSetで管理（レコードなし＝デフォルトON）
-    const disabledUserIds = new Set(
-      (settings ?? [])
-        .filter((s) => !(s as Record<string, unknown>)[settingField])
-        .map((s) => s.user_id)
-    );
-
-    const props = buildProps(ctx);
-    await Promise.all(
-      watchers
-        .filter((w) => !disabledUserIds.has(w.user_id))
-        .map(({ email }) =>
-          sendNotificationEmail({ ...props, to: email }).catch((err) =>
-            logger.warn("Failed to send notification email:", err)
-          )
-        )
-    );
-  } catch (err) {
-    logger.warn("Failed to send watcher notification emails:", err);
-  }
-}
-
-/**
  * コメント本文のメンション対象ユーザーに `mention` 通知を発行する
  * 自分自身へのメンションは除外する
  */
@@ -275,41 +166,14 @@ async function sendMentionNotifications(
     logger.warn("Failed to send mention notifications:", error);
   }
 
-  // メンションされたユーザーへメール・Slack 通知を送信（email_mention=ONのユーザーのみ）
+  // メンションされたユーザーへ Slack 通知を送信
   try {
-    const [ctx, { data: profiles }, { data: settings }] = await Promise.all([
+    const [ctx, { data: profiles }] = await Promise.all([
       fetchNotificationEmailContext(supabase, ticketId, actorId),
-      supabase.from("profiles").select("id, email, slack_webhook_url").in("id", mentionedIds),
-      // 他ユーザーのレコードを読むため admin クライアントで RLS をバイパス
-      createAdminClient()
-        .from("notification_settings")
-        .select("user_id, email_mention")
-        .in("user_id", mentionedIds),
+      supabase.from("profiles").select("id, slack_webhook_url").in("id", mentionedIds),
     ]);
     if (!ctx || !profiles) return;
 
-    // OFFのユーザーIDをSetで管理（レコードなし＝デフォルトON）
-    const disabledUserIds = new Set(
-      (settings ?? []).filter((s) => !s.email_mention).map((s) => s.user_id)
-    );
-    const enabledProfiles = profiles.filter((p) => !disabledUserIds.has(p.id));
-
-    // メール通知を送信
-    await Promise.all(
-      enabledProfiles.map(({ email }) =>
-        sendNotificationEmail({
-          to: email,
-          type: "mention",
-          actorName: ctx.actorName,
-          ticketTitle: ctx.ticketTitle,
-          ticketUrl: ctx.ticketUrl,
-          projectName: ctx.projectName,
-          commentBody: stripHtml(html),
-        }).catch((err) => logger.warn("Failed to send mention notification email:", err))
-      )
-    );
-
-    // Slack 通知を送信
     const slackPayload = {
       type: "mention",
       ticketTitle: ctx.ticketTitle,
@@ -320,7 +184,7 @@ async function sendMentionNotifications(
     } as Omit<SlackNotificationPayload, "webhookUrl">;
 
     await Promise.all(
-      enabledProfiles
+      profiles
         .filter((p): p is typeof p & { slack_webhook_url: string } => !!p.slack_webhook_url)
         .map(({ slack_webhook_url }) =>
           sendSlackNotification({
@@ -332,7 +196,7 @@ async function sendMentionNotifications(
         )
     );
   } catch (err) {
-    logger.warn("Failed to send mention notification emails:", err);
+    logger.warn("Failed to send mention Slack notification:", err);
   }
 }
 
@@ -409,7 +273,17 @@ export async function createTicket(projectId: string, formData: FormData) {
     if (notifyError) {
       logger.warn("Failed to send assigned notification:", notifyError);
     }
-    await sendAssignedNotificationEmail(supabase, newTicket.id, user.id, assigneeId);
+    // Slack 通知（担当者本人へ）
+    const ctx = await fetchNotificationEmailContext(supabase, newTicket.id, user.id);
+    if (ctx) {
+      await sendSlackNotificationToUser(supabase, assigneeId, {
+        type: "assigned",
+        ticketTitle: ctx.ticketTitle,
+        ticketUrl: ctx.ticketUrl,
+        actorName: ctx.actorName,
+        projectName: ctx.projectName,
+      } as Omit<SlackNotificationPayload, "webhookUrl">);
+    }
   }
 
   return { success: true, projectId };
@@ -541,24 +415,11 @@ export async function updateTicketField(
         type: "assigned" as const,
       });
       if (notifyError) logger.warn("Failed to send assigned notification:", notifyError);
-      // 旧担当者名を取得してメール送信（旧担当者がいた場合のみ）
-      const oldAssigneeName = update.prevValue
-        ? (await supabase.from("profiles").select("username").eq("id", update.prevValue).single())
-            .data?.username
-        : undefined;
-      await sendAssignedNotificationEmail(
-        supabase,
-        ticketId,
-        user.id,
-        update.value,
-        oldAssigneeName
-      );
     }
     await callNotifyWatchers(supabase, ticketId, "assignee_changed", user.id, {
       old_assignee_id: update.prevValue ?? null,
       new_assignee_id: update.value ?? null,
     });
-    // ウォッチャーへ assignee_changed メールを送信
     const [{ data: oldAssignee }, { data: newAssignee }] = await Promise.all([
       update.prevValue
         ? supabase.from("profiles").select("username").eq("id", update.prevValue).single()
@@ -567,17 +428,21 @@ export async function updateTicketField(
         ? supabase.from("profiles").select("username").eq("id", update.value).single()
         : Promise.resolve({ data: null }),
     ]);
-    await sendNotificationEmailToWatchers(ticketId, user.id, "assignee_changed", (ctx) => ({
-      type: "assignee_changed" as const,
-      ...ctx,
-      fieldLabel: "担当者",
-      oldValue: oldAssignee?.username ?? "なし",
-      newValue: newAssignee?.username ?? "なし",
-    }));
 
     // ウォッチャーへ assignee_changed Slack 通知を送信
     const ctx = await fetchNotificationEmailContext(supabase, ticketId, user.id);
     if (ctx) {
+      // 担当者本人への Slack 通知
+      if (update.value && update.value !== user.id) {
+        await sendSlackNotificationToUser(supabase, update.value, {
+          type: "assigned",
+          ticketTitle: ctx.ticketTitle,
+          ticketUrl: ctx.ticketUrl,
+          actorName: ctx.actorName,
+          projectName: ctx.projectName,
+          ...(oldAssignee?.username && { oldAssigneeName: oldAssignee.username }),
+        } as Omit<SlackNotificationPayload, "webhookUrl">);
+      }
       await sendSlackNotificationToWatchers(ticketId, user.id, {
         type: "assignee_changed",
         ticketTitle: ctx.ticketTitle,
@@ -595,13 +460,6 @@ export async function updateTicketField(
       old_status: update.prevValue ?? null,
       new_status: update.value,
     });
-    await sendNotificationEmailToWatchers(ticketId, user.id, "status_changed", (ctx) => ({
-      type: "status_changed" as const,
-      ...ctx,
-      fieldLabel: "ステータス",
-      oldValue: STATUS_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
-      newValue: STATUS_LABELS[update.value] ?? update.value,
-    }));
 
     // ウォッチャーへ status_changed Slack 通知を送信
     const ctxStatus = await fetchNotificationEmailContext(supabase, ticketId, user.id);
@@ -623,13 +481,6 @@ export async function updateTicketField(
       old_priority: update.prevValue ?? null,
       new_priority: update.value,
     });
-    await sendNotificationEmailToWatchers(ticketId, user.id, "priority_changed", (ctx) => ({
-      type: "priority_changed" as const,
-      ...ctx,
-      fieldLabel: "優先度",
-      oldValue: PRIORITY_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
-      newValue: PRIORITY_LABELS[update.value] ?? update.value,
-    }));
 
     // ウォッチャーへ priority_changed Slack 通知を送信
     const ctxPriority = await fetchNotificationEmailContext(supabase, ticketId, user.id);
@@ -681,11 +532,6 @@ export async function addComment(
   if (notifyError) {
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
-  await sendNotificationEmailToWatchers(ticketId, user.id, "comment_added", (ctx) => ({
-    type: "comment_added" as const,
-    ...ctx,
-    commentBody: stripHtml(trimmed),
-  }));
 
   // ウォッチャーへ comment_added Slack 通知を送信
   const ctxComment = await fetchNotificationEmailContext(supabase, ticketId, user.id);
@@ -736,11 +582,6 @@ export async function addReply(
   if (notifyError) {
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
-  await sendNotificationEmailToWatchers(ticketId, user.id, "comment_added", (ctx) => ({
-    type: "comment_added" as const,
-    ...ctx,
-    commentBody: stripHtml(trimmed),
-  }));
 
   // ウォッチャーへ comment_added Slack 通知を送信
   const ctxReply = await fetchNotificationEmailContext(supabase, ticketId, user.id);

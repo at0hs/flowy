@@ -22,8 +22,7 @@
     "sb:migration": "npm run sb:reset && npm run sb:lint && npm run gen:types",
     "sb:func-serve": "supabase functions serve",
     "email:dev": "email dev --dir emails",
-    "build:emails": "tsx scripts/build-emails.ts",
-    "push:templates": "tsx scripts/push-resend-templates.ts"
+    "build:emails": "tsx scripts/build-emails.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.52",
