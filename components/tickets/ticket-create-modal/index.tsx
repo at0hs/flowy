@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createTicket } from "@/app/(app)/projects/[id]/actions";
+import {
+  createTicket,
+  registerAttachment,
+  getAttachmentUrl,
+  updateTicketField,
+} from "@/app/(app)/projects/[id]/actions";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +31,10 @@ import {
   Plus,
   CalendarIcon,
   X,
+  Paperclip,
 } from "lucide-react";
+import { formatFileSize } from "@/components/tickets/attachment-section/attachment-item";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -66,6 +75,8 @@ const PRIORITY_OPTIONS: {
   { value: "urgent", label: "緊急", icon: ChevronsUpIcon, iconColor: "text-red-400" },
 ];
 
+const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
+
 interface RootTicket {
   id: string;
   title: string;
@@ -87,6 +98,9 @@ export function TicketCreateModal({
   triggerLabel,
 }: TicketCreateModalProps) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Blob URL（画像プレビュー用）→ File のマッピング
+  const blobUrlToFileRef = useRef<Map<string, File>>(new Map());
   const [open, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -97,6 +111,22 @@ export function TicketCreateModal({
   const [priority, setPriority] = useState<Ticket["priority"]>("medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [dueDateOpen, setDueDateOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? []);
+    if (selected.length === 0) return;
+    setPendingFiles((prev) => [...prev, ...selected]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemovePendingFile = (index: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleImagePreview = (file: File, blobUrl: string) => {
+    blobUrlToFileRef.current.set(blobUrl, file);
+  };
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -116,21 +146,96 @@ export function TicketCreateModal({
 
     if (result?.error) {
       setErrorMessage(result.error);
-    } else {
-      setOpen(false);
-      setAssigneeId("none");
-      setParentId(defaultParentId ?? "none");
-      setStatus("todo");
-      setPriority("medium");
-      setDescription("");
-      setDueDate(undefined);
-      router.refresh();
+      setIsLoading(false);
+      return;
     }
+
+    // チケット INSERT 後に ticketId が確定してから添付ファイルをアップロード
+    // 画像ファイルは Blob URL → 実 URL に置換して説明文を更新する
+    if (pendingFiles.length > 0 && result.ticketId) {
+      const supabase = createClient();
+      let failedCount = 0;
+      let finalDescription = isDescriptionEmpty ? "" : description;
+
+      for (const file of pendingFiles) {
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error(`${file.name}: ファイルサイズは30MB以下にしてください`);
+          failedCount++;
+          continue;
+        }
+        const filePath = `${projectId}/${result.ticketId}/${crypto.randomUUID()}-${file.name}`;
+        const { error: storageError } = await supabase.storage
+          .from("attachments")
+          .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        if (storageError) {
+          failedCount++;
+          continue;
+        }
+        const registerResult = await registerAttachment(result.ticketId, projectId, {
+          fileName: file.name,
+          filePath,
+          mimeType: file.type,
+          fileSize: file.size,
+        });
+        if ("error" in registerResult) {
+          await supabase.storage.from("attachments").remove([filePath]);
+          failedCount++;
+          continue;
+        }
+
+        // 画像ファイルの場合、プレビュー用 Blob URL を実 URL に置換する
+        if (file.type.startsWith("image/")) {
+          const blobUrl = [...blobUrlToFileRef.current.entries()].find(([, f]) => f === file)?.[0];
+          if (blobUrl) {
+            const urlResult = await getAttachmentUrl(registerResult.attachment.id);
+            if ("url" in urlResult) {
+              finalDescription = finalDescription.replace(blobUrl, urlResult.url);
+            }
+            URL.revokeObjectURL(blobUrl);
+            blobUrlToFileRef.current.delete(blobUrl);
+          }
+        }
+      }
+
+      if (failedCount > 0) {
+        toast.error(`${failedCount}件のファイルのアップロードに失敗しました`);
+      }
+
+      // Blob URL の置換が発生していた場合、説明文を更新する
+      const originalDescription = isDescriptionEmpty ? "" : description;
+      if (finalDescription !== originalDescription) {
+        await updateTicketField(result.ticketId, projectId, {
+          field: "description",
+          value: finalDescription || null,
+        });
+      }
+    }
+
+    // 残存する Blob URL を解放
+    for (const blobUrl of blobUrlToFileRef.current.keys()) {
+      URL.revokeObjectURL(blobUrl);
+    }
+    blobUrlToFileRef.current.clear();
+
+    setOpen(false);
+    setAssigneeId("none");
+    setParentId(defaultParentId ?? "none");
+    setStatus("todo");
+    setPriority("medium");
+    setDescription("");
+    setDueDate(undefined);
+    setPendingFiles([]);
+    router.refresh();
     setIsLoading(false);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
+      // キャンセル時は Blob URL を全て解放する
+      for (const blobUrl of blobUrlToFileRef.current.keys()) {
+        URL.revokeObjectURL(blobUrl);
+      }
+      blobUrlToFileRef.current.clear();
       setErrorMessage("");
       setAssigneeId("none");
       setParentId(defaultParentId ?? "none");
@@ -138,6 +243,7 @@ export function TicketCreateModal({
       setPriority("medium");
       setDescription("");
       setDueDate(undefined);
+      setPendingFiles([]);
     }
     setOpen(nextOpen);
   };
@@ -193,10 +299,15 @@ export function TicketCreateModal({
             {/* 説明 */}
             <div className="space-y-2">
               <Label>説明</Label>
+              <p className="text-muted-foreground text-xs">
+                画像をドラッグ＆ドロップするとエディタに挿入されます
+              </p>
               <RichTextEditor
                 value={description}
                 onChange={setDescription}
                 placeholder="説明を入力..."
+                onFileDrop={(files) => setPendingFiles((prev) => [...prev, ...files])}
+                onImagePreview={handleImagePreview}
               />
             </div>
 
@@ -278,29 +389,75 @@ export function TicketCreateModal({
                 )}
               </div>
             </div>
-          </div>
 
-          <Separator className="my-6" />
+            <Separator className="my-6" />
 
-          {/* 親チケット */}
-          {rootTickets.length > 0 && (
-            <div className="flex items-center gap-4">
-              <Label className="w-24 shrink-0 text-muted-foreground">親チケット</Label>
-              <Select value={parentId} onValueChange={setParentId}>
-                <SelectTrigger className="w-80 overflow-hidden *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate">
-                  <SelectValue placeholder="親チケットを選択" />
-                </SelectTrigger>
-                <SelectContent position="popper">
-                  <SelectItem value="none">なし</SelectItem>
-                  {rootTickets.map((ticket) => (
-                    <SelectItem key={ticket.id} value={ticket.id}>
-                      <span className="block truncate max-w-80">{ticket.title}</span>
-                    </SelectItem>
+            {/* 親チケット */}
+            {rootTickets.length > 0 && (
+              <div className="flex items-center gap-4">
+                <Label className="w-24 shrink-0 text-muted-foreground">親チケット</Label>
+                <Select value={parentId} onValueChange={setParentId}>
+                  <SelectTrigger className="w-80 overflow-hidden *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate">
+                    <SelectValue placeholder="親チケットを選択" />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    <SelectItem value="none">なし</SelectItem>
+                    {rootTickets.map((ticket) => (
+                      <SelectItem key={ticket.id} value={ticket.id}>
+                        <span className="block truncate max-w-80">{ticket.title}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <Separator className="my-6" />
+
+            {/* 添付ファイル */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-muted-foreground">
+                  添付ファイル{pendingFiles.length > -1 && ` (${pendingFiles.length})`}
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1 text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Paperclip className="h-4.5 w-3.5" />
+                  ファイルを追加
+                </Button>
+                <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileSelect} />
+              </div>
+              {pendingFiles.length > -1 && (
+                <div className="border rounded-lg divide-y">
+                  {pendingFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-3 px-3 py-2 text-sm">
+                      <Paperclip className="h-5 w-4 shrink-0 text-muted-foreground" />
+                      <span className="flex-2 truncate" title={file.name}>
+                        {file.name}
+                      </span>
+                      <span className="shrink text-muted-foreground text-xs">
+                        {formatFileSize(file.size)}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-6 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => handleRemovePendingFile(index)}
+                      >
+                        <X className="h-4.5 w-3.5" />
+                      </Button>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           <DialogFooter className="mt-4">
             <Button type="submit" disabled={isLoading}>

@@ -9,9 +9,19 @@ type Props = {
   value: string | null;
   onSave: (value: string | null) => Promise<void>;
   disabled?: boolean;
+  ticketId?: string;
+  projectId?: string;
+  onAttachmentUploaded?: () => void;
 };
 
-export function InlineDescription({ value, onSave, disabled }: Props) {
+export function InlineDescription({
+  value,
+  onSave,
+  disabled,
+  ticketId,
+  projectId,
+  onAttachmentUploaded,
+}: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
 
@@ -36,7 +46,14 @@ export function InlineDescription({ value, onSave, disabled }: Props) {
   if (isEditing) {
     return (
       <div className="space-y-2">
-        <RichTextEditor value={draft} onChange={setDraft} placeholder="説明を入力..." />
+        <RichTextEditor
+          value={draft}
+          onChange={setDraft}
+          placeholder="説明を入力..."
+          ticketId={ticketId}
+          projectId={projectId}
+          onAttachmentUploaded={onAttachmentUploaded}
+        />
         <div className="flex gap-2">
           <Button type="button" size="sm" onClick={handleSave}>
             保存

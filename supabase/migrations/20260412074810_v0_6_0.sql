@@ -88,6 +88,6 @@ CREATE POLICY "attachments bucket: project members only" ON storage.objects
     USING (
       bucket_id = 'attachments'
       AND is_project_member(
-        (split_part(storage.objects.name, '/', 2))::uuid
+        (split_part(storage.objects.name, '/', 1))::uuid
       )
     );

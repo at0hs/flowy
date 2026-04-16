@@ -13,6 +13,8 @@ import { isWatching } from "@/lib/supabase/watches";
 import { TicketWatchButton } from "@/components/tickets/ticket-watch-button";
 import { ArrowLeft } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date";
+import { getAttachments } from "@/lib/supabase/attachments";
+import { AttachmentSection } from "@/components/tickets/attachment-section";
 
 type Props = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -27,10 +29,11 @@ export default async function TicketDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: ticket }, members, comments] = await Promise.all([
+  const [{ data: ticket }, members, comments, attachments] = await Promise.all([
     supabase.from("tickets").select("*").eq("id", ticketId).single(),
     getProjectMembers(id),
     getComments(ticketId),
+    getAttachments(ticketId),
   ]);
 
   if (!ticket) notFound();
@@ -75,6 +78,16 @@ export default async function TicketDetailPage({ params }: Props) {
         <p>作成日：{formatRelativeTime(ticket.created_at)}</p>
         <p>更新日：{formatRelativeTime(ticket.updated_at)}</p>
       </div>
+
+      <Separator className="my-6" />
+
+      {/* 添付ファイル */}
+      <AttachmentSection
+        attachments={attachments}
+        ticketId={ticketId}
+        projectId={id}
+        currentUserId={user.id}
+      />
 
       {/* サブタスク（親チケットのみ表示） */}
       {ticket.parent_id === null && (

@@ -67,13 +67,19 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
 
       {/* 説明 */}
       <div className="mb-6">
-        <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+        <p className="text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wide">
           説明
+        </p>
+        <p className="text-muted-foreground text-xs mb-1">
+          画像をドラッグ＆ドロップするとエディタに挿入されます
         </p>
         <InlineDescription
           value={localTicket.description}
           onSave={(v) => save({ field: "description", value: v }, { description: v })}
           disabled={isPending}
+          ticketId={ticket.id}
+          projectId={projectId}
+          onAttachmentUploaded={() => router.refresh()}
         />
       </div>
 

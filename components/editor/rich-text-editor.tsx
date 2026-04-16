@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { mergeAttributes } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
+import Image from "@tiptap/extension-image";
 import Mention from "@tiptap/extension-mention";
 import tippy, { type Instance } from "tippy.js";
+import { toast } from "sonner";
+import { registerAttachment, getAttachmentUrl } from "@/app/(app)/projects/[id]/actions";
+import { createClient } from "@/lib/supabase/client";
+
+const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 import { EditorToolbar } from "./editor-toolbar";
 
 export type MentionMember = { id: string; label: string };
@@ -18,6 +24,15 @@ interface RichTextEditorProps {
   editable?: boolean;
   maxHeight?: string;
   members?: MentionMember[];
+  /** D&Dアップロードを有効にする場合に指定 */
+  ticketId?: string;
+  projectId?: string;
+  /** アップロード完了後に呼ばれるコールバック（添付ファイルセクションの更新に使用） */
+  onAttachmentUploaded?: () => void;
+  /** D&Dされたファイルを受け取るコールバック（ticketId なしで使用する場合） */
+  onFileDrop?: (files: File[]) => void;
+  /** D&Dされた画像のプレビュー用 Blob URL を親に通知するコールバック（ticketId なしで使用する場合） */
+  onImagePreview?: (file: File, blobUrl: string) => void;
 }
 
 function buildMentionExtension(membersRef: React.RefObject<MentionMember[]>) {
@@ -161,8 +176,15 @@ export function RichTextEditor({
   editable = true,
   maxHeight = "50rem",
   members,
+  ticketId,
+  projectId,
+  onAttachmentUploaded,
+  onFileDrop,
+  onImagePreview,
 }: RichTextEditorProps) {
   const membersRef = useRef<MentionMember[]>(members ?? []);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     membersRef.current = members ?? [];
@@ -187,6 +209,7 @@ export function RichTextEditor({
       TableRow,
       TableHeader,
       TableCell,
+      Image.configure({ inline: false, allowBase64: false }),
       ...(mentionExtension ? [mentionExtension] : []),
     ],
     content: value,
@@ -206,9 +229,118 @@ export function RichTextEditor({
     editor.setEditable(editable);
   }, [editor, editable]);
 
+  const dndEnabled = editable && (!!onFileDrop || (!!ticketId && !!projectId));
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (!dndEnabled) return;
+    if (e.dataTransfer.types.includes("Files")) {
+      e.preventDefault();
+      setIsDragging(true);
+    }
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    // 子要素への移動は無視する（currentTarget の外に出たときのみ解除）
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  }
+
+  async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    if (!dndEnabled) return;
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length === 0) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    // ticketId がない場合は onFileDrop コールバックにファイルを渡す
+    // 画像ファイルは Blob URL でエディタにプレビュー挿入する
+    if (!ticketId || !projectId) {
+      const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+      for (const file of imageFiles) {
+        const blobUrl = URL.createObjectURL(file);
+        editor?.commands.setImage({ src: blobUrl });
+        onImagePreview?.(file, blobUrl);
+      }
+      if (imageFiles.length > 0 && editor) {
+        onChange(editor.getHTML());
+      }
+      onFileDrop?.(files);
+      return;
+    }
+
+    setIsUploading(true);
+
+    const supabase = createClient();
+    try {
+      for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) {
+          toast.error("ファイルサイズは30MB以下にしてください");
+          continue;
+        }
+
+        const filePath = `${projectId}/${ticketId}/${crypto.randomUUID()}-${file.name}`;
+        const { error: storageError } = await supabase.storage
+          .from("attachments")
+          .upload(filePath, file, { cacheControl: "3600", upsert: false });
+        if (storageError) {
+          toast.error(`${file.name} のアップロードに失敗しました`);
+          continue;
+        }
+
+        const result = await registerAttachment(ticketId, projectId, {
+          fileName: file.name,
+          filePath,
+          mimeType: file.type,
+          fileSize: file.size,
+        });
+        if ("error" in result) {
+          toast.error(result.error);
+          await supabase.storage.from("attachments").remove([filePath]);
+          continue;
+        }
+
+        if (file.type.startsWith("image/")) {
+          // 署名付きURLを取得してエディタに画像として埋め込む
+          const urlResult = await getAttachmentUrl(result.attachment.id);
+          if ("error" in urlResult) {
+            toast.error(urlResult.error);
+          } else {
+            editor?.commands.setImage({ src: urlResult.url });
+            onChange(editor?.getHTML() ?? "");
+          }
+        } else {
+          toast.success(`${file.name} をアップロードしました`);
+        }
+
+        onAttachmentUploaded?.();
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
   return (
-    <div className="border border-border rounded-md overflow-hidden">
+    <div
+      className={[
+        "border rounded-md overflow-hidden transition-colors",
+        isDragging ? "border-primary bg-primary/5" : "border-border",
+        isUploading ? "opacity-70 pointer-events-none" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      onDragOver={dndEnabled ? handleDragOver : undefined}
+      onDragLeave={dndEnabled ? handleDragLeave : undefined}
+      onDrop={dndEnabled ? handleDrop : undefined}
+    >
       {editable && <EditorToolbar editor={editor} />}
+      {isUploading && (
+        <div className="px-3 py-1.5 text-xs text-muted-foreground bg-muted/50">
+          アップロード中...
+        </div>
+      )}
       <div className="overflow-y-auto" style={{ maxHeight }}>
         <EditorContent editor={editor} />
       </div>
