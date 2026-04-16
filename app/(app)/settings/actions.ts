@@ -11,6 +11,73 @@ import { redirect } from "next/navigation";
 import { logger } from "@/lib/logger";
 import { NotificationType } from "@/types";
 
+export async function updateAiSettings(formData: FormData) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const provider = (formData.get("ai_provider") as string | null) || null;
+  const apiKey = (formData.get("ai_api_key") as string | null)?.trim() || null;
+  const endpointUrl = (formData.get("ai_endpoint_url") as string | null)?.trim() || null;
+  const modelName = (formData.get("ai_model_name") as string | null)?.trim() || null;
+
+  if (provider && provider !== "ollama" && provider !== "gemini") {
+    return { error: "プロバイダーの値が正しくありません" };
+  }
+
+  if (provider === "gemini" && !apiKey) {
+    return { error: "GeminiにはAPIキーが必要です" };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      ai_provider: provider as "ollama" | "gemini" | null,
+      ai_api_key: apiKey,
+      ai_endpoint_url: endpointUrl,
+      ai_model_name: modelName,
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    logger.error("Failed to update AI settings:", error);
+    return { error: "設定の更新に失敗しました" };
+  }
+
+  revalidatePath("/settings/integrations");
+  return { success: true };
+}
+
+export async function deleteAiSettings() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      ai_provider: null,
+      ai_api_key: null,
+      ai_endpoint_url: null,
+      ai_model_name: null,
+    })
+    .eq("id", user.id);
+
+  if (error) {
+    logger.error("Failed to delete AI settings:", error);
+    return { error: "設定の削除に失敗しました" };
+  }
+
+  revalidatePath("/settings/integrations");
+  return { success: true };
+}
+
 export async function updateSlackWebhookUrl(formData: FormData) {
   const supabase = await createClient();
 

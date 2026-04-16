@@ -1,7 +1,7 @@
 -- ----------------------------------------
 -- AI機能の設定を追加
 -- ----------------------------------------
-CREATE TYPE ai_provider_type AS ENUM ('openai_compatible', 'ollama');
+CREATE TYPE ai_provider_type AS ENUM ('ollama', 'gemini');
 
 ALTER TABLE profiles
   ADD COLUMN ai_provider    ai_provider_type,

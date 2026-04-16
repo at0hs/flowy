@@ -1,5 +1,6 @@
 import { generateObject, generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { AiProviderType } from "@/types";
@@ -27,9 +28,9 @@ export class AiNotConfiguredError extends Error {
 // ────────────────────────────────────────────────────────────
 
 const DEFAULT_OLLAMA_MODEL = "llama3.2";
-const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
 
-// Ollama は OpenAI 互換 API を持つため createOpenAI で統一して対応する。
+// Ollama は OpenAI 互換 API を持つため createOpenAI で対応する。
 // Ollama のデフォルトエンドポイント: http://localhost:11434/v1
 function createAIModel(config: AiConfig) {
   const { provider, apiKey, endpointUrl, modelName } = config;
@@ -41,11 +42,8 @@ function createAIModel(config: AiConfig) {
     });
     return openai(modelName ?? DEFAULT_OLLAMA_MODEL);
   } else {
-    const openai = createOpenAI({
-      apiKey: apiKey ?? "",
-      baseURL: endpointUrl ?? undefined,
-    });
-    return openai(modelName ?? DEFAULT_OPENAI_MODEL);
+    const google = createGoogleGenerativeAI({ apiKey: apiKey ?? "" });
+    return google(modelName ?? DEFAULT_GEMINI_MODEL);
   }
 }
 
