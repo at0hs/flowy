@@ -4,11 +4,12 @@ import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
 import { SubtaskSuggestButton } from "@/components/tickets/ai-assist/subtask-suggest-button";
 import { SubticketWithAssignee } from "@/lib/supabase/tickets";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
+import { STATUS_LABELS } from "@/lib/constants";
 
 const STATUS_MAP = {
-  todo: { label: "TODO", color: "bg-slate-500" },
-  in_progress: { label: "進行中", color: "bg-blue-500" },
-  done: { label: "完了", color: "bg-green-500" },
+  todo: { label: STATUS_LABELS.todo, color: "bg-slate-500" },
+  in_progress: { label: STATUS_LABELS.in_progress, color: "bg-blue-500" },
+  done: { label: STATUS_LABELS.done, color: "bg-green-500" },
 } as const;
 
 interface SubtaskSectionProps {

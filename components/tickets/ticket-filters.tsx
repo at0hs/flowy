@@ -11,6 +11,7 @@ import {
 import { Button } from "../ui/button";
 import { LoaderCircleIcon, RotateCcwIcon } from "lucide-react";
 import { useTransition } from "react";
+import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 
 export function TicketFilters() {
   const router = useRouter();
@@ -51,9 +52,9 @@ export function TicketFilters() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">すべて</SelectItem>
-          <SelectItem value="todo">TODO</SelectItem>
-          <SelectItem value="in_progress">進行中</SelectItem>
-          <SelectItem value="done">完了</SelectItem>
+          <SelectItem value="todo">{STATUS_LABELS.todo}</SelectItem>
+          <SelectItem value="in_progress">{STATUS_LABELS.in_progress}</SelectItem>
+          <SelectItem value="done">{STATUS_LABELS.done}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -67,10 +68,10 @@ export function TicketFilters() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">すべて</SelectItem>
-          <SelectItem value="low">低</SelectItem>
-          <SelectItem value="medium">中</SelectItem>
-          <SelectItem value="high">高</SelectItem>
-          <SelectItem value="urgent">緊急</SelectItem>
+          <SelectItem value="low">{PRIORITY_LABELS.low}</SelectItem>
+          <SelectItem value="medium">{PRIORITY_LABELS.medium}</SelectItem>
+          <SelectItem value="high">{PRIORITY_LABELS.high}</SelectItem>
+          <SelectItem value="urgent">{PRIORITY_LABELS.urgent}</SelectItem>
         </SelectContent>
       </Select>
 

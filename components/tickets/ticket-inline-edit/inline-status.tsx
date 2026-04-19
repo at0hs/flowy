@@ -7,26 +7,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Ticket } from "@/types";
+import { StatusType } from "@/types";
+import { STATUS_LABELS } from "@/lib/constants";
 
 const STATUS_MAP = {
   todo: {
-    label: "TODO",
+    label: STATUS_LABELS.todo,
     className: "bg-slate-500/20 text-black hover:bg-slate-500/30",
   },
   in_progress: {
-    label: "進行中",
+    label: STATUS_LABELS.in_progress,
     className: "bg-blue-500/20 text-black hover:bg-blue-500/30",
   },
   done: {
-    label: "完了",
+    label: STATUS_LABELS.done,
     className: "bg-green-500/20 text-black hover:bg-green-500/30",
   },
 } as const;
 
 type Props = {
-  value: Ticket["status"];
-  onSave: (value: Ticket["status"]) => Promise<void>;
+  value: StatusType;
+  onSave: (value: StatusType) => Promise<void>;
   disabled?: boolean;
 };
 
@@ -35,7 +36,7 @@ export function InlineStatus({ value, onSave, disabled }: Props) {
 
   async function handleChange(newValue: string) {
     if (newValue !== value) {
-      await onSave(newValue as Ticket["status"]);
+      await onSave(newValue as StatusType);
     }
   }
 

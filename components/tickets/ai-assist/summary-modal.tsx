@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import DOMPurify from "dompurify";
 import {
@@ -20,6 +21,14 @@ interface SummaryModalProps {
 }
 
 export function SummaryModal({ isOpen, onClose, summary, isLoading }: SummaryModalProps) {
+  const [sanitizedSummary, setSanitizedSummary] = useState("");
+
+  useEffect(() => {
+    if (!summary) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSanitizedSummary(DOMPurify.sanitize(summary));
+  }, [summary]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
@@ -40,7 +49,7 @@ export function SummaryModal({ isOpen, onClose, summary, isLoading }: SummaryMod
           ) : (
             <div
               className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(summary) }}
+              dangerouslySetInnerHTML={{ __html: sanitizedSummary }}
             />
           )}
         </div>

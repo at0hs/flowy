@@ -22,21 +22,7 @@ import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slac
 import { insertAttachment, deleteAttachment } from "@/lib/supabase/attachments";
 import { Attachment } from "@/types";
 import { revalidatePath } from "next/cache";
-
-// ステータスの日本語ラベル
-const STATUS_LABELS: Record<string, string> = {
-  todo: "TODO",
-  in_progress: "進行中",
-  done: "完了",
-};
-
-// 優先度の日本語ラベル
-const PRIORITY_LABELS: Record<string, string> = {
-  low: "低",
-  medium: "中",
-  high: "高",
-  urgent: "緊急",
-};
+import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 
 /** HTMLタグを除去する（メール本文用） */
 function stripHtml(html: string): string {

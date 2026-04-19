@@ -4,6 +4,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { AiProviderType, PriorityType, StatusType } from "@/types";
+import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 
 export type AiConfig = {
   provider: AiProviderType;
@@ -126,25 +127,13 @@ export async function suggestSubtask(
       ? `\n\n## 既存のサブタスク（これらと重複しないこと）\n${ticket.existingSubtasks.map((t) => `- ${t}`).join("\n")}`
       : "";
 
-  const STATUS_LABEL: Record<typeof ticket.status, string> = {
-    todo: "未着手",
-    in_progress: "進行中",
-    done: "完了",
-  };
-  const PRIORITY_LABEL: Record<typeof ticket.priority, string> = {
-    low: "低",
-    medium: "中",
-    high: "高",
-    urgent: "緊急",
-  };
-
   const prompt =
     `以下のチケットを実現するために必要なサブタスクを1件提案してください。\n\n` +
     `## プロジェクト名\n${ticket.projectName}\n\n` +
     `## タイトル\n${ticket.title}\n\n` +
     `## 説明\n${ticket.description ?? "（説明なし）"}\n\n` +
-    `## ステータス\n${STATUS_LABEL[ticket.status]}\n\n` +
-    `## 優先度\n${PRIORITY_LABEL[ticket.priority]}` +
+    `## ステータス\n${STATUS_LABELS[ticket.status]}\n\n` +
+    `## 優先度\n${PRIORITY_LABELS[ticket.priority]}` +
     existingSubtasksSection;
 
   logger.debug("suggestSubtask: calling AI", {

@@ -8,26 +8,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Ticket } from "@/types";
+import { PriorityType } from "@/types";
+import { PRIORITY_LABELS } from "@/lib/constants";
 
 // 推奨: コンポーネント外
 const PRIORITIES = [
-  { value: "low", icon: ChevronsDownIcon, iconColor: "text-blue-400", label: "低" },
-  { value: "medium", icon: EqualIcon, iconColor: "text-orange-300", label: "中" },
-  { value: "high", icon: ChevronUpIcon, iconColor: "text-red-400", label: "高" },
-  { value: "urgent", icon: ChevronsUpIcon, iconColor: "text-red-400", label: "緊急" },
+  { value: "low", icon: ChevronsDownIcon, iconColor: "text-blue-400", label: PRIORITY_LABELS.low },
+  { value: "medium", icon: EqualIcon, iconColor: "text-orange-300", label: PRIORITY_LABELS.medium },
+  { value: "high", icon: ChevronUpIcon, iconColor: "text-red-400", label: PRIORITY_LABELS.high },
+  {
+    value: "urgent",
+    icon: ChevronsUpIcon,
+    iconColor: "text-red-400",
+    label: PRIORITY_LABELS.urgent,
+  },
 ] as const;
 
 type Props = {
-  value: Ticket["priority"];
-  onSave: (value: Ticket["priority"]) => Promise<void>;
+  value: PriorityType;
+  onSave: (value: PriorityType) => Promise<void>;
   disabled?: boolean;
 };
 
 export function InlinePriority({ value, onSave, disabled }: Props) {
   async function handleChange(newValue: string) {
     if (newValue !== value) {
-      await onSave(newValue as Ticket["priority"]);
+      await onSave(newValue as PriorityType);
     }
   }
 

@@ -46,34 +46,49 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { Ticket } from "@/types";
+import { PriorityType, StatusType } from "@/types";
+import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { ja } from "date-fns/locale";
 import { format } from "date-fns";
 
-const STATUS_OPTIONS: { value: Ticket["status"]; label: string; className: string }[] = [
-  { value: "todo", label: "TODO", className: "bg-slate-500/20 text-black hover:bg-slate-500/30" },
+const STATUS_OPTIONS: { value: StatusType; label: string; className: string }[] = [
+  {
+    value: "todo",
+    label: STATUS_LABELS.todo,
+    className: "bg-slate-500/20 text-black hover:bg-slate-500/30",
+  },
   {
     value: "in_progress",
-    label: "進行中",
+    label: STATUS_LABELS.in_progress,
     className: "bg-blue-500/20 text-black hover:bg-blue-500/30",
   },
   {
     value: "done",
-    label: "完了",
+    label: STATUS_LABELS.done,
     className: "bg-green-500/20 text-black hover:bg-green-500/30",
   },
 ];
 
 const PRIORITY_OPTIONS: {
-  value: Ticket["priority"];
+  value: PriorityType;
   label: string;
   icon: React.ElementType;
   iconColor: string;
 }[] = [
-  { value: "low", label: "低", icon: ChevronsDownIcon, iconColor: "text-blue-400" },
-  { value: "medium", label: "中", icon: EqualIcon, iconColor: "text-orange-300" },
-  { value: "high", label: "高", icon: ChevronUpIcon, iconColor: "text-red-400" },
-  { value: "urgent", label: "緊急", icon: ChevronsUpIcon, iconColor: "text-red-400" },
+  { value: "low", label: PRIORITY_LABELS.low, icon: ChevronsDownIcon, iconColor: "text-blue-400" },
+  {
+    value: "medium",
+    label: PRIORITY_LABELS.medium,
+    icon: EqualIcon,
+    iconColor: "text-orange-300",
+  },
+  { value: "high", label: PRIORITY_LABELS.high, icon: ChevronUpIcon, iconColor: "text-red-400" },
+  {
+    value: "urgent",
+    label: PRIORITY_LABELS.urgent,
+    icon: ChevronsUpIcon,
+    iconColor: "text-red-400",
+  },
 ];
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
@@ -93,7 +108,7 @@ interface TicketCreateModalProps {
   onOpenChange?: (open: boolean) => void;
   initialTitle?: string;
   initialDescription?: string;
-  initialPriority?: Ticket["priority"];
+  initialPriority?: PriorityType;
 }
 
 export function TicketCreateModal({
@@ -121,8 +136,8 @@ export function TicketCreateModal({
   const [assigneeId, setAssigneeId] = useState<string>("none");
   const [description, setDescription] = useState(initialDescription ?? "");
   const [parentId, setParentId] = useState<string>(defaultParentId ?? "none");
-  const [status, setStatus] = useState<Ticket["status"]>("todo");
-  const [priority, setPriority] = useState<Ticket["priority"]>(initialPriority ?? "medium");
+  const [status, setStatus] = useState<StatusType>("todo");
+  const [priority, setPriority] = useState<PriorityType>(initialPriority ?? "medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [dueDateOpen, setDueDateOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -316,7 +331,7 @@ export function TicketCreateModal({
             {/* ステータス */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0">ステータス *</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as Ticket["status"])}>
+              <Select value={status} onValueChange={(v) => setStatus(v as StatusType)}>
                 <SelectTrigger
                   className={`w-auto h-7 px-3 text-xs font-medium border-0 shadow-none rounded-sm gap-1 transition-colors ${currentStatus.className}`}
                 >
@@ -368,7 +383,7 @@ export function TicketCreateModal({
             {/* 優先度 */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0 text-muted-foreground">優先度 *</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as Ticket["priority"])}>
+              <Select value={priority} onValueChange={(v) => setPriority(v as PriorityType)}>
                 <SelectTrigger className="w-80">
                   <SelectValue />
                 </SelectTrigger>
