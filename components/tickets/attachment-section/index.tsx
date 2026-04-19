@@ -11,9 +11,11 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
 } from "@/components/ui/dialog";
 import { AttachmentWithUploader } from "@/types";
 import { createClient } from "@/lib/supabase/client";
+import { cn, generateUUID } from "@/lib/utils";
 import {
   registerAttachment,
   removeAttachment,
@@ -57,7 +59,7 @@ export function AttachmentSection({
     }
     startTransition(async () => {
       const supabase = createClient();
-      const filePath = `${projectId}/${ticketId}/${crypto.randomUUID()}-${file.name}`;
+      const filePath = `${projectId}/${ticketId}/${generateUUID()}-${file.name}`;
       const { error: storageError } = await supabase.storage
         .from("attachments")
         .upload(filePath, file, { cacheControl: "3600", upsert: false });
@@ -170,23 +172,44 @@ export function AttachmentSection({
           }
         }}
       >
-        <DialogContent className="sm:max-w-3xl">
-          <DialogTitle>プレビュー</DialogTitle>
-          {previewUrl && previewMime?.startsWith("image/") && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={previewUrl}
-              alt="プレビュー"
-              className="max-h-[70vh] w-full object-contain rounded"
-            />
+        <DialogContent
+          className={cn(
+            "dark",
+            "text-white",
+            "p-4",
+            "flex",
+            "flex-col",
+            "max-w-none!",
+            "w-screen!",
+            "h-screen!",
+            "translate-x-0!",
+            "translate-y-0!",
+            "top-0!",
+            "left-0!",
+            "rounded-none!"
           )}
-          {previewUrl && previewMime === "application/pdf" && (
-            <iframe
-              src={previewUrl}
-              className="w-full h-[70vh] rounded border"
-              title="PDFプレビュー"
-            />
-          )}
+        >
+          <DialogHeader>
+            <DialogTitle className="sr-only">プレビュー</DialogTitle>
+            <DialogDescription className="sr-only">画像やPDFのプレビューです</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            {previewUrl && previewMime?.startsWith("image/") && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl}
+                alt="プレビュー"
+                className="max-w-full max-h-full object-contain rounded"
+              />
+            )}
+            {previewUrl && previewMime === "application/pdf" && (
+              <iframe
+                src={previewUrl}
+                className="w-full h-full rounded border"
+                title="PDFプレビュー"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

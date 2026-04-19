@@ -88,7 +88,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-8">
+    <div className="max-w-2xl xl:max-w-7xl 2xl:max-w-360 mx-auto p-8">
       <div className="flex flex-col mb-2">
         <Link
           href="/projects"

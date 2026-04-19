@@ -9,6 +9,7 @@ import {
   updateTicketField,
 } from "@/app/(app)/projects/[id]/actions";
 import { createClient } from "@/lib/supabase/client";
+import { generateUUID } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -186,7 +187,7 @@ export function TicketCreateModal({
           failedCount++;
           continue;
         }
-        const filePath = `${projectId}/${result.ticketId}/${crypto.randomUUID()}-${file.name}`;
+        const filePath = `${projectId}/${result.ticketId}/${generateUUID()}-${file.name}`;
         const { error: storageError } = await supabase.storage
           .from("attachments")
           .upload(filePath, file, { cacheControl: "3600", upsert: false });

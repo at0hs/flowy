@@ -11,6 +11,7 @@ import tippy, { type Instance } from "tippy.js";
 import { toast } from "sonner";
 import { registerAttachment, getAttachmentUrl } from "@/app/(app)/projects/[id]/actions";
 import { createClient } from "@/lib/supabase/client";
+import { generateUUID } from "@/lib/utils";
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 import { EditorToolbar } from "./editor-toolbar";
@@ -281,7 +282,7 @@ export function RichTextEditor({
           continue;
         }
 
-        const filePath = `${projectId}/${ticketId}/${crypto.randomUUID()}-${file.name}`;
+        const filePath = `${projectId}/${ticketId}/${generateUUID()}-${file.name}`;
         const { error: storageError } = await supabase.storage
           .from("attachments")
           .upload(filePath, file, { cacheControl: "3600", upsert: false });
