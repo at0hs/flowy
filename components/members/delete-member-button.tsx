@@ -13,6 +13,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { removeProjectMember } from "@/app/(app)/projects/actions";
+import { LoaderCircle } from "lucide-react";
 
 type Props = {
   projectId: string;
@@ -58,7 +59,7 @@ export function DeleteMemberButton({ projectId, memberId, userId, memberName }: 
             キャンセル
           </Button>
           <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-            {isLoading ? "削除中..." : "削除する"}
+            {isLoading ? <LoaderCircle className="animate-spin" /> : "削除"}
           </Button>
         </DialogFooter>
       </DialogContent>

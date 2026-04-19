@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Project } from "@/types";
 import { toast } from "sonner";
+import { LoaderCircle } from "lucide-react";
 import { formatDate } from "@/lib/date";
 
 type Props = {
@@ -100,7 +101,7 @@ export function ProjectCard({ project, isOwner }: Props) {
               キャンセル
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-              {isLoading ? "削除中..." : "削除する"}
+              {isLoading ? <LoaderCircle className="animate-spin" /> : "削除"}
             </Button>
           </DialogFooter>
         </DialogContent>

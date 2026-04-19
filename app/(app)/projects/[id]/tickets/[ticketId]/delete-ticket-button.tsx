@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Trash2Icon } from "lucide-react";
+import { Trash2Icon, LoaderCircle } from "lucide-react";
 
 type Props = {
   ticketId: string;
@@ -64,7 +64,7 @@ export function DeleteTicketButton({ ticketId, projectId, ticketTitle }: Props) 
               キャンセル
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
-              {isLoading ? "削除中..." : "削除する"}
+              {isLoading ? <LoaderCircle className="animate-spin" /> : "削除"}
             </Button>
           </DialogFooter>
         </DialogContent>

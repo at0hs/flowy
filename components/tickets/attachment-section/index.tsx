@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Paperclip } from "lucide-react";
+import { LoaderCircle, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -228,7 +228,7 @@ export function AttachmentSection({
               キャンセル
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isDeleting}>
-              {isDeleting ? "削除中..." : "削除"}
+              {isDeleting ? <LoaderCircle className="animate-spin" /> : "削除"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { LoaderCircle } from "lucide-react";
 
 export function UpdatePasswordForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +50,7 @@ export function UpdatePasswordForm() {
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "変更中..." : "変更する"}
+          {isLoading ? <LoaderCircle className="animate-spin" /> : "変更"}
         </Button>
       </div>
     </form>

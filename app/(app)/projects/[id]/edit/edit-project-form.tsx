@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Project } from "@/types";
 import { toast } from "sonner";
+import { LoaderCircle } from "lucide-react";
 
 type Props = {
   project: Project;
@@ -70,7 +71,7 @@ export function EditProjectForm({ project }: Props) {
             キャンセル
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "更新中..." : "更新する"}
+            {isLoading ? <LoaderCircle className="animate-spin" /> : "更新"}
           </Button>
         </CardFooter>
       </form>

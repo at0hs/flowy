@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
-import { LoaderCircleIcon, RotateCcwIcon } from "lucide-react";
+import { LoaderCircle, RotateCcwIcon } from "lucide-react";
 import { useTransition } from "react";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 
@@ -90,7 +90,7 @@ export function TicketFilters() {
       </Select>
 
       <Button variant="ghost" className="ml-auto" onClick={handleReload} disabled={isPending}>
-        {isPending ? <LoaderCircleIcon className="animate-spin" /> : <RotateCcwIcon />}
+        {isPending ? <LoaderCircle className="animate-spin" /> : <RotateCcwIcon />}
       </Button>
     </div>
   );

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ExternalLink, Trash2 } from "lucide-react";
+import { ExternalLink, LoaderCircle, Trash2 } from "lucide-react";
 
 type Props = {
   initialWebhookUrl: string | null;
@@ -79,7 +79,7 @@ export function SlackIntegrationForm({ initialWebhookUrl }: Props) {
 
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={isLoading || !webhookUrl.trim()}>
-          {isLoading ? "保存中..." : "保存"}
+          {isLoading ? <LoaderCircle className="animate-spin" /> : "保存"}
         </Button>
       </div>
 

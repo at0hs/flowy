@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { updateMemberRole } from "@/app/(app)/projects/actions";
+import { LoaderCircle } from "lucide-react";
 
 type Props = {
   projectId: string;
@@ -92,7 +93,7 @@ export function ChangeRoleButton({
               キャンセル
             </Button>
             <Button onClick={() => applyRoleChange("member")} disabled={isLoading}>
-              {isLoading ? "変更中..." : "変更する"}
+              {isLoading ? <LoaderCircle className="animate-spin" /> : "変更"}
             </Button>
           </DialogFooter>
         </DialogContent>

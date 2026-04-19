@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { marked } from "marked";
 import { Button } from "@/components/ui/button";
@@ -62,7 +62,7 @@ export function SubtaskSuggestButton({
         title={!isAiConfigured ? "AI設定が未設定です" : "AIでサブタスクを提案"}
       >
         {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <LoaderCircle className="w-4 h-4 animate-spin" />
         ) : (
           <Sparkles className="w-4 h-4" />
         )}

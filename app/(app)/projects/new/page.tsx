@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { LoaderCircle } from "lucide-react";
 
 export default function NewProjectPage() {
   const router = useRouter();
@@ -60,7 +61,7 @@ export default function NewProjectPage() {
               キャンセル
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "作成中..." : "作成する"}
+              {isLoading ? <LoaderCircle className="animate-spin" /> : "作成"}
             </Button>
           </CardFooter>
         </form>

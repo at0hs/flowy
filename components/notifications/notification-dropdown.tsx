@@ -13,7 +13,7 @@ import {
 } from "@/app/(app)/notifications/actions";
 import { NotificationWithDetails, NotificationType } from "@/types";
 import { cn } from "@/lib/utils";
-import { UserCheck, UserCog, MessageSquare, RefreshCw, Bell, Loader2 } from "lucide-react";
+import { UserCheck, UserCog, MessageSquare, RefreshCw, Bell, LoaderCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 
@@ -230,7 +230,7 @@ export function NotificationDropdown({
                       disabled={isLoadingMore || isPending}
                     >
                       {isLoadingMore ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                        <LoaderCircle className="h-3.5 w-3.5 animate-spin mr-1.5" />
                       ) : null}
                       もっと見る
                     </Button>

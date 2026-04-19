@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SummaryModal } from "./summary-modal";
@@ -46,7 +46,7 @@ export function AiAssistButton({ ticketId, isAiConfigured }: AiAssistButtonProps
         title={!isAiConfigured ? "AI設定が未設定です" : "AIでチケットを要約"}
       >
         {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <LoaderCircle className="w-4 h-4 animate-spin" />
         ) : (
           <Sparkles className="w-4 h-4" />
         )}

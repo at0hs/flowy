@@ -33,6 +33,7 @@ import {
   CalendarIcon,
   X,
   Paperclip,
+  LoaderCircle,
 } from "lucide-react";
 import { formatFileSize } from "@/components/tickets/attachment-section/attachment-item";
 import { toast } from "sonner";
@@ -513,7 +514,7 @@ export function TicketCreateModal({
 
           <DialogFooter className="mt-4">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "作成中..." : "作成"}
+              {isLoading ? <LoaderCircle className="animate-spin" /> : "作成"}
             </Button>
           </DialogFooter>
         </form>

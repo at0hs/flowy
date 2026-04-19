@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { inviteMember } from "@/app/(app)/projects/actions";
+import { LoaderCircle } from "lucide-react";
 
 type Props = {
   projectId: string;
@@ -52,7 +53,7 @@ export function AddMemberForm({ projectId, onMemberAdded }: Props) {
         className="flex-1"
       />
       <Button type="submit" disabled={isLoading || !email.trim()}>
-        {isLoading ? "送信中..." : "招待"}
+        {isLoading ? <LoaderCircle className="animate-spin" /> : "招待"}
       </Button>
     </form>
   );

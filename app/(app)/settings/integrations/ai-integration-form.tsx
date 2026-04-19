@@ -21,7 +21,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { toast } from "sonner";
-import { Check, RefreshCw, Trash2 } from "lucide-react";
+import { Check, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
 import { AiProviderType } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -249,7 +249,7 @@ export function AiIntegrationForm({ initialProvider, initialApiKey, initialModel
 
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={isLoading || !canSave}>
-          {isLoading ? "保存中..." : "保存"}
+          {isLoading ? <LoaderCircle className="animate-spin" /> : "保存"}
         </Button>
         <Button
           type="button"

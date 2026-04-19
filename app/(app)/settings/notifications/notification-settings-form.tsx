@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { NotificationSetting } from "@/types";
+import { LoaderCircle } from "lucide-react";
 
 type SettingsFields = Pick<
   NotificationSetting,
@@ -133,7 +134,7 @@ export function NotificationSettingsForm({ initialSettings }: Props) {
 
       <div className="flex justify-end pt-2">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "保存中..." : "保存する"}
+          {isLoading ? <LoaderCircle className="animate-spin" /> : "保存"}
         </Button>
       </div>
     </form>

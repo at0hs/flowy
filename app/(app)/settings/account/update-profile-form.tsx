@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Profile } from "@/types";
+import { LoaderCircle } from "lucide-react";
 
 type Props = {
   profile: Pick<Profile, "username" | "email">;
@@ -65,7 +66,7 @@ export function UpdateProfileForm({ profile }: Props) {
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "更新中..." : "更新する"}
+          {isLoading ? <LoaderCircle className="animate-spin" /> : "更新"}
         </Button>
       </div>
     </form>

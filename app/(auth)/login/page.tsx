@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { logger } from "@/lib/logger";
 import { acceptInvitationAction } from "@/app/(auth)/actions";
+import { LoaderCircle } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -100,7 +101,7 @@ function LoginForm() {
 
           <CardFooter className="flex flex-col gap-3">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "ログイン中..." : "ログイン"}
+              {isLoading ? <LoaderCircle className="animate-spin" /> : "ログイン"}
             </Button>
             <p className="text-sm text-muted-foreground">
               アカウントをお持ちでない方は{" "}

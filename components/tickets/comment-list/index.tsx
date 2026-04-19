@@ -10,7 +10,7 @@ import {
   editComment,
   removeComment,
 } from "@/app/(app)/projects/[id]/actions";
-import { SquarePen, Trash2, CornerDownRight } from "lucide-react";
+import { SquarePen, Trash2, CornerDownRight, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -160,7 +160,7 @@ export function CommentList({ comments, ticketId, currentUserId, members }: Prop
                 onClick={handlePost}
                 disabled={isPostPending || isHtmlEmpty(newBody)}
               >
-                {isPostPending ? "投稿中..." : "投稿"}
+                {isPostPending ? <LoaderCircle className="animate-spin" /> : "投稿"}
               </Button>
               <Button
                 variant="outline"
@@ -228,7 +228,7 @@ export function CommentList({ comments, ticketId, currentUserId, members }: Prop
                             onClick={() => handleReply(comment.id)}
                             disabled={isReplyPending || isHtmlEmpty(replyBody)}
                           >
-                            {isReplyPending ? "投稿中..." : "返信"}
+                            {isReplyPending ? <LoaderCircle className="animate-spin" /> : "返信"}
                           </Button>
                           <Button
                             variant="outline"
@@ -329,7 +329,7 @@ function CommentItem({
               onClick={() => onEditSave(comment.id)}
               disabled={isEditPending || isHtmlEmpty(editBody)}
             >
-              {isEditPending ? "保存中..." : "保存"}
+              {isEditPending ? <LoaderCircle className="animate-spin" /> : "保存"}
             </Button>
             <Button variant="outline" size="sm" onClick={onEditCancel} disabled={isEditPending}>
               キャンセル
@@ -396,7 +396,7 @@ function CommentItem({
                     onClick={() => onDeleteConfirm(comment.id)}
                     disabled={isDeletePending}
                   >
-                    {isDeletePending ? "削除中..." : "削除"}
+                    {isDeletePending ? <LoaderCircle className="animate-spin" /> : "削除"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
