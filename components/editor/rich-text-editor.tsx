@@ -9,7 +9,10 @@ import Image from "@tiptap/extension-image";
 import Mention from "@tiptap/extension-mention";
 import tippy, { type Instance } from "tippy.js";
 import { toast } from "sonner";
-import { registerAttachment, getAttachmentUrl } from "@/app/(app)/projects/[id]/actions";
+import {
+  registerAttachment,
+  getAttachmentUrl,
+} from "@/app/(app)/projects/[id]/actions/attachments";
 import { createClient } from "@/lib/supabase/client";
 import { generateUUID } from "@/lib/utils";
 

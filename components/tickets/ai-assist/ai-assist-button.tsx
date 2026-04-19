@@ -5,7 +5,7 @@ import { Sparkles, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SummaryModal } from "./summary-modal";
-import { summarizeTicketAction } from "@/app/(app)/projects/[id]/actions";
+import { summarizeTicketAction } from "@/app/(app)/projects/[id]/actions/ai";
 import { marked } from "marked";
 
 interface AiAssistButtonProps {

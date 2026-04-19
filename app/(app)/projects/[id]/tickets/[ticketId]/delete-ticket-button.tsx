@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { deleteTicket } from "../../actions";
+import { deleteTicket } from "../../actions/tickets";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

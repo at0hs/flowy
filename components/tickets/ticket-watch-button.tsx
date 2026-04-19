@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { watchTicket, unwatchTicket } from "@/app/(app)/projects/[id]/actions";
+import { watchTicket, unwatchTicket } from "@/app/(app)/projects/[id]/actions/watches";
 
 interface TicketWatchButtonProps {
   ticketId: string;

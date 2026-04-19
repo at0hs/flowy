@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Ticket } from "@/types";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { updateTicketField } from "@/app/(app)/projects/[id]/actions";
+import { updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
 import { InlineTitle } from "./inline-title";
 import { InlineDescription } from "./inline-description";
 import { InlineStatus } from "./inline-status";

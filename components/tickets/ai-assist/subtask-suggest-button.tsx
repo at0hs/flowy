@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { marked } from "marked";
 import { Button } from "@/components/ui/button";
 import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
-import { suggestSubtaskAction } from "@/app/(app)/projects/[id]/actions";
+import { suggestSubtaskAction } from "@/app/(app)/projects/[id]/actions/ai";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 import { SuggestedSubtask } from "@/lib/ai";
 

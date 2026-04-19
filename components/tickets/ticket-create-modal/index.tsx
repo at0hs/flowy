@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createTicket, updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
 import {
-  createTicket,
   registerAttachment,
   getAttachmentUrl,
-  updateTicketField,
-} from "@/app/(app)/projects/[id]/actions";
+} from "@/app/(app)/projects/[id]/actions/attachments";
 import { createClient } from "@/lib/supabase/client";
 import { generateUUID } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

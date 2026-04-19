@@ -9,7 +9,7 @@ import {
   addReply,
   editComment,
   removeComment,
-} from "@/app/(app)/projects/[id]/actions";
+} from "@/app/(app)/projects/[id]/actions/comments";
 import { SquarePen, Trash2, CornerDownRight, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

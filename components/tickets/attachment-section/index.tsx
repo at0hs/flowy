@@ -20,7 +20,7 @@ import {
   registerAttachment,
   removeAttachment,
   getAttachmentUrl,
-} from "@/app/(app)/projects/[id]/actions";
+} from "@/app/(app)/projects/[id]/actions/attachments";
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 import { AttachmentItem } from "./attachment-item";

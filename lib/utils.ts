@@ -14,3 +14,8 @@ export function generateUUID(): string {
     return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
   });
 }
+/** HTMLタグを除去する（メール本文用） */
+
+export function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "").trim();
+}
