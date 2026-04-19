@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SummaryModal } from "./summary-modal";
 import { summarizeTicketAction } from "@/app/(app)/projects/[id]/actions";
+import { marked } from "marked";
 
 interface AiAssistButtonProps {
   ticketId: string;
@@ -14,13 +15,13 @@ interface AiAssistButtonProps {
 
 export function AiAssistButton({ ticketId, isAiConfigured }: AiAssistButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [summary, setSummary] = useState<string | null>(null);
+  const [summary, setSummary] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleClick = async () => {
     setIsLoading(true);
     setIsModalOpen(true);
-    setSummary(null);
+    setSummary("");
 
     const result = await summarizeTicketAction(ticketId);
 
@@ -28,7 +29,8 @@ export function AiAssistButton({ ticketId, isAiConfigured }: AiAssistButtonProps
       toast.error(result.error);
       setIsModalOpen(false);
     } else {
-      setSummary(result.summary);
+      const html = await marked.parse(result.summary);
+      setSummary(html);
     }
 
     setIsLoading(false);

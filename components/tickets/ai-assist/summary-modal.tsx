@@ -1,6 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
+import DOMPurify from "dompurify";
 import {
   Dialog,
   DialogContent,
@@ -14,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface SummaryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  summary: string | null;
+  summary: string;
   isLoading: boolean;
 }
 
@@ -37,7 +38,10 @@ export function SummaryModal({ isOpen, onClose, summary, isLoading }: SummaryMod
               <Skeleton className="h-4 w-4/6" />
             </div>
           ) : (
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">{summary}</p>
+            <div
+              className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(summary) }}
+            />
           )}
         </div>
 

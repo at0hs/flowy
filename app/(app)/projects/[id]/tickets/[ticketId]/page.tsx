@@ -103,6 +103,7 @@ export default async function TicketDetailPage({ params }: Props) {
             projectId={id}
             subtickets={subtickets}
             members={members}
+            isAiConfigured={isAiConfigured}
           />
         </>
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createTicket,
@@ -88,6 +88,11 @@ interface TicketCreateModalProps {
   rootTickets?: RootTicket[];
   defaultParentId?: string;
   triggerLabel?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  initialTitle?: string;
+  initialDescription?: string;
+  initialPriority?: Ticket["priority"];
 }
 
 export function TicketCreateModal({
@@ -96,22 +101,40 @@ export function TicketCreateModal({
   rootTickets = [],
   defaultParentId,
   triggerLabel,
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+  initialTitle,
+  initialDescription,
+  initialPriority,
 }: TicketCreateModalProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Blob URL（画像プレビュー用）→ File のマッピング
   const blobUrlToFileRef = useRef<Map<string, File>>(new Map());
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = externalOpen !== undefined;
+  const isOpen = isControlled ? externalOpen : internalOpen;
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState(initialTitle ?? "");
   const [assigneeId, setAssigneeId] = useState<string>("none");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(initialDescription ?? "");
   const [parentId, setParentId] = useState<string>(defaultParentId ?? "none");
   const [status, setStatus] = useState<Ticket["status"]>("todo");
-  const [priority, setPriority] = useState<Ticket["priority"]>("medium");
+  const [priority, setPriority] = useState<Ticket["priority"]>(initialPriority ?? "medium");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [dueDateOpen, setDueDateOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialTitle !== undefined) setTitle(initialTitle);
+      if (initialDescription !== undefined) setDescription(initialDescription);
+      if (initialPriority !== undefined) setPriority(initialPriority);
+    }
+    // isOpen の変化時のみ適用する
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? []);
@@ -217,7 +240,9 @@ export function TicketCreateModal({
     }
     blobUrlToFileRef.current.clear();
 
-    setOpen(false);
+    if (!isControlled) setInternalOpen(false);
+    externalOnOpenChange?.(false);
+    setTitle("");
     setAssigneeId("none");
     setParentId(defaultParentId ?? "none");
     setStatus("todo");
@@ -237,6 +262,7 @@ export function TicketCreateModal({
       }
       blobUrlToFileRef.current.clear();
       setErrorMessage("");
+      setTitle("");
       setAssigneeId("none");
       setParentId(defaultParentId ?? "none");
       setStatus("todo");
@@ -245,22 +271,25 @@ export function TicketCreateModal({
       setDueDate(undefined);
       setPendingFiles([]);
     }
-    setOpen(nextOpen);
+    if (!isControlled) setInternalOpen(nextOpen);
+    externalOnOpenChange?.(nextOpen);
   };
 
   const currentStatus = STATUS_OPTIONS.find((s) => s.value === status)!;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button
-          variant={triggerLabel ? "outline" : "default"}
-          size={triggerLabel ? "sm" : "default"}
-        >
-          <Plus />
-          {triggerLabel ?? "チケット作成"}
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button
+            variant={triggerLabel ? "outline" : "default"}
+            size={triggerLabel ? "sm" : "default"}
+          >
+            <Plus />
+            {triggerLabel ?? "チケット作成"}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>チケット作成</DialogTitle>
@@ -274,7 +303,13 @@ export function TicketCreateModal({
             {/* タイトル */}
             <div className="space-y-2">
               <Label htmlFor="modal-title">タイトル *</Label>
-              <Input id="modal-title" name="title" required />
+              <Input
+                id="modal-title"
+                name="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
             </div>
 
             {/* ステータス */}

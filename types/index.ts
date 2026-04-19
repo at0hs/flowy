@@ -14,6 +14,8 @@ export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
 export type ProjectRole = Database["public"]["Enums"]["project_role"];
 export type InvitationStatus = Database["public"]["Enums"]["invitation_status"];
 export type AiProviderType = Database["public"]["Enums"]["ai_provider_type"];
+export type PriorityType = Database["public"]["Enums"]["ticket_priority"];
+export type StatusType = Database["public"]["Enums"]["ticket_status"];
 
 // 通知関連の型定義
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];

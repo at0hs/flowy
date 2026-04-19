@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
+import { SubtaskSuggestButton } from "@/components/tickets/ai-assist/subtask-suggest-button";
 import { SubticketWithAssignee } from "@/lib/supabase/tickets";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 
@@ -15,6 +16,7 @@ interface SubtaskSectionProps {
   projectId: string;
   subtickets: SubticketWithAssignee[];
   members: ProjectMemberWithProfile[];
+  isAiConfigured: boolean;
 }
 
 export function SubtaskSection({
@@ -22,17 +24,27 @@ export function SubtaskSection({
   projectId,
   subtickets,
   members,
+  isAiConfigured,
 }: SubtaskSectionProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold">サブタスク（{subtickets.length}）</h3>
-        <TicketCreateModal
-          projectId={projectId}
-          members={members}
-          defaultParentId={parentTicketId}
-          triggerLabel="サブタスクを追加"
-        />
+        <div className="flex items-center gap-2">
+          <SubtaskSuggestButton
+            ticketId={parentTicketId}
+            isAiConfigured={isAiConfigured}
+            projectId={projectId}
+            members={members}
+            parentTicketId={parentTicketId}
+          />
+          <TicketCreateModal
+            projectId={projectId}
+            members={members}
+            defaultParentId={parentTicketId}
+            triggerLabel="サブタスクを追加"
+          />
+        </div>
       </div>
 
       {subtickets.length === 0 ? (
