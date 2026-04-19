@@ -1,6 +1,6 @@
 import { generateObject, generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
 import { AiProviderType } from "@/types";
@@ -27,23 +27,23 @@ export class AiNotConfiguredError extends Error {
 // 内部: モデルインスタンス生成
 // ────────────────────────────────────────────────────────────
 
-const DEFAULT_OLLAMA_MODEL = "llama3.2";
-const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
-// Ollama は OpenAI 互換 API を持つため createOpenAI で対応する。
-// Ollama のデフォルトエンドポイント: http://localhost:11434/v1
 function createAIModel(config: AiConfig) {
-  const { provider, apiKey, endpointUrl, modelName } = config;
+  const { provider, apiKey, modelName } = config;
 
-  if (provider === "ollama") {
-    const openai = createOpenAI({
-      apiKey: "ollama", // Ollama は API キー不要だが空文字は拒否される
-      baseURL: endpointUrl ?? "http://localhost:11434/v1",
-    });
-    return openai(modelName ?? DEFAULT_OLLAMA_MODEL);
+  if (!apiKey) throw new AiNotConfiguredError();
+  if (!modelName) throw new AiNotConfiguredError();
+
+  if (provider === "gemini") {
+    const google = createGoogleGenerativeAI({ apiKey });
+    return google(modelName);
   } else {
-    const google = createGoogleGenerativeAI({ apiKey: apiKey ?? "" });
-    return google(modelName ?? DEFAULT_GEMINI_MODEL);
+    const openrouter = createOpenAI({
+      baseURL: OPENROUTER_BASE_URL,
+      apiKey,
+    });
+    return openrouter(modelName);
   }
 }
 
@@ -57,13 +57,6 @@ export type SummarizeTicketInput = {
   comments: string[];
 };
 
-/**
- * チケットの内容をAIで要約して返す
- * @param config - ユーザーのAI設定（profiles から取得）
- * @param ticket - 要約対象のチケット情報
- * @returns 要約テキスト
- * @throws AiNotConfiguredError - provider が未設定の場合
- */
 export async function summarizeTicket(
   config: AiConfig,
   ticket: SummarizeTicketInput
@@ -89,8 +82,8 @@ export async function summarizeTicket(
   const { text } = await generateText({
     model,
     system:
-      "あなたはプロジェクト管理ツールのAIアシスタントです。チケットの内容を分かりやすく要約します。",
-    prompt,
+      "あなたはプロジェクト管理ツールのAIアシスタントです。チケットの内容を分かりやすく要約します。要約した文章のみを出力してください。前置きなどは一切含めないでください。",
+    prompt: prompt + "\n\n要約のみを出力してください。",
   });
 
   logger.debug("summarizeTicket: done");
@@ -116,13 +109,6 @@ const suggestedSubtaskSchema = z.object({
   description: z.string().describe("サブタスクの説明（具体的な作業内容）"),
 });
 
-/**
- * チケットの内容を元にサブタスクを1件提案する
- * @param config - ユーザーのAI設定（profiles から取得）
- * @param ticket - 提案対象のチケット情報
- * @returns 提案されたサブタスク（タイトルと説明）
- * @throws AiNotConfiguredError - provider が未設定の場合
- */
 export async function suggestSubtask(
   config: AiConfig,
   ticket: SuggestSubtaskInput

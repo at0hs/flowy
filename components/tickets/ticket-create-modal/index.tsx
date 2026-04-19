@@ -390,26 +390,27 @@ export function TicketCreateModal({
               </div>
             </div>
 
-            <Separator className="my-6" />
-
             {/* 親チケット */}
             {rootTickets.length > 0 && (
-              <div className="flex items-center gap-4">
-                <Label className="w-24 shrink-0 text-muted-foreground">親チケット</Label>
-                <Select value={parentId} onValueChange={setParentId}>
-                  <SelectTrigger className="w-80 overflow-hidden *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate">
-                    <SelectValue placeholder="親チケットを選択" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    <SelectItem value="none">なし</SelectItem>
-                    {rootTickets.map((ticket) => (
-                      <SelectItem key={ticket.id} value={ticket.id}>
-                        <span className="block truncate max-w-80">{ticket.title}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <>
+                <Separator className="my-6" />
+                <div className="flex items-center gap-4">
+                  <Label className="w-24 shrink-0 text-muted-foreground">親チケット</Label>
+                  <Select value={parentId} onValueChange={setParentId}>
+                    <SelectTrigger className="w-80 overflow-hidden *:data-[slot=select-value]:block *:data-[slot=select-value]:truncate">
+                      <SelectValue placeholder="親チケットを選択" />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      <SelectItem value="none">なし</SelectItem>
+                      {rootTickets.map((ticket) => (
+                        <SelectItem key={ticket.id} value={ticket.id}>
+                          <span className="block truncate max-w-80">{ticket.title}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
 
             <Separator className="my-6" />

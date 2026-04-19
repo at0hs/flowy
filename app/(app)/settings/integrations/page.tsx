@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator";
 import { SlackIntegrationForm } from "./slack-integration-form";
 import { AiIntegrationForm } from "./ai-integration-form";
 import { Sparkles } from "lucide-react";
+import { decrypt } from "@/lib/encryption";
 
 export default async function IntegrationsSettingsPage() {
   const supabase = await createClient();
@@ -60,7 +61,7 @@ export default async function IntegrationsSettingsPage() {
 
         <AiIntegrationForm
           initialProvider={profile?.ai_provider ?? null}
-          initialApiKey={profile?.ai_api_key ?? null}
+          initialApiKey={profile?.ai_api_key ? decrypt(profile.ai_api_key) : null}
           initialEndpointUrl={profile?.ai_endpoint_url ?? null}
           initialModelName={profile?.ai_model_name ?? null}
         />

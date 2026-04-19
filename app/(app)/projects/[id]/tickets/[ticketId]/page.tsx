@@ -15,6 +15,7 @@ import { ArrowLeft } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date";
 import { getAttachments } from "@/lib/supabase/attachments";
 import { AttachmentSection } from "@/components/tickets/attachment-section";
+import { AiAssistButton } from "@/components/tickets/ai-assist/ai-assist-button";
 
 type Props = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -29,12 +30,15 @@ export default async function TicketDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: ticket }, members, comments, attachments] = await Promise.all([
+  const [{ data: ticket }, members, comments, attachments, { data: profile }] = await Promise.all([
     supabase.from("tickets").select("*").eq("id", ticketId).single(),
     getProjectMembers(id),
     getComments(ticketId),
     getAttachments(ticketId),
+    supabase.from("profiles").select("ai_provider").eq("id", user.id).single(),
   ]);
+
+  const isAiConfigured = !!profile?.ai_provider;
 
   if (!ticket) notFound();
 
@@ -56,6 +60,7 @@ export default async function TicketDetailPage({ params }: Props) {
           チケット一覧
         </Link>
         <div className="ml-auto flex items-center gap-2">
+          <AiAssistButton ticketId={ticketId} isAiConfigured={isAiConfigured} />
           <TicketWatchButton ticketId={ticketId} isWatching={watching} />
           <DeleteTicketButton ticketId={ticketId} projectId={id} ticketTitle={ticket.title} />
         </div>

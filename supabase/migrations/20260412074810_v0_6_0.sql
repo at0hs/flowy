@@ -1,7 +1,7 @@
 -- ----------------------------------------
 -- AI機能の設定を追加
 -- ----------------------------------------
-CREATE TYPE ai_provider_type AS ENUM ('ollama', 'gemini');
+CREATE TYPE ai_provider_type AS ENUM ('gemini', 'openrouter');
 
 ALTER TABLE profiles
   ADD COLUMN ai_provider    ai_provider_type,

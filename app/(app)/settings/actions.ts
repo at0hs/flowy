@@ -9,7 +9,8 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { logger } from "@/lib/logger";
-import { NotificationType } from "@/types";
+import { NotificationType, AiProviderType } from "@/types";
+import { encrypt } from "@/lib/encryption";
 
 export async function updateAiSettings(formData: FormData) {
   const supabase = await createClient();
@@ -24,19 +25,21 @@ export async function updateAiSettings(formData: FormData) {
   const endpointUrl = (formData.get("ai_endpoint_url") as string | null)?.trim() || null;
   const modelName = (formData.get("ai_model_name") as string | null)?.trim() || null;
 
-  if (provider && provider !== "ollama" && provider !== "gemini") {
+  if (provider && provider !== "gemini" && provider !== "openrouter") {
     return { error: "プロバイダーの値が正しくありません" };
   }
 
-  if (provider === "gemini" && !apiKey) {
-    return { error: "GeminiにはAPIキーが必要です" };
+  if (provider && !apiKey) {
+    return { error: "APIキーが必要です" };
   }
+
+  const encryptedApiKey = apiKey ? encrypt(apiKey) : null;
 
   const { error } = await supabase
     .from("profiles")
     .update({
-      ai_provider: provider as "ollama" | "gemini" | null,
-      ai_api_key: apiKey,
+      ai_provider: provider as AiProviderType | null,
+      ai_api_key: encryptedApiKey,
       ai_endpoint_url: endpointUrl,
       ai_model_name: modelName,
     })
@@ -115,6 +118,29 @@ const FIELD_TO_NOTIFICATION_TYPE: Record<string, NotificationType> = {
   email_mention: "mention",
   email_deadline: "deadline",
 };
+
+export async function fetchGeminiModels(
+  apiKey: string
+): Promise<{ models?: string[]; error?: string }> {
+  if (!apiKey) return { error: "APIキーが必要です" };
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) {
+      return { error: "APIキーが無効またはAPIエラーが発生しました" };
+    }
+    const data = await res.json();
+    const models = (data.models as Array<{ name: string; supportedGenerationMethods: string[] }>)
+      .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+      .map((m) => m.name.replace("models/", ""));
+    return { models };
+  } catch {
+    return { error: "Geminiモデルの取得に失敗しました" };
+  }
+}
 
 export async function updateNotificationSettings(formData: FormData) {
   const supabase = await createClient();

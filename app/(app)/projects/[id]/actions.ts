@@ -13,7 +13,10 @@ import {
   deleteComment,
   createReply,
   extractMentionedUserIds,
+  getComments,
 } from "@/lib/supabase/comments";
+import { summarizeTicket, AiConfig } from "@/lib/ai";
+import { decrypt } from "@/lib/encryption";
 import { addWatch, removeWatch, getWatcherEmails } from "@/lib/supabase/watches";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 import { insertAttachment, deleteAttachment } from "@/lib/supabase/attachments";
@@ -824,4 +827,69 @@ export async function getAttachmentUrl(
   }
 
   return { url: data.signedUrl };
+}
+
+// ────────────────────────────────────────────────────────────
+// AIアシスト: チケット要約
+// ────────────────────────────────────────────────────────────
+
+export async function summarizeTicketAction(
+  ticketId: string
+): Promise<{ summary: string } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  // ユーザーの AI 設定を取得
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("ai_provider, ai_api_key, ai_endpoint_url, ai_model_name")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.ai_provider) {
+    return { error: "AI設定が未設定です。設定画面からAIプロバイダを設定してください。" };
+  }
+
+  const aiConfig: AiConfig = {
+    provider: profile.ai_provider,
+    apiKey: profile.ai_api_key ? decrypt(profile.ai_api_key) : null,
+    endpointUrl: profile.ai_endpoint_url,
+    modelName: profile.ai_model_name,
+  };
+
+  // チケット情報を取得
+  const { data: ticket, error: ticketError } = await supabase
+    .from("tickets")
+    .select("title, description")
+    .eq("id", ticketId)
+    .single();
+
+  if (ticketError || !ticket) {
+    logger.error("summarizeTicketAction: failed to fetch ticket", ticketError);
+    return { error: "チケットの取得に失敗しました" };
+  }
+
+  // コメント一覧を取得（削除済みを除くテキスト本文のみ抽出）
+  let commentTexts: string[] = [];
+  try {
+    const comments = await getComments(ticketId);
+    commentTexts = comments.filter((c) => !c.is_deleted && c.body).map((c) => stripHtml(c.body));
+  } catch (err) {
+    logger.warn("summarizeTicketAction: failed to fetch comments, continuing without them", err);
+  }
+
+  try {
+    const summary = await summarizeTicket(aiConfig, {
+      title: ticket.title,
+      description: ticket.description,
+      comments: commentTexts,
+    });
+    return { summary };
+  } catch (err) {
+    logger.error("summarizeTicketAction: AI call failed", err);
+    return { error: "AIによる要約に失敗しました。AI設定を確認してください。" };
+  }
 }
