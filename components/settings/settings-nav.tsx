@@ -15,7 +15,7 @@ export function SettingsNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="shrink-0 bg-muted border-r border-border flex flex-col p-3 gap-1">
+    <nav className="shrink-0 bg-accent border-r border-border flex flex-col p-3 gap-1">
       <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2 mb-1">
         設定
       </div>
@@ -28,7 +28,7 @@ export function SettingsNav() {
             className={cn(
               "flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors whitespace-nowrap",
               isActive
-                ? "bg-primary text-primary-foreground font-medium"
+                ? "bg-neutral-400/30 text-black font-medium"
                 : "text-muted-foreground hover:bg-accent hover:text-foreground"
             )}
           >
