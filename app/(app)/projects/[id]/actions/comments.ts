@@ -11,7 +11,7 @@ import {
   extractMentionedUserIds,
 } from "@/lib/supabase/comments";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
-import { sendSlackNotificationToWatchers, fetchNotificationEmailContext } from "./_helpers";
+import { sendSlackNotificationToWatchers, fetchNotificationContext } from "./_helpers";
 import { stripHtml } from "@/lib/utils";
 
 async function sendMentionNotifications(
@@ -37,7 +37,7 @@ async function sendMentionNotifications(
 
   try {
     const [ctx, { data: profiles }] = await Promise.all([
-      fetchNotificationEmailContext(supabase, ticketId, actorId),
+      fetchNotificationContext(supabase, ticketId, actorId),
       supabase.from("profiles").select("id, slack_webhook_url").in("id", mentionedIds),
     ]);
     if (!ctx || !profiles) return;
@@ -98,7 +98,7 @@ export async function addComment(
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
 
-  const ctx = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+  const ctx = await fetchNotificationContext(supabase, ticketId, user.id);
   if (ctx) {
     await sendSlackNotificationToWatchers(ticketId, user.id, {
       type: "comment_added",
@@ -145,7 +145,7 @@ export async function addReply(
     logger.warn("Failed to send comment_added notification:", notifyError);
   }
 
-  const ctx = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+  const ctx = await fetchNotificationContext(supabase, ticketId, user.id);
   if (ctx) {
     await sendSlackNotificationToWatchers(ticketId, user.id, {
       type: "comment_added",

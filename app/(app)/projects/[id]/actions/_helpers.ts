@@ -45,9 +45,9 @@ export async function sendSlackNotificationToWatchers(
 }
 
 /**
- * メール通知に必要なコンテキスト（チケット情報・操作者名・チケットURL）を取得する
+ * 通知に必要なコンテキスト（チケット情報・操作者名・チケットURL）を取得する
  */
-export async function fetchNotificationEmailContext(
+export async function fetchNotificationContext(
   supabase: Awaited<ReturnType<typeof createClient>>,
   ticketId: string,
   actorId: string

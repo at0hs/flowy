@@ -9,7 +9,7 @@ import { PriorityType, StatusType } from "@/types";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { Json } from "@/types/database.types";
-import { sendSlackNotificationToWatchers, fetchNotificationEmailContext } from "./_helpers";
+import { sendSlackNotificationToWatchers, fetchNotificationContext } from "./_helpers";
 
 async function sendSlackNotificationToUser(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -131,7 +131,7 @@ export async function createTicket(projectId: string, formData: FormData) {
     if (notifyError) {
       logger.warn("Failed to send assigned notification:", notifyError);
     }
-    const ctx = await fetchNotificationEmailContext(supabase, newTicket.id, user.id);
+    const ctx = await fetchNotificationContext(supabase, newTicket.id, user.id);
     if (ctx) {
       await sendSlackNotificationToUser(supabase, assigneeId, {
         type: "assigned",
@@ -285,7 +285,7 @@ export async function updateTicketField(
         : Promise.resolve({ data: null }),
     ]);
 
-    const ctx = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+    const ctx = await fetchNotificationContext(supabase, ticketId, user.id);
     if (ctx) {
       if (update.value && update.value !== user.id) {
         await sendSlackNotificationToUser(supabase, update.value, {
@@ -315,7 +315,7 @@ export async function updateTicketField(
       new_status: update.value,
     });
 
-    const ctxStatus = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+    const ctxStatus = await fetchNotificationContext(supabase, ticketId, user.id);
     if (ctxStatus) {
       await sendSlackNotificationToWatchers(ticketId, user.id, {
         type: "status_changed",
@@ -335,7 +335,7 @@ export async function updateTicketField(
       new_priority: update.value,
     });
 
-    const ctxPriority = await fetchNotificationEmailContext(supabase, ticketId, user.id);
+    const ctxPriority = await fetchNotificationContext(supabase, ticketId, user.id);
     if (ctxPriority) {
       await sendSlackNotificationToWatchers(ticketId, user.id, {
         type: "priority_changed",
