@@ -85,6 +85,7 @@ export async function summarizeTicket(
     system:
       "あなたはプロジェクト管理ツールのAIアシスタントです。チケットの内容を分かりやすく要約します。要約した文章のみを出力してください。前置きなどは一切含めないでください。必要であればマークダウン形式での出力は許可します。",
     prompt: prompt + "\n\n要約のみを出力してください。",
+    timeout: 30 * 1000,
   });
 
   logger.debug("summarizeTicket: done");
@@ -149,6 +150,7 @@ export async function suggestSubtask(
     system:
       "あなたはプロジェクト管理ツールのAIアシスタントです。チケットを分解して具体的なサブタスクを提案します。既存のサブタスクと重複せず、まだカバーされていない作業領域を優先して提案してください。サブタスクの説明はマークダウン形式を採用する。",
     prompt,
+    timeout: 30 * 1000,
   });
 
   logger.debug("suggestSubtask: done", output);
