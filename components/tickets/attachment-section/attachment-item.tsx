@@ -6,7 +6,7 @@ interface AttachmentItemProps {
   attachment: AttachmentWithUploader;
   currentUserId: string;
   onPreviewRequest: (attachmentId: string, mimeType: string) => void;
-  onDownloadRequest: (attachmentId: string) => void;
+  onDownloadRequest: (attachmentId: string, fileName: string) => void;
   onDeleteRequest: (attachmentId: string) => void;
 }
 
@@ -61,7 +61,7 @@ export function AttachmentItem({
         size="icon"
         className="h-6 w-6 text-muted-foreground shrink-0"
         tooltip="ダウンロード"
-        onClick={() => onDownloadRequest(attachment.id)}
+        onClick={() => onDownloadRequest(attachment.id, attachment.file_name)}
       >
         <Download className="h-3.5 w-3.5" />
       </Button>

@@ -59,7 +59,9 @@ export function AttachmentSection({
     }
     startTransition(async () => {
       const supabase = createClient();
-      const filePath = `${projectId}/${ticketId}/${generateUUID()}-${file.name}`;
+      const ext =
+        file.name.lastIndexOf(".") > -1 ? file.name.slice(file.name.lastIndexOf(".")) : "";
+      const filePath = `${projectId}/${ticketId}/${generateUUID()}${ext}`;
       const { error: storageError } = await supabase.storage
         .from("attachments")
         .upload(filePath, file, { cacheControl: "3600", upsert: false });
@@ -98,16 +100,24 @@ export function AttachmentSection({
     setPreviewMime(mimeType);
   }
 
-  async function handleDownload(attachmentId: string) {
+  async function handleDownload(attachmentId: string, fileName: string) {
     const result = await getAttachmentUrl(attachmentId);
     if ("error" in result) {
       toast.error(result.error);
       return;
     }
-    const a = document.createElement("a");
-    a.href = result.url;
-    a.download = "";
-    a.click();
+    try {
+      const response = await fetch(result.url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      toast.error("ダウンロードに失敗しました");
+    }
   }
 
   function handleDeleteConfirm() {

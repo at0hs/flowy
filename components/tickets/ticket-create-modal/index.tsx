@@ -202,7 +202,9 @@ export function TicketCreateModal({
           failedCount++;
           continue;
         }
-        const filePath = `${projectId}/${result.ticketId}/${generateUUID()}-${file.name}`;
+        const ext =
+          file.name.lastIndexOf(".") > -1 ? file.name.slice(file.name.lastIndexOf(".")) : "";
+        const filePath = `${projectId}/${result.ticketId}/${generateUUID()}${ext}`;
         const { error: storageError } = await supabase.storage
           .from("attachments")
           .upload(filePath, file, { cacheControl: "3600", upsert: false });
