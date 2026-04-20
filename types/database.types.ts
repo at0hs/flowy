@@ -543,7 +543,7 @@ export type Database = {
       };
     };
     Enums: {
-      ai_provider_type: "openrouter" | "gemini";
+      ai_provider_type: "gemini" | "openrouter";
       invitation_status: "pending" | "accepted" | "expired";
       notification_type:
         | "assigned"
@@ -684,7 +684,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      ai_provider_type: ["openrouter", "gemini"],
+      ai_provider_type: ["gemini", "openrouter"],
       invitation_status: ["pending", "accepted", "expired"],
       notification_type: [
         "assigned",
