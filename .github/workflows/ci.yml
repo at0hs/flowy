@@ -47,15 +47,19 @@ jobs:
 
       - name: Set up .env.local
         run: |
-          SUPABASE_URL=$(npx supabase status | grep "API URL" | awk '{print $NF}')
-          ANON_KEY=$(npx supabase status | grep "anon key" | awk '{print $NF}')
-          SERVICE_KEY=$(npx supabase status | grep "service_role key" | awk '{print $NF}')
-          cat > .env.local << EOF
-          NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
-          SUPABASE_SERVICE_ROLE_KEY=${SERVICE_KEY}
-          RESEND_API_KEY=dummy
-          EOF
+          STATUS=$(npx supabase status -o json)
+          SUPABASE_URL=$(echo "$STATUS" | jq -r '.API_URL')
+          ANON_KEY=$(echo "$STATUS" | jq -r '.PUBLISHABLE_KEY')
+          SERVICE_KEY=$(echo "$STATUS" | jq -r '.SERVICE_ROLE_KEY')
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}"
+            echo "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_KEY}"
+            echo "RESEND_API_KEY=dummy"
+            echo "NEXT_PUBLIC_APP_URL=http://localhost:3111"
+            echo "ENCRYPTION_SECRET=0000000000000000000000000000000000000000000000000000000000000000"
+            echo "NEXT_PUBLIC_APP_ENV=development"
+          } > .env.local
 
       - name: Run E2E tests
         run: npm run test:e2e
