@@ -45,7 +45,7 @@ export function DeleteTicketButton({ ticketId, projectId, ticketTitle }: Props) 
 
   return (
     <>
-      <Button variant="ghost" onClick={() => setIsDialogOpen(true)}>
+      <Button variant="ghost" aria-label="チケットを削除" onClick={() => setIsDialogOpen(true)}>
         <Trash2Icon className="text-red-400" />
       </Button>
 

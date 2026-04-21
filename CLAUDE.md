@@ -83,8 +83,13 @@ npm run format:check # Prettier フォーマット確認
 npm run check        # type-check + lint + format:check を一括実行
 npm run validate     # check + build を一括実行
 
+# E2E testing (Playwright) ※ローカルSupabaseの起動が前提
+npm run test:e2e     # Playwright E2E テスト実行 (headless)
+npm run test:e2e:ui  # Playwright E2E テスト実行 (UIモード)
+
 # Email development (React Email)
 npm run email:dev    # React Email 開発サーバー起動 (emails/ ディレクトリ)
+npm run build:emails # React Email テンプレートを supabase/templates/ に HTML ビルド
 
 # Supabase local development (requires Docker)
 npm run sb:start     # Start local Supabase (DB, Auth, Studio)
@@ -92,7 +97,9 @@ npm run sb:stop      # Stop local Supabase
 npm run sb:status    # Supabase 動作状態確認
 npm run sb:reset     # Reset DB and re-run all migrations
 npm run sb:push      # DB スキーマをリモートに push
-npm run sb:migration-up  # Run pending migrations
+npm run sb:lint      # DB スキーマの lint チェック
+npm run sb:migration # sb:reset + sb:lint + gen:types を一括実行（マイグレーション後の定番フロー）
+npm run sb:func-serve  # Supabase Edge Functions をローカルで起動
 supabase migration new <name>   # Create a new migration file
 
 # Type generation
@@ -145,6 +152,7 @@ components/
 │   ├── ticket-create-modal/  # チケット作成モーダル (Dialog ベース)
 │   ├── subtask-section/      # サブタスク一覧 + 追加ボタン（チケット詳細用）
 │   ├── comment-list/         # コメント一覧・投稿・返信・編集・削除
+│   ├── ai-assist/            # AIアシストボタン（Vercel AI SDK 使用）
 │   └── ticket-inline-edit/   # チケット詳細インライン編集
 │       ├── index.tsx          # 楽観的更新ロジック
 │       ├── inline-title.tsx
@@ -181,8 +189,17 @@ emails/
 ├── confirm-signup.tsx   # サインアップ確認メールテンプレート
 └── change-email.tsx     # メールアドレス変更確認テンプレート
 proxy.ts             # 認証ミドルウェア (Next.js middleware)
+scripts/
+└── build-emails.ts  # React Email → supabase/templates/ へ HTML ビルド（Supabase Auth メールカスタマイズ用）
 supabase/
-└── migrations/      # タイムスタンプ付きSQLマイグレーション
+├── migrations/      # タイムスタンプ付きSQLマイグレーション
+└── templates/       # build:emails で生成した Auth メール HTML（自動生成、手動編集不可）
+tests/
+└── e2e/             # Playwright E2E テスト
+    ├── auth.setup.ts        # 認証状態セットアップ（DBリセット + ログイン → playwright/.auth/user.json 保存）
+    ├── fixtures/            # テスト用フィクスチャ
+    ├── helpers/db.ts        # DB リセットヘルパー
+    └── s*.spec.ts           # シナリオ別テストファイル（s1: プロジェクト, s2: チケットCRUD, etc.）
 ```
 
 ### Key patterns
@@ -201,6 +218,8 @@ supabase/
 - **リッチテキスト**: Tiptap で編集、HTML文字列として保存。表示時は `rich-text-content.tsx` が DOMPurify でサニタイズしてから `dangerouslySetInnerHTML` で描画
 - **通知発行**: Server Action 内でチケット更新後に `notify_watchers()` SECURITY DEFINER関数を呼び出してウォッチユーザーへ一括通知レコード挿入。担当者割り当ては直接 `notifications` テーブルに INSERT
 - **ウォッチ**: `ticket_watches` テーブルで管理。チケット作成時にトリガーで作成者を自動ウォッチ。`ticket-watch-button.tsx` で楽観的更新
+- **AIアシスト**: Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/openai`) を使用。`components/tickets/ai-assist/` 以下に実装
+- **E2Eテスト**: Playwright を使用（`tests/e2e/`）。実行前にローカル Supabase (`npm run sb:start`) が必要。`auth.setup.ts` が DB をリセットし `test@example.com` / `password123` でログイン状態を生成する。認証状態は `playwright/.auth/user.json` にキャッシュされる
 
 ### UI / Styling
 
