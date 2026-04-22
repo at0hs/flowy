@@ -13,6 +13,7 @@ import {
   Ticket,
   Users,
   LayoutDashboard,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
@@ -92,6 +93,20 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
 
       {/* プロジェクト一覧セクション */}
       <div className="flex-1 overflow-y-auto p-4">
+        {/* ホームボタン */}
+        <Link
+          href="/dashboard"
+          className={cn(
+            "flex items-center gap-1.5 px-1 py-1 rounded-md text-sm font-medium transition-colors mb-2",
+            pathname === "/dashboard"
+              ? "bg-accent text-foreground"
+              : "text-foreground hover:bg-accent"
+          )}
+        >
+          <Home className="h-4 w-4 shrink-0" />
+          ホーム
+        </Link>
+
         <Link
           href="/projects"
           className="group flex items-center gap-1.5 px-1 py-1 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"

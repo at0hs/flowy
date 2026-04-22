@@ -60,7 +60,7 @@ function LoginForm() {
       }
     }
 
-    router.push("/projects");
+    router.push("/dashboard");
   };
 
   return (

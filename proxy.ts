@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { logger } from "./lib/logger";
 
 export async function proxy(request: NextRequest) {
   // レスポンスを準備する（Cookieの更新に必要）
@@ -58,7 +59,7 @@ export async function proxy(request: NextRequest) {
     }
     // /projects へリダイレクト
     const url = request.nextUrl.clone();
-    url.pathname = "/projects";
+    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 

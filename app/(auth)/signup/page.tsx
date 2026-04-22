@@ -70,7 +70,7 @@ function SignupForm() {
         logger.error("failed to confirm email or accept invitation: ", err);
         // 失敗しても登録自体は成功しているため、そのまま続行
       }
-      router.push("/projects");
+      router.push("/dashboard");
       return;
     }
 
