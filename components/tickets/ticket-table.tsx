@@ -4,15 +4,9 @@ import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Ticket } from "@/types";
-import {
-  ChevronsDownIcon,
-  ChevronsUpIcon,
-  ChevronUpIcon,
-  ChevronRightIcon,
-  EqualIcon,
-} from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { formatDateTime, formatDate } from "@/lib/date";
-import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
+import { STATUS_CONFIG, PRIORITY_CONFIG } from "@/lib/ticket-config";
 import { isAfter, parseISO, startOfDay } from "date-fns";
 import {
   useReactTable,
@@ -21,23 +15,6 @@ import {
   createColumnHelper,
   ColumnDef,
 } from "@tanstack/react-table";
-
-const STATUS_MAP = {
-  todo: { label: STATUS_LABELS.todo, color: "bg-slate-500", variant: "default" },
-  in_progress: { label: STATUS_LABELS.in_progress, color: "bg-blue-500", variant: "default" },
-  done: { label: STATUS_LABELS.done, color: "bg-green-500", variant: "default" },
-} as const;
-
-const PRIORITY_MAP = {
-  low: { icon: ChevronsDownIcon, iconColor: "text-blue-400", label: PRIORITY_LABELS.low },
-  medium: { icon: EqualIcon, iconColor: "text-orange-300", label: PRIORITY_LABELS.medium },
-  high: { icon: ChevronUpIcon, iconColor: "text-red-400", label: PRIORITY_LABELS.high },
-  urgent: {
-    icon: ChevronsUpIcon,
-    iconColor: "text-red-400",
-    label: PRIORITY_LABELS.urgent,
-  },
-} as const;
 
 // テーブルの行データ型
 type RowData = {
@@ -159,7 +136,7 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
         size: 120,
         minSize: 80,
         cell: ({ row }) => {
-          const priority = PRIORITY_MAP[row.original.ticket.priority];
+          const priority = PRIORITY_CONFIG[row.original.ticket.priority];
           return (
             <div className="flex items-center gap-2">
               <priority.icon className={`w-4 h-4 stroke-[3px] ${priority.iconColor}`} />
@@ -174,12 +151,9 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
         size: 130,
         minSize: 80,
         cell: ({ row }) => {
-          const status = STATUS_MAP[row.original.ticket.status];
+          const status = STATUS_CONFIG[row.original.ticket.status];
           return (
-            <Badge
-              variant={status.variant}
-              className={`${status.color}/20 text-primary rounded-sm`}
-            >
+            <Badge className={`${status.badgeClass}/20 text-primary rounded-sm`}>
               {status.label}
             </Badge>
           );

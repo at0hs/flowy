@@ -1,6 +1,5 @@
 "use client";
 
-import { EqualIcon, ChevronsDownIcon, ChevronUpIcon, ChevronsUpIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,20 +8,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PriorityType } from "@/types";
-import { PRIORITY_LABELS } from "@/lib/constants";
+import { PRIORITY_CONFIG } from "@/lib/ticket-config";
 
-// 推奨: コンポーネント外
-const PRIORITIES = [
-  { value: "low", icon: ChevronsDownIcon, iconColor: "text-blue-400", label: PRIORITY_LABELS.low },
-  { value: "medium", icon: EqualIcon, iconColor: "text-orange-300", label: PRIORITY_LABELS.medium },
-  { value: "high", icon: ChevronUpIcon, iconColor: "text-red-400", label: PRIORITY_LABELS.high },
-  {
-    value: "urgent",
-    icon: ChevronsUpIcon,
-    iconColor: "text-red-400",
-    label: PRIORITY_LABELS.urgent,
-  },
-] as const;
+const PRIORITIES = (
+  Object.entries(PRIORITY_CONFIG) as [PriorityType, (typeof PRIORITY_CONFIG)[PriorityType]][]
+).map(([value, config]) => ({ value, ...config }));
 
 type Props = {
   value: PriorityType;

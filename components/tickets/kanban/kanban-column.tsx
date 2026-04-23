@@ -4,12 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { Ticket, StatusType } from "@/types";
 import { KanbanCard } from "./kanban-card";
 import { cn } from "@/lib/utils";
-
-const COLUMN_STYLES: Record<StatusType, string> = {
-  todo: "border-t-slate-400",
-  in_progress: "border-t-blue-400",
-  done: "border-t-green-500",
-};
+import { STATUS_CONFIG } from "@/lib/ticket-config";
 
 type Props = {
   status: StatusType;
@@ -27,7 +22,7 @@ export function KanbanColumn({ status, label, tickets, projectId, assigneeMap }:
       <div
         className={cn(
           "bg-card border border-t-2 rounded-lg flex flex-col h-full",
-          COLUMN_STYLES[status],
+          STATUS_CONFIG[status].columnBorderClass,
           isOver && "bg-muted/50"
         )}
       >

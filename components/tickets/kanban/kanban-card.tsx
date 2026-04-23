@@ -4,15 +4,8 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import Link from "next/link";
 import { Ticket } from "@/types";
-import { PRIORITY_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-
-const PRIORITY_COLORS: Record<string, string> = {
-  urgent: "bg-red-500",
-  high: "bg-orange-400",
-  medium: "bg-yellow-400",
-  low: "bg-blue-400",
-};
+import { PRIORITY_CONFIG } from "@/lib/ticket-config";
 
 type Props = {
   ticket: Ticket;
@@ -57,11 +50,11 @@ export function KanbanCard({ ticket, projectId, assigneeName }: Props) {
           <span
             className={cn(
               "inline-block w-2 h-2 rounded-full shrink-0",
-              PRIORITY_COLORS[ticket.priority] ?? "bg-gray-400"
+              PRIORITY_CONFIG[ticket.priority].dotColor
             )}
           />
           <span className="text-xs text-muted-foreground">
-            {PRIORITY_LABELS[ticket.priority] ?? ticket.priority}
+            {PRIORITY_CONFIG[ticket.priority].label}
           </span>
         </div>
 

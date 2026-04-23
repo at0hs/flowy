@@ -1,31 +1,11 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { MyTicket } from "@/lib/supabase/dashboard";
-import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/date";
 import { cn } from "@/lib/utils";
-import {
-  ChevronsDownIcon,
-  ChevronsUpIcon,
-  ChevronUpIcon,
-  EqualIcon,
-  ClipboardList,
-} from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { isAfter, parseISO, startOfDay } from "date-fns";
-
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  todo: { label: STATUS_LABELS.todo, className: "bg-slate-500" },
-  in_progress: { label: STATUS_LABELS.in_progress, className: "bg-blue-500" },
-  done: { label: STATUS_LABELS.done, className: "bg-green-500" },
-};
-
-const PRIORITY_MAP: Record<string, { icon: React.ElementType; iconColor: string; label: string }> =
-  {
-    low: { icon: ChevronsDownIcon, iconColor: "text-blue-400", label: PRIORITY_LABELS.low },
-    medium: { icon: EqualIcon, iconColor: "text-orange-300", label: PRIORITY_LABELS.medium },
-    high: { icon: ChevronUpIcon, iconColor: "text-red-400", label: PRIORITY_LABELS.high },
-    urgent: { icon: ChevronsUpIcon, iconColor: "text-red-400", label: PRIORITY_LABELS.urgent },
-  };
+import { STATUS_CONFIG, PRIORITY_CONFIG } from "@/lib/ticket-config";
 
 interface MyTicketsProps {
   tickets: MyTicket[];
@@ -44,11 +24,8 @@ export function MyTickets({ tickets }: MyTicketsProps) {
       ) : (
         <ul className="space-y-2">
           {tickets.map((ticket) => {
-            const status = STATUS_MAP[ticket.status] ?? {
-              label: ticket.status,
-              className: "bg-slate-400",
-            };
-            const priority = PRIORITY_MAP[ticket.priority];
+            const status = STATUS_CONFIG[ticket.status];
+            const priority = PRIORITY_CONFIG[ticket.priority];
             const PriorityIcon = priority?.icon;
 
             const isOverdue =
@@ -77,7 +54,7 @@ export function MyTickets({ tickets }: MyTicketsProps) {
                   </span>
 
                   {/* ステータスバッジ */}
-                  <Badge className={cn("shrink-0 text-xs text-white", status.className)}>
+                  <Badge className={cn("shrink-0 text-xs text-white", status.badgeClass)}>
                     {status.label}
                   </Badge>
 
