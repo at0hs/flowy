@@ -9,15 +9,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
-import { LoaderCircle, RotateCcwIcon } from "lucide-react";
-import { useTransition } from "react";
+import { Input } from "../ui/input";
+import { LoaderCircle, RotateCcwIcon, SearchIcon } from "lucide-react";
+import { useTransition, useState, useEffect } from "react";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 
-export function TicketFilters() {
+type TicketFiltersProps = {
+  currentView?: "list" | "kanban";
+};
+
+export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
+
+  // 検索ボックスの debounce 処理
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (searchValue.trim()) {
+        params.set("q", searchValue.trim());
+      } else {
+        params.delete("q");
+      }
+      router.push(`${pathname}?${params.toString()}`);
+    }, 300);
+    return () => clearTimeout(timer);
+    // searchParams を依存配列に含めると無限ループになるため除外
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue]);
 
   // クエリパラメータを更新する関数
   const updateParams = (key: string, value: string) => {
@@ -41,7 +63,21 @@ export function TicketFilters() {
   };
 
   return (
-    <div className="flex flex-wrap gap-3 mb-6">
+    <div className="flex flex-wrap gap-3 mt-4 mb-6">
+      {/* タイトル検索（リストビューのみ） */}
+      {currentView === "list" && (
+        <div className="relative">
+          <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="チケットを検索..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="pl-8 w-56"
+          />
+        </div>
+      )}
+
       {/* ステータスフィルタ */}
       <Select
         defaultValue={searchParams.get("status") ?? "all"}

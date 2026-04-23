@@ -17,6 +17,7 @@
     "allow": [
       "Bash(npm run type-check *)",
       "Bash(npm run check *)",
+      "Bash(npm run lint *)",
       "Bash(npm run build *)"
     ]
   }

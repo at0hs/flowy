@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
 import { TicketTable } from "@/components/tickets/ticket-table";
 import { TicketFilters } from "@/components/tickets/ticket-filters";
 import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
+import { ViewTabs } from "@/components/tickets/view-tabs";
+import { KanbanBoard } from "@/components/tickets/kanban/kanban-board";
 import { Suspense } from "react";
 import { ticketsQuerySchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
@@ -25,6 +26,8 @@ export default async function TicketsPage({ params, searchParams }: Props) {
     status: rawSearchParams.status,
     priority: rawSearchParams.priority,
     order: rawSearchParams.order,
+    view: rawSearchParams.view,
+    q: rawSearchParams.q,
   });
 
   if (!validationResult.success) {
@@ -32,7 +35,10 @@ export default async function TicketsPage({ params, searchParams }: Props) {
     logger.warn("Invalid search params:", validationResult.error.issues);
   }
 
-  const { status, priority, order } = validationResult.success ? validationResult.data : {};
+  const { status, priority, order, view, q } = validationResult.success
+    ? validationResult.data
+    : {};
+  const currentView = view ?? "list";
 
   const supabase = await createClient();
 
@@ -68,6 +74,9 @@ export default async function TicketsPage({ params, searchParams }: Props) {
 
   // 優先度フィルタ（指定がある場合のみ条件を追加）
   if (priority) query = query.eq("priority", priority);
+
+  // タイトル部分一致検索（指定がある場合のみ条件を追加）
+  if (q) query = query.ilike("title", `%${q}%`);
   const { data: tickets, error } = await query;
 
   if (error) logger.error(error);
@@ -107,13 +116,17 @@ export default async function TicketsPage({ params, searchParams }: Props) {
         <p className="text-sm text-muted-foreground mb-4">{project.description}</p>
       )}
 
-      <Separator className="mb-6" />
-
       <Suspense>
-        <TicketFilters />
+        <ViewTabs currentView={currentView} />
       </Suspense>
 
-      {tickets && tickets.length > 0 ? (
+      <Suspense>
+        <TicketFilters currentView={currentView} />
+      </Suspense>
+
+      {currentView === "kanban" ? (
+        <KanbanBoard tickets={tickets ?? []} projectId={id} assigneeMap={assigneeMap} />
+      ) : tickets && tickets.length > 0 ? (
         <TicketTable tickets={tickets} assigneeMap={assigneeMap} />
       ) : (
         <div className="text-sm text-center py-16 text-muted-foreground">
