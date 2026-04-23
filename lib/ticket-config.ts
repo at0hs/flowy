@@ -5,29 +5,33 @@ import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 
 type StatusConfig = {
   label: string;
-  badgeClass: string;
+  badgeBgClass: string;
   badgeAlphaClass: string;
   columnBorderClass: string;
+  columnBgClass: string;
 };
 
 export const STATUS_CONFIG: Record<StatusType, StatusConfig> = {
   todo: {
     label: STATUS_LABELS.todo,
-    badgeClass: "bg-slate-500",
-    badgeAlphaClass: "bg-slate-500/20 hover:bg-slate-500/30",
+    badgeBgClass: "bg-slate-200",
+    badgeAlphaClass: "bg-slate-200 hover:bg-slate-500/30",
     columnBorderClass: "border-t-slate-400",
+    columnBgClass: "bg-slate-500/10",
   },
   in_progress: {
     label: STATUS_LABELS.in_progress,
-    badgeClass: "bg-blue-500",
-    badgeAlphaClass: "bg-blue-500/20 hover:bg-blue-500/30",
-    columnBorderClass: "border-t-blue-400",
+    badgeBgClass: "bg-blue-200",
+    badgeAlphaClass: "bg-blue-200 hover:bg-blue-500/30",
+    columnBorderClass: "border-t-sky-400",
+    columnBgClass: "bg-sky-500/10",
   },
   done: {
     label: STATUS_LABELS.done,
-    badgeClass: "bg-green-500",
-    badgeAlphaClass: "bg-green-500/20 hover:bg-green-500/30",
+    badgeBgClass: "bg-green-200",
+    badgeAlphaClass: "bg-green-200 hover:bg-green-500/30",
     columnBorderClass: "border-t-green-500",
+    columnBgClass: "bg-green-500/10",
   },
 };
 

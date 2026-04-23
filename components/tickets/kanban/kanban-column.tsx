@@ -21,9 +21,10 @@ export function KanbanColumn({ status, label, tickets, projectId, assigneeMap }:
     <div className="flex flex-col min-w-0 flex-1">
       <div
         className={cn(
-          "bg-card border border-t-2 rounded-lg flex flex-col h-full",
+          "border border-t-2 rounded-lg flex flex-col h-full",
           STATUS_CONFIG[status].columnBorderClass,
-          isOver && "bg-muted/50"
+          STATUS_CONFIG[status].columnBgClass,
+          isOver && "brightness-110"
         )}
       >
         <div className="flex items-center gap-2 px-3 py-2.5 border-b">
@@ -33,7 +34,7 @@ export function KanbanColumn({ status, label, tickets, projectId, assigneeMap }:
           </span>
         </div>
 
-        <div ref={setNodeRef} className="flex flex-col gap-2 p-2 flex-1 min-h-[120px]">
+        <div ref={setNodeRef} className="flex flex-col gap-2 p-2 flex-1 min-h-30">
           {tickets.map((ticket) => (
             <KanbanCard
               key={ticket.id}

@@ -54,7 +54,7 @@ export function MyTickets({ tickets }: MyTicketsProps) {
                   </span>
 
                   {/* ステータスバッジ */}
-                  <Badge className={cn("shrink-0 text-xs text-white", status.badgeClass)}>
+                  <Badge className={cn("shrink-0 text-xs text-primary", status.badgeBgClass)}>
                     {status.label}
                   </Badge>
 

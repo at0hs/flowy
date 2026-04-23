@@ -15,6 +15,7 @@ import {
   createColumnHelper,
   ColumnDef,
 } from "@tanstack/react-table";
+import { cn } from "@/lib/utils";
 
 // テーブルの行データ型
 type RowData = {
@@ -153,7 +154,7 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
         cell: ({ row }) => {
           const status = STATUS_CONFIG[row.original.ticket.status];
           return (
-            <Badge className={`${status.badgeClass}/20 text-primary rounded-sm`}>
+            <Badge className={cn(status.badgeBgClass, "text-primary", "rounded-sm")}>
               {status.label}
             </Badge>
           );

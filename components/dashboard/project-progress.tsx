@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ProjectProgress } from "@/lib/supabase/dashboard";
 import { STATUS_LABELS } from "@/lib/constants";
+import { Progress } from "@/components/ui/progress";
 import { FolderOpen } from "lucide-react";
 
 interface ProjectProgressProps {
@@ -37,13 +38,10 @@ export function ProjectProgressSection({ projects }: ProjectProgressProps) {
                   </span>
                 </div>
 
-                {/* プログレスバー */}
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
-                  <div
-                    className="h-full rounded-full bg-green-500 transition-all"
-                    style={{ width: `${donePercent}%` }}
-                  />
-                </div>
+                <Progress
+                  value={donePercent}
+                  className="h-2 mb-2 *:data-[slot=progress-indicator]:bg-lime-500"
+                />
 
                 {/* ステータス別カウント */}
                 <div className="flex gap-4 text-xs text-muted-foreground">
