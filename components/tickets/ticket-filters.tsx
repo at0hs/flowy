@@ -129,18 +129,20 @@ export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
       </Select>
 
       {/* ソート */}
-      <Select
-        defaultValue={searchParams.get("order") ?? "desc"}
-        onValueChange={(value) => updateParams("order", value)}
-      >
-        <SelectTrigger className="w-44">
-          <SelectValue placeholder="並び順" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="desc">作成日（新しい順）</SelectItem>
-          <SelectItem value="asc">作成日（古い順）</SelectItem>
-        </SelectContent>
-      </Select>
+      {currentView === "list" && (
+        <Select
+          defaultValue={searchParams.get("order") ?? "desc"}
+          onValueChange={(value) => updateParams("order", value)}
+        >
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="並び順" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="desc">作成日（新しい順）</SelectItem>
+            <SelectItem value="asc">作成日（古い順）</SelectItem>
+          </SelectContent>
+        </Select>
+      )}
 
       <Button variant="ghost" className="ml-auto" onClick={handleReload} disabled={isPending}>
         {isPending ? <LoaderCircle className="animate-spin" /> : <RotateCcwIcon />}

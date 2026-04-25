@@ -224,7 +224,7 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
                 <th
                   key={header.id}
                   style={{ width: header.getSize() }}
-                  className="relative px-6 py-1 text-left text-sm font-semibold select-none"
+                  className="relative px-6 py-1 text-left text-sm font-semibold select-none hover:bg-gray-200"
                 >
                   {flexRender(header.column.columnDef.header, header.getContext())}
                   {/* リサイズハンドル */}

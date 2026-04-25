@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -26,6 +26,10 @@ type Props = {
 export function KanbanBoard({ tickets: initialTickets, projectId, assigneeMap }: Props) {
   const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
+
+  useEffect(() => {
+    setTickets(initialTickets);
+  }, [initialTickets]);
   const [, startTransition] = useTransition();
   const router = useRouter();
 

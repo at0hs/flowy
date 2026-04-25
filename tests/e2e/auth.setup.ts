@@ -6,6 +6,8 @@ const AUTH_FILE = path.join(__dirname, "../../playwright/.auth/user.json");
 
 setup("認証状態を保存", async ({ page }) => {
   resetDb();
+  // コンテナ再起動後のクロックずれによる JWT "issued at future" エラーを避けるため待機
+  await page.waitForTimeout(2000);
 
   await page.goto("/login");
 
@@ -13,7 +15,7 @@ setup("認証状態を保存", async ({ page }) => {
   await page.getByLabel("パスワード").fill("password123");
   await page.getByRole("button", { name: "ログイン" }).click();
 
-  await page.waitForURL("/projects");
+  await page.waitForURL("/dashboard");
 
   await page.context().storageState({ path: AUTH_FILE });
 });
