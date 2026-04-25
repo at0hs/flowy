@@ -40,7 +40,8 @@ export function MyTickets({ tickets }: MyTicketsProps) {
                   {/* 優先度アイコン */}
                   {PriorityIcon && (
                     <PriorityIcon
-                      className={cn("h-4 w-4 shrink-0", priority.iconColor)}
+                      strokeWidth={3}
+                      className={cn("h-4 w-4", "shrink-0", priority.iconColor)}
                       aria-label={priority.label}
                     />
                   )}

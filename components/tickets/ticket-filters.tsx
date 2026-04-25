@@ -12,7 +12,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { LoaderCircle, RotateCcwIcon, SearchIcon } from "lucide-react";
 import { useTransition, useState, useEffect } from "react";
-import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
+import { STATUS_LABELS, PRIORITY_LABELS, CATEGORY_LABELS } from "@/lib/constants";
 
 type TicketFiltersProps = {
   currentView?: "list" | "kanban";
@@ -108,6 +108,23 @@ export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
           <SelectItem value="medium">{PRIORITY_LABELS.medium}</SelectItem>
           <SelectItem value="high">{PRIORITY_LABELS.high}</SelectItem>
           <SelectItem value="urgent">{PRIORITY_LABELS.urgent}</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* カテゴリフィルタ */}
+      <Select
+        defaultValue={searchParams.get("category") ?? "all"}
+        onValueChange={(value) => updateParams("category", value)}
+      >
+        <SelectTrigger className="w-36">
+          <SelectValue placeholder="カテゴリ" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">すべて</SelectItem>
+          <SelectItem value="bug">{CATEGORY_LABELS.bug}</SelectItem>
+          <SelectItem value="task">{CATEGORY_LABELS.task}</SelectItem>
+          <SelectItem value="feature">{CATEGORY_LABELS.feature}</SelectItem>
+          <SelectItem value="improvement">{CATEGORY_LABELS.improvement}</SelectItem>
         </SelectContent>
       </Select>
 

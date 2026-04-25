@@ -10,3 +10,10 @@ export const PRIORITY_LABELS: Record<string, string> = {
   high: "高",
   urgent: "緊急",
 };
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  bug: "バグ",
+  task: "タスク",
+  feature: "機能",
+  improvement: "改善",
+};

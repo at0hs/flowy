@@ -10,6 +10,7 @@ import { InlineTitle } from "./inline-title";
 import { InlineDescription } from "./inline-description";
 import { InlineStatus } from "./inline-status";
 import { InlinePriority } from "./inline-priority";
+import { InlineCategory } from "./inline-category";
 import { InlineAssignee } from "./inline-assignee";
 import { InlineDueDate } from "./inline-due-date";
 
@@ -45,6 +46,11 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
 
   return (
     <div className="mt-4">
+      {/* カテゴリ（変更不可バッジ） */}
+      <div className="mb-2">
+        <InlineCategory value={localTicket.category} />
+      </div>
+
       {/* タイトル */}
       <div className="mb-6">
         <InlineTitle

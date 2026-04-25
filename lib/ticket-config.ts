@@ -1,7 +1,16 @@
-import { ChevronsDownIcon, ChevronsUpIcon, ChevronUpIcon, EqualIcon } from "lucide-react";
+import {
+  ChevronsDownIcon,
+  ChevronsUpIcon,
+  ChevronUpIcon,
+  EqualIcon,
+  BugIcon,
+  CheckSquareIcon,
+  TrendingUpIcon,
+  Zap,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { StatusType, PriorityType } from "@/types";
-import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
+import type { StatusType, PriorityType, CategoryType } from "@/types";
+import { STATUS_LABELS, PRIORITY_LABELS, CATEGORY_LABELS } from "@/lib/constants";
 
 type StatusConfig = {
   label: string;
@@ -66,5 +75,44 @@ export const PRIORITY_CONFIG: Record<PriorityType, PriorityConfig> = {
     icon: ChevronsUpIcon,
     iconColor: "text-red-400",
     dotColor: "bg-red-500",
+  },
+};
+
+type CategoryConfig = {
+  label: string;
+  icon: LucideIcon;
+  iconColor: string;
+  badgeBgClass: string;
+  badgeAlphaClass: string;
+};
+
+export const CATEGORY_CONFIG: Record<CategoryType, CategoryConfig> = {
+  bug: {
+    label: CATEGORY_LABELS.bug,
+    icon: BugIcon,
+    iconColor: "text-red-500",
+    badgeBgClass: "bg-red-200",
+    badgeAlphaClass: "bg-red-200 hover:bg-red-500/30",
+  },
+  task: {
+    label: CATEGORY_LABELS.task,
+    icon: CheckSquareIcon,
+    iconColor: "text-slate-500",
+    badgeBgClass: "bg-slate-200",
+    badgeAlphaClass: "bg-slate-200 hover:bg-slate-500/30",
+  },
+  feature: {
+    label: CATEGORY_LABELS.feature,
+    icon: Zap,
+    iconColor: "text-blue-500",
+    badgeBgClass: "bg-blue-200",
+    badgeAlphaClass: "bg-blue-200 hover:bg-blue-500/30",
+  },
+  improvement: {
+    label: CATEGORY_LABELS.improvement,
+    icon: TrendingUpIcon,
+    iconColor: "text-green-500",
+    badgeBgClass: "bg-green-200",
+    badgeAlphaClass: "bg-green-200 hover:bg-green-500/30",
   },
 };

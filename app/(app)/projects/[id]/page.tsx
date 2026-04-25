@@ -25,6 +25,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   const validationResult = ticketsQuerySchema.safeParse({
     status: rawSearchParams.status,
     priority: rawSearchParams.priority,
+    category: rawSearchParams.category,
     order: rawSearchParams.order,
     view: rawSearchParams.view,
     q: rawSearchParams.q,
@@ -35,7 +36,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
     logger.warn("Invalid search params:", validationResult.error.issues);
   }
 
-  const { status, priority, order, view, q } = validationResult.success
+  const { status, priority, category, order, view, q } = validationResult.success
     ? validationResult.data
     : {};
   const currentView = view ?? "list";
@@ -74,6 +75,9 @@ export default async function TicketsPage({ params, searchParams }: Props) {
 
   // 優先度フィルタ（指定がある場合のみ条件を追加）
   if (priority) query = query.eq("priority", priority);
+
+  // カテゴリフィルタ（指定がある場合のみ条件を追加）
+  if (category) query = query.eq("category", category);
 
   // タイトル部分一致検索（指定がある場合のみ条件を追加）
   if (q) query = query.ilike("title", `%${q}%`);

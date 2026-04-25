@@ -426,6 +426,7 @@ export type Database = {
       tickets: {
         Row: {
           assignee_id: string | null;
+          category: Database["public"]["Enums"]["ticket_category"];
           created_at: string;
           description: string | null;
           due_date: string | null;
@@ -439,6 +440,7 @@ export type Database = {
         };
         Insert: {
           assignee_id?: string | null;
+          category?: Database["public"]["Enums"]["ticket_category"];
           created_at?: string;
           description?: string | null;
           due_date?: string | null;
@@ -452,6 +454,7 @@ export type Database = {
         };
         Update: {
           assignee_id?: string | null;
+          category?: Database["public"]["Enums"]["ticket_category"];
           created_at?: string;
           description?: string | null;
           due_date?: string | null;
@@ -554,6 +557,7 @@ export type Database = {
         | "mention"
         | "deadline";
       project_role: "owner" | "member";
+      ticket_category: "bug" | "task" | "feature" | "improvement";
       ticket_priority: "low" | "medium" | "high" | "urgent";
       ticket_status: "todo" | "in_progress" | "done";
     };
@@ -696,6 +700,7 @@ export const Constants = {
         "deadline",
       ],
       project_role: ["owner", "member"],
+      ticket_category: ["bug", "task", "feature", "improvement"],
       ticket_priority: ["low", "medium", "high", "urgent"],
       ticket_status: ["todo", "in_progress", "done"],
     },

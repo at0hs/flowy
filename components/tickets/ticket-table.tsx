@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Ticket } from "@/types";
 import { ChevronRightIcon } from "lucide-react";
 import { formatDateTime, formatDate } from "@/lib/date";
-import { STATUS_CONFIG, PRIORITY_CONFIG } from "@/lib/ticket-config";
+import { STATUS_CONFIG, PRIORITY_CONFIG, CATEGORY_CONFIG } from "@/lib/ticket-config";
 import { isAfter, parseISO, startOfDay } from "date-fns";
 import {
   useReactTable,
@@ -86,6 +86,22 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
 
   const columns = useMemo<ColumnDef<RowData, unknown>[]>(
     () => [
+      columnHelper.display({
+        id: "category",
+        header: "カテゴリ",
+        size: 110,
+        minSize: 80,
+        cell: ({ row }) => {
+          const cat = CATEGORY_CONFIG[row.original.ticket.category];
+          const Icon = cat.icon;
+          return (
+            <Badge className={cn(cat.badgeBgClass, "text-primary", "rounded-sm", "gap-1")}>
+              <Icon className={cn("w-3 h-3", cat.iconColor)} />
+              {cat.label}
+            </Badge>
+          );
+        },
+      }),
       columnHelper.display({
         id: "title",
         header: "タイトル",

@@ -4,6 +4,7 @@ import { z } from "zod";
 export const ticketsQuerySchema = z.object({
   status: z.enum(["todo", "in_progress", "done"] as const).optional(),
   priority: z.enum(["low", "medium", "high", "urgent"] as const).optional(),
+  category: z.enum(["bug", "task", "feature", "improvement"] as const).optional(),
   order: z.enum(["asc", "desc"] as const).optional(),
   view: z.enum(["list", "kanban"] as const).optional(),
   q: z.string().trim().optional(),
@@ -14,6 +15,7 @@ export const ticketSchema = z.object({
   description: z.string().optional(),
   status: z.enum(["todo", "in_progress", "done"]).catch("todo"),
   priority: z.enum(["low", "medium", "high", "urgent"]).catch("medium"),
+  category: z.enum(["bug", "task", "feature", "improvement"]).catch("task"),
 });
 
 // export type TicketsQuery = z.infer<typeof ticketsQuerySchema>;

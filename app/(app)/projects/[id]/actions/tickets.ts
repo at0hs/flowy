@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { ticketSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
-import { PriorityType, StatusType } from "@/types";
+import { PriorityType, StatusType, CategoryType } from "@/types";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { Json } from "@/types/database.types";
@@ -71,6 +71,7 @@ export async function createTicket(projectId: string, formData: FormData) {
     description: formData.get("description") || undefined,
     status: formData.get("status"),
     priority: formData.get("priority"),
+    category: formData.get("category"),
   });
 
   const assigneeIdRaw = formData.get("assignee_id") as string | null;
@@ -109,6 +110,7 @@ export async function createTicket(projectId: string, formData: FormData) {
       description: data.description || null,
       status: data.status,
       priority: data.priority,
+      category: data.category,
       assignee_id: assigneeId,
       due_date: dueDate,
     })
@@ -229,6 +231,7 @@ type TicketFieldUpdate =
   | { field: "description"; value: string | null }
   | { field: "status"; value: StatusType; prevValue?: StatusType }
   | { field: "priority"; value: PriorityType; prevValue?: PriorityType }
+  | { field: "category"; value: CategoryType }
   | { field: "assignee_id"; value: string | null; prevValue?: string | null }
   | { field: "due_date"; value: string | null };
 

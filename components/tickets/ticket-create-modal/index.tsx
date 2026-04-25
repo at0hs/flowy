@@ -46,10 +46,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { PriorityType, StatusType } from "@/types";
+import { PriorityType, StatusType, CategoryType } from "@/types";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
+import { CATEGORY_CONFIG } from "@/lib/ticket-config";
 import { ja } from "date-fns/locale";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS: { value: StatusType; label: string; className: string }[] = [
   {
@@ -90,6 +92,10 @@ const PRIORITY_OPTIONS: {
     iconColor: "text-red-400",
   },
 ];
+
+const CATEGORY_OPTIONS = (
+  Object.entries(CATEGORY_CONFIG) as [CategoryType, (typeof CATEGORY_CONFIG)[CategoryType]][]
+).map(([value, config]) => ({ value, ...config }));
 
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 
@@ -138,6 +144,7 @@ export function TicketCreateModal({
   const [parentId, setParentId] = useState<string>(defaultParentId ?? "none");
   const [status, setStatus] = useState<StatusType>("todo");
   const [priority, setPriority] = useState<PriorityType>(initialPriority ?? "medium");
+  const [category, setCategory] = useState<CategoryType>("task");
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [dueDateOpen, setDueDateOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -177,6 +184,7 @@ export function TicketCreateModal({
     formData.set("parent_id", parentId === "none" ? "" : parentId);
     formData.set("status", status);
     formData.set("priority", priority);
+    formData.set("category", category);
     const isDescriptionEmpty = !description || description === "<p></p>";
     formData.set("description", isDescriptionEmpty ? "" : description);
     formData.set("due_date", dueDate ? format(dueDate, "yyyy-MM-dd") : "");
@@ -265,6 +273,7 @@ export function TicketCreateModal({
     setParentId(defaultParentId ?? "none");
     setStatus("todo");
     setPriority("medium");
+    setCategory("task");
     setDescription("");
     setDueDate(undefined);
     setPendingFiles([]);
@@ -285,6 +294,7 @@ export function TicketCreateModal({
       setParentId(defaultParentId ?? "none");
       setStatus("todo");
       setPriority("medium");
+      setCategory("task");
       setDescription("");
       setDueDate(undefined);
       setPendingFiles([]);
@@ -311,12 +321,49 @@ export function TicketCreateModal({
       <DialogContent className="sm:max-w-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>チケット作成</DialogTitle>
-          <DialogDescription>必須フィールドにはアスタリスクが付いています *</DialogDescription>
+          <DialogDescription className="text-xs">
+            必須フィールドにはアスタリスクが付いています *
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-6 py-2">
             {errorMessage && <p className="text-sm text-red-500">{errorMessage}</p>}
+
+            {/* カテゴリ */}
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0">カテゴリ *</Label>
+              <Select value={category} onValueChange={(v) => setCategory(v as CategoryType)}>
+                <SelectTrigger
+                  className={cn(
+                    "w-auto",
+                    "h-7",
+                    "px-3",
+                    "text-xs",
+                    "font-medium",
+                    "border-0",
+                    "shadow-none",
+                    "rounded-sm",
+                    "gap-1",
+                    "transition-colors",
+                    "text-black"
+                    // CATEGORY_CONFIG[category].badgeAlphaClass
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORY_OPTIONS.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      <div className="flex items-center gap-2">
+                        <c.icon className={`w-4 h-4 ${c.iconColor}`} />
+                        {c.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* タイトル */}
             <div className="space-y-2">
