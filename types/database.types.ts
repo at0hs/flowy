@@ -387,6 +387,51 @@ export type Database = {
           },
         ];
       };
+      ticket_activities: {
+        Row: {
+          action: Database["public"]["Enums"]["activity_action"];
+          created_at: string;
+          id: string;
+          new_value: string | null;
+          old_value: string | null;
+          ticket_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          action: Database["public"]["Enums"]["activity_action"];
+          created_at?: string;
+          id?: string;
+          new_value?: string | null;
+          old_value?: string | null;
+          ticket_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["activity_action"];
+          created_at?: string;
+          id?: string;
+          new_value?: string | null;
+          old_value?: string | null;
+          ticket_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ticket_activities_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ticket_activities_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ticket_watches: {
         Row: {
           created_at: string;
@@ -434,6 +479,7 @@ export type Database = {
           parent_id: string | null;
           priority: Database["public"]["Enums"]["ticket_priority"];
           project_id: string;
+          start_date: string | null;
           status: Database["public"]["Enums"]["ticket_status"];
           title: string;
           updated_at: string;
@@ -448,6 +494,7 @@ export type Database = {
           parent_id?: string | null;
           priority?: Database["public"]["Enums"]["ticket_priority"];
           project_id: string;
+          start_date?: string | null;
           status?: Database["public"]["Enums"]["ticket_status"];
           title: string;
           updated_at?: string;
@@ -462,6 +509,7 @@ export type Database = {
           parent_id?: string | null;
           priority?: Database["public"]["Enums"]["ticket_priority"];
           project_id?: string;
+          start_date?: string | null;
           status?: Database["public"]["Enums"]["ticket_status"];
           title?: string;
           updated_at?: string;
@@ -503,6 +551,7 @@ export type Database = {
         Args: { ticket_id: string };
         Returns: boolean;
       };
+      can_access_ticket: { Args: { p_ticket_id: string }; Returns: boolean };
       create_invitation: {
         Args: { p_email: string; p_project_id: string };
         Returns: {
@@ -546,6 +595,15 @@ export type Database = {
       };
     };
     Enums: {
+      activity_action:
+        | "created"
+        | "status_changed"
+        | "assignee_changed"
+        | "priority_changed"
+        | "category_changed"
+        | "due_date_changed"
+        | "start_date_changed"
+        | "comment_added";
       ai_provider_type: "gemini" | "openrouter";
       invitation_status: "pending" | "accepted" | "expired";
       notification_type:
@@ -688,6 +746,16 @@ export const Constants = {
   },
   public: {
     Enums: {
+      activity_action: [
+        "created",
+        "status_changed",
+        "assignee_changed",
+        "priority_changed",
+        "category_changed",
+        "due_date_changed",
+        "start_date_changed",
+        "comment_added",
+      ],
       ai_provider_type: ["gemini", "openrouter"],
       invitation_status: ["pending", "accepted", "expired"],
       notification_type: [

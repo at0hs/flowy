@@ -252,4 +252,4 @@ tests/
 
 ### Auth flow
 
-- `proxy.ts` がミドルウェアとして動作：未認証ユーザーを `/login` へ、認証済みユーザーが `/` `/login` `/signup` アクセス時は `/projects` へリダイレクト
+- `proxy.ts` がミドルウェアとして動作：未認証ユーザーを `/login` へ、認証済みユーザーが `/` `/login` `/signup` アクセス時は `/dashboard` へリダイレクト
