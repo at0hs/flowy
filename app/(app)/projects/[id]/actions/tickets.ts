@@ -72,6 +72,8 @@ export async function createTicket(projectId: string, formData: FormData) {
     status: formData.get("status"),
     priority: formData.get("priority"),
     category: formData.get("category"),
+    start_date: formData.get("start_date") || undefined,
+    due_date: formData.get("due_date") || undefined,
   });
 
   const assigneeIdRaw = formData.get("assignee_id") as string | null;
@@ -79,9 +81,6 @@ export async function createTicket(projectId: string, formData: FormData) {
 
   const parentIdRaw = formData.get("parent_id") as string | null;
   const parentId = parentIdRaw && parentIdRaw.trim() !== "" ? parentIdRaw : null;
-
-  const dueDateRaw = formData.get("due_date") as string | null;
-  const dueDate = dueDateRaw && dueDateRaw.trim() !== "" ? dueDateRaw : null;
 
   // T28: 孫チケット作成を禁止する（親チケットが既に子チケットの場合はエラー）
   if (parentId) {
@@ -112,7 +111,8 @@ export async function createTicket(projectId: string, formData: FormData) {
       priority: data.priority,
       category: data.category,
       assignee_id: assigneeId,
-      due_date: dueDate,
+      start_date: data.start_date || null,
+      due_date: data.due_date || null,
     })
     .select("id")
     .single();
@@ -202,6 +202,8 @@ export async function updateTicket(ticketId: string, projectId: string, formData
     description: formData.get("description") || undefined,
     status: formData.get("status"),
     priority: formData.get("priority"),
+    start_date: formData.get("start_date") || undefined,
+    due_date: formData.get("due_date") || undefined,
   });
 
   const assigneeIdRaw = formData.get("assignee_id") as string | null;
@@ -215,6 +217,8 @@ export async function updateTicket(ticketId: string, projectId: string, formData
       status: data.status,
       priority: data.priority,
       assignee_id: assigneeId,
+      start_date: data.start_date || null,
+      due_date: data.due_date || null,
     })
     .eq("id", ticketId);
 
@@ -233,6 +237,7 @@ type TicketFieldUpdate =
   | { field: "priority"; value: PriorityType; prevValue?: PriorityType }
   | { field: "category"; value: CategoryType }
   | { field: "assignee_id"; value: string | null; prevValue?: string | null }
+  | { field: "start_date"; value: string | null }
   | { field: "due_date"; value: string | null };
 
 export async function updateTicketField(

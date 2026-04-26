@@ -16,6 +16,8 @@ export const ticketSchema = z.object({
   status: z.enum(["todo", "in_progress", "done"]).catch("todo"),
   priority: z.enum(["low", "medium", "high", "urgent"]).catch("medium"),
   category: z.enum(["bug", "task", "feature", "improvement"]).catch("task"),
+  start_date: z.iso.date().optional(),
+  due_date: z.iso.date().optional(),
 });
 
 // export type TicketsQuery = z.infer<typeof ticketsQuerySchema>;

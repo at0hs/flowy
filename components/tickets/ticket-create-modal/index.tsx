@@ -145,6 +145,8 @@ export function TicketCreateModal({
   const [status, setStatus] = useState<StatusType>("todo");
   const [priority, setPriority] = useState<PriorityType>(initialPriority ?? "medium");
   const [category, setCategory] = useState<CategoryType>("task");
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [startDateOpen, setStartDateOpen] = useState(false);
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [dueDateOpen, setDueDateOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -187,6 +189,7 @@ export function TicketCreateModal({
     formData.set("category", category);
     const isDescriptionEmpty = !description || description === "<p></p>";
     formData.set("description", isDescriptionEmpty ? "" : description);
+    formData.set("start_date", startDate ? format(startDate, "yyyy-MM-dd") : "");
     formData.set("due_date", dueDate ? format(dueDate, "yyyy-MM-dd") : "");
 
     const result = await createTicket(projectId, formData);
@@ -275,6 +278,7 @@ export function TicketCreateModal({
     setPriority("medium");
     setCategory("task");
     setDescription("");
+    setStartDate(undefined);
     setDueDate(undefined);
     setPendingFiles([]);
     router.refresh();
@@ -296,6 +300,7 @@ export function TicketCreateModal({
       setPriority("medium");
       setCategory("task");
       setDescription("");
+      setStartDate(undefined);
       setDueDate(undefined);
       setPendingFiles([]);
     }
@@ -447,6 +452,47 @@ export function TicketCreateModal({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* 開始日 */}
+            <div className="flex items-center gap-4">
+              <Label className="w-24 shrink-0 text-muted-foreground">開始日</Label>
+              <div className="flex items-center gap-2">
+                <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-52 justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                      {startDate ? (
+                        format(startDate, "yyyy年MM月dd日", { locale: ja })
+                      ) : (
+                        <span className="text-muted-foreground">日付を選択</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(date) => {
+                        setStartDate(date);
+                        setStartDateOpen(false);
+                      }}
+                      locale={ja}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {startDate && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setStartDate(undefined)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* 期限 */}

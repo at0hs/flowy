@@ -17,6 +17,7 @@ export type AiProviderType = Database["public"]["Enums"]["ai_provider_type"];
 export type PriorityType = Database["public"]["Enums"]["ticket_priority"];
 export type StatusType = Database["public"]["Enums"]["ticket_status"];
 export type CategoryType = Database["public"]["Enums"]["ticket_category"];
+export type ActivityActionType = Database["public"]["Enums"]["activity_action"];
 
 // 通知関連の型定義
 export type Notification = Database["public"]["Tables"]["notifications"]["Row"];

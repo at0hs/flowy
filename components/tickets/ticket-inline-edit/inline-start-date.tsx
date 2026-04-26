@@ -8,6 +8,6 @@ type Props = {
   disabled?: boolean;
 };
 
-export function InlineDueDate({ value, onSave, disabled }: Props) {
-  return <InlineDate value={value} onSave={onSave} disabled={disabled} placeholder="期限なし" />;
+export function InlineStartDate({ value, onSave, disabled }: Props) {
+  return <InlineDate value={value} onSave={onSave} disabled={disabled} placeholder="開始日なし" />;
 }
