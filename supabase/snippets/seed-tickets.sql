@@ -9,7 +9,7 @@ ALTER TABLE tickets DISABLE TRIGGER on_ticket_created;
 
 DO $$
 DECLARE
-  v_project_id uuid := '9f30abe1-abc0-4960-b99b-4d9e11c6b821';  -- ← ここを変更
+  v_project_id uuid := '74f5bdb0-f3a0-44d3-8c45-f230bd802149';  -- ← ここを変更
 BEGIN
   INSERT INTO tickets (project_id, assignee_id, title, status, priority, created_at)
   SELECT

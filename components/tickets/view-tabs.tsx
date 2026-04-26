@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { LayoutList, Kanban } from "lucide-react";
+import { LayoutList, Kanban, GanttChartSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ViewTabsProps = {
-  currentView: "list" | "kanban";
+  currentView: "list" | "kanban" | "gantt";
 };
 
 export function ViewTabs({ currentView }: ViewTabsProps) {
@@ -13,7 +13,7 @@ export function ViewTabs({ currentView }: ViewTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const setView = (view: "list" | "kanban") => {
+  const setView = (view: "list" | "kanban" | "gantt") => {
     const params = new URLSearchParams(searchParams.toString());
     if (view === "list") {
       params.delete("view");
@@ -49,6 +49,18 @@ export function ViewTabs({ currentView }: ViewTabsProps) {
       >
         <Kanban className="w-4 h-4" />
         カンバン
+      </button>
+      <button
+        onClick={() => setView("gantt")}
+        className={cn(
+          "flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+          currentView === "gantt"
+            ? "border-primary text-foreground"
+            : "border-transparent text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <GanttChartSquare className="w-4 h-4" />
+        ガント
       </button>
     </div>
   );

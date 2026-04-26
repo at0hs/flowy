@@ -6,6 +6,7 @@ import { TicketFilters } from "@/components/tickets/ticket-filters";
 import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
 import { ViewTabs } from "@/components/tickets/view-tabs";
 import { KanbanBoard } from "@/components/tickets/kanban/kanban-board";
+import { GanttChart } from "@/components/tickets/gantt/gantt-chart";
 import { Suspense } from "react";
 import { ticketsQuerySchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
@@ -130,6 +131,8 @@ export default async function TicketsPage({ params, searchParams }: Props) {
 
       {currentView === "kanban" ? (
         <KanbanBoard tickets={tickets ?? []} projectId={id} assigneeMap={assigneeMap} />
+      ) : currentView === "gantt" ? (
+        <GanttChart tickets={tickets ?? []} projectId={id} />
       ) : tickets && tickets.length > 0 ? (
         <TicketTable tickets={tickets} assigneeMap={assigneeMap} />
       ) : (

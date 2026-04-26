@@ -6,7 +6,7 @@ export const ticketsQuerySchema = z.object({
   priority: z.enum(["low", "medium", "high", "urgent"] as const).optional(),
   category: z.enum(["bug", "task", "feature", "improvement"] as const).optional(),
   order: z.enum(["asc", "desc"] as const).optional(),
-  view: z.enum(["list", "kanban"] as const).optional(),
+  view: z.enum(["list", "kanban", "gantt"] as const).optional(),
   q: z.string().trim().optional(),
 });
 

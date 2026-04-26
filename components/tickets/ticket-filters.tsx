@@ -15,7 +15,7 @@ import { useTransition, useState, useEffect } from "react";
 import { STATUS_LABELS, PRIORITY_LABELS, CATEGORY_LABELS } from "@/lib/constants";
 
 type TicketFiltersProps = {
-  currentView?: "list" | "kanban";
+  currentView?: "list" | "kanban" | "gantt";
 };
 
 export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
