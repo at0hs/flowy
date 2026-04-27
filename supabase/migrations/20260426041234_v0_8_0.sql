@@ -6,10 +6,10 @@ CREATE TYPE activity_action AS ENUM (
   'status_changed',
   'assignee_changed',
   'priority_changed',
-  'category_changed',
   'due_date_changed',
   'start_date_changed',
-  'comment_added'
+  'comment_added',
+  'comment_deleted'
 );
 
 -- ----------------------------------------

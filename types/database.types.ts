@@ -600,10 +600,10 @@ export type Database = {
         | "status_changed"
         | "assignee_changed"
         | "priority_changed"
-        | "category_changed"
         | "due_date_changed"
         | "start_date_changed"
-        | "comment_added";
+        | "comment_added"
+        | "comment_deleted";
       ai_provider_type: "gemini" | "openrouter";
       invitation_status: "pending" | "accepted" | "expired";
       notification_type:
@@ -751,10 +751,10 @@ export const Constants = {
         "status_changed",
         "assignee_changed",
         "priority_changed",
-        "category_changed",
         "due_date_changed",
         "start_date_changed",
         "comment_added",
+        "comment_deleted",
       ],
       ai_provider_type: ["gemini", "openrouter"],
       invitation_status: ["pending", "accepted", "expired"],

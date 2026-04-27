@@ -6,7 +6,8 @@ import { DeleteTicketButton } from "./delete-ticket-button";
 import { TicketInlineEditPanel } from "@/components/tickets/ticket-inline-edit";
 import { getProjectMembers } from "@/lib/supabase/members";
 import { getComments } from "@/lib/supabase/comments";
-import { CommentList } from "@/components/tickets/comment-list";
+import { getTicketActivities } from "@/lib/supabase/activities";
+import { CommentActivityTabs } from "@/components/tickets/activity-section/comment-activity-tabs";
 import { getSubtickets } from "@/lib/supabase/tickets";
 import { SubtaskSection } from "@/components/tickets/subtask-section";
 import { isWatching } from "@/lib/supabase/watches";
@@ -30,13 +31,15 @@ export default async function TicketDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: ticket }, members, comments, attachments, { data: profile }] = await Promise.all([
-    supabase.from("tickets").select("*").eq("id", ticketId).single(),
-    getProjectMembers(id),
-    getComments(ticketId),
-    getAttachments(ticketId),
-    supabase.from("profiles").select("ai_provider").eq("id", user.id).single(),
-  ]);
+  const [{ data: ticket }, members, comments, attachments, { data: profile }, activities] =
+    await Promise.all([
+      supabase.from("tickets").select("*").eq("id", ticketId).single(),
+      getProjectMembers(id),
+      getComments(ticketId),
+      getAttachments(ticketId),
+      supabase.from("profiles").select("ai_provider").eq("id", user.id).single(),
+      getTicketActivities(ticketId),
+    ]);
 
   const isAiConfigured = !!profile?.ai_provider;
 
@@ -110,9 +113,10 @@ export default async function TicketDetailPage({ params }: Props) {
 
       <Separator className="my-6" />
 
-      {/* コメント */}
-      <CommentList
+      {/* コメント／アクティビティ */}
+      <CommentActivityTabs
         comments={comments}
+        activities={activities}
         ticketId={ticketId}
         currentUserId={user.id}
         members={members.map((m) => ({ id: m.user_id, label: m.profile.username }))}

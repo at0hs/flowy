@@ -10,6 +10,7 @@ import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slac
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { Json } from "@/types/database.types";
 import { sendSlackNotificationToWatchers, fetchNotificationContext } from "./_helpers";
+import { insertTicketActivity } from "@/lib/supabase/activities";
 
 async function sendSlackNotificationToUser(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -120,6 +121,13 @@ export async function createTicket(projectId: string, formData: FormData) {
   if (error) {
     logger.error(error);
     return { error: "チケットの作成に失敗しました" };
+  }
+
+  // チケット作成アクティビティを記録
+  try {
+    await insertTicketActivity(newTicket.id, "created");
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity (created):", activityError);
   }
 
   // 担当者が設定されており、自分以外の場合は `assigned` 通知を発行
@@ -267,6 +275,38 @@ export async function updateTicketField(
   if (error) {
     logger.error(error);
     return { error: "チケットの更新に失敗しました" };
+  }
+
+  // アクティビティを記録（title / description / category は対象外）
+  try {
+    if (update.field === "status") {
+      await insertTicketActivity(
+        ticketId,
+        "status_changed",
+        update.prevValue ?? null,
+        update.value
+      );
+    } else if (update.field === "assignee_id") {
+      await insertTicketActivity(
+        ticketId,
+        "assignee_changed",
+        update.prevValue ?? null,
+        update.value
+      );
+    } else if (update.field === "priority") {
+      await insertTicketActivity(
+        ticketId,
+        "priority_changed",
+        update.prevValue ?? null,
+        update.value
+      );
+    } else if (update.field === "due_date") {
+      await insertTicketActivity(ticketId, "due_date_changed", null, update.value);
+    } else if (update.field === "start_date") {
+      await insertTicketActivity(ticketId, "start_date_changed", null, update.value);
+    }
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity:", activityError);
   }
 
   if (update.field === "assignee_id" && update.value !== update.prevValue) {

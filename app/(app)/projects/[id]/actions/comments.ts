@@ -13,6 +13,7 @@ import {
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 import { sendSlackNotificationToWatchers, fetchNotificationContext } from "./_helpers";
 import { stripHtml } from "@/lib/utils";
+import { insertTicketActivity } from "@/lib/supabase/activities";
 
 async function sendMentionNotifications(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -88,6 +89,12 @@ export async function addComment(
     return { error: "コメントの投稿に失敗しました" };
   }
 
+  try {
+    await insertTicketActivity(ticketId, "comment_added", null, stripHtml(trimmed).slice(0, 50));
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity (comment_added):", activityError);
+  }
+
   const { error: notifyError } = await supabase.rpc("notify_watchers", {
     p_ticket_id: ticketId,
     p_type: "comment_added",
@@ -134,6 +141,12 @@ export async function addReply(
   } catch (err) {
     logger.error("Failed to add reply:", err);
     return { error: "返信の投稿に失敗しました" };
+  }
+
+  try {
+    await insertTicketActivity(ticketId, "comment_added", null, stripHtml(trimmed).slice(0, 50));
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity (comment_added):", activityError);
   }
 
   const { error: notifyError } = await supabase.rpc("notify_watchers", {
@@ -193,11 +206,29 @@ export async function removeComment(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const { data: comment, error: fetchError } = await supabase
+    .from("comments")
+    .select("ticket_id")
+    .eq("id", commentId)
+    .single();
+
+  if (fetchError || !comment) {
+    logger.error("Failed to fetch comment before deletion:", fetchError);
+    return { error: "コメントの削除に失敗しました" };
+  }
+
   try {
     await deleteComment(commentId);
-    return { success: true };
   } catch (err) {
     logger.error("Failed to delete comment:", err);
     return { error: "コメントの削除に失敗しました" };
   }
+
+  try {
+    await insertTicketActivity(comment.ticket_id, "comment_deleted", null, null);
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity (comment_deleted):", activityError);
+  }
+
+  return { success: true };
 }

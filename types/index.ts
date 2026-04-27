@@ -36,3 +36,9 @@ export type NotificationWithDetails = Notification & {
 export type AttachmentWithUploader = Attachment & {
   uploader: Profile | null;
 };
+
+// アクティビティ関連の型定義
+export type TicketActivity = Database["public"]["Tables"]["ticket_activities"]["Row"];
+export type TicketActivityWithProfile = TicketActivity & {
+  actor: { id: string; username: string } | null;
+};
