@@ -76,9 +76,11 @@ export function SubtaskSuggestButton({
           defaultParentId={parentTicketId}
           open={isModalOpen}
           onOpenChange={handleModalOpenChange}
-          initialTitle={suggestion.title}
-          initialDescription={suggestion.description}
-          initialPriority={suggestion.priority}
+          defaultValues={{
+            title: suggestion.title,
+            description: suggestion.description,
+            priority: suggestion.priority,
+          }}
         />
       )}
     </>

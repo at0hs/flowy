@@ -17,6 +17,7 @@ import { formatRelativeTime } from "@/lib/date";
 import { getAttachments } from "@/lib/supabase/attachments";
 import { AttachmentSection } from "@/components/tickets/attachment-section";
 import { AiAssistButton } from "@/components/tickets/ai-assist/ai-assist-button";
+import { CopyTicketButton } from "@/components/tickets/copy-ticket-button";
 
 type Props = {
   params: Promise<{ id: string; ticketId: string }>;
@@ -31,15 +32,28 @@ export default async function TicketDetailPage({ params }: Props) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: ticket }, members, comments, attachments, { data: profile }, activities] =
-    await Promise.all([
-      supabase.from("tickets").select("*").eq("id", ticketId).single(),
-      getProjectMembers(id),
-      getComments(ticketId),
-      getAttachments(ticketId),
-      supabase.from("profiles").select("ai_provider").eq("id", user.id).single(),
-      getTicketActivities(ticketId),
-    ]);
+  const [
+    { data: ticket },
+    members,
+    comments,
+    attachments,
+    { data: profile },
+    activities,
+    { data: rootTickets },
+  ] = await Promise.all([
+    supabase.from("tickets").select("*").eq("id", ticketId).single(),
+    getProjectMembers(id),
+    getComments(ticketId),
+    getAttachments(ticketId),
+    supabase.from("profiles").select("ai_provider").eq("id", user.id).single(),
+    getTicketActivities(ticketId),
+    supabase
+      .from("tickets")
+      .select("id, title")
+      .eq("project_id", id)
+      .is("parent_id", null)
+      .order("created_at", { ascending: true }),
+  ]);
 
   const isAiConfigured = !!profile?.ai_provider;
 
@@ -64,6 +78,12 @@ export default async function TicketDetailPage({ params }: Props) {
         </Link>
         <div className="ml-auto flex items-center gap-2">
           <AiAssistButton ticketId={ticketId} isAiConfigured={isAiConfigured} />
+          <CopyTicketButton
+            ticket={ticket}
+            projectId={id}
+            members={members}
+            rootTickets={rootTickets ?? []}
+          />
           <TicketWatchButton ticketId={ticketId} isWatching={watching} />
           <DeleteTicketButton ticketId={ticketId} projectId={id} ticketTitle={ticket.title} />
         </div>

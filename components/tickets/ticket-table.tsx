@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Ticket } from "@/types";
-import { ChevronRightIcon } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon, ArrowUpDownIcon, ChevronRightIcon } from "lucide-react";
 import { formatDateTime, formatDate } from "@/lib/date";
 import { STATUS_CONFIG, PRIORITY_CONFIG, CATEGORY_CONFIG } from "@/lib/ticket-config";
 import { isAfter, parseISO, startOfDay } from "date-fns";
@@ -17,7 +17,6 @@ import {
 } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
 
-// テーブルの行データ型
 type RowData = {
   ticket: Ticket;
   isChild: boolean;
@@ -29,10 +28,88 @@ type Props = {
   assigneeMap: Record<string, string>;
 };
 
+type SortColumn =
+  | "title"
+  | "status"
+  | "priority"
+  | "assignee"
+  | "due_date"
+  | "created_at"
+  | "category";
+type SortDirection = "asc" | "desc";
+type SortConfig = { column: SortColumn; direction: SortDirection } | null;
+
+const PRIORITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, urgent: 3 };
+const STATUS_ORDER: Record<string, number> = { todo: 0, in_progress: 1, done: 2 };
+const CATEGORY_ORDER: Record<string, number> = { bug: 0, feature: 1, improvement: 2, task: 3 };
+
+function sortTickets(
+  tickets: Ticket[],
+  sortConfig: SortConfig,
+  assigneeMap: Record<string, string>
+): Ticket[] {
+  if (!sortConfig) return tickets;
+
+  return [...tickets].sort((a, b) => {
+    let comparison = 0;
+    switch (sortConfig.column) {
+      case "title":
+        comparison = a.title.localeCompare(b.title, "ja");
+        break;
+      case "status":
+        comparison = (STATUS_ORDER[a.status] ?? 0) - (STATUS_ORDER[b.status] ?? 0);
+        break;
+      case "priority":
+        comparison = (PRIORITY_ORDER[a.priority] ?? 0) - (PRIORITY_ORDER[b.priority] ?? 0);
+        break;
+      case "assignee": {
+        const nameA = a.assignee_id ? (assigneeMap[a.assignee_id] ?? "") : "";
+        const nameB = b.assignee_id ? (assigneeMap[b.assignee_id] ?? "") : "";
+        comparison = nameA.localeCompare(nameB, "ja");
+        break;
+      }
+      case "due_date": {
+        const dateA = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+        const dateB = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+        comparison = dateA - dateB;
+        break;
+      }
+      case "created_at":
+        comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        break;
+      case "category":
+        comparison = (CATEGORY_ORDER[a.category] ?? 0) - (CATEGORY_ORDER[b.category] ?? 0);
+        break;
+    }
+    return sortConfig.direction === "asc" ? comparison : -comparison;
+  });
+}
+
+function SortIcon({ column, sortConfig }: { column: SortColumn; sortConfig: SortConfig }) {
+  if (sortConfig?.column !== column) {
+    return <ArrowUpDownIcon className="w-3 h-3 text-muted-foreground/50" />;
+  }
+  return sortConfig.direction === "asc" ? (
+    <ArrowUpIcon className="w-3 h-3" />
+  ) : (
+    <ArrowDownIcon className="w-3 h-3" />
+  );
+}
+
 const columnHelper = createColumnHelper<RowData>();
 
 export function TicketTable({ tickets, assigneeMap }: Props) {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+
+  const handleSort = useCallback((column: SortColumn) => {
+    setSortConfig((prev) => {
+      if (prev?.column === column) {
+        return { column, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      return { column, direction: "asc" };
+    });
+  }, []);
 
   // 親子関係を構築
   const { roots, childrenByParent } = useMemo(() => {
@@ -53,11 +130,17 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
     return { roots, childrenByParent };
   }, [tickets]);
 
+  // ルートチケットをソート
+  const sortedRoots = useMemo(
+    () => sortTickets(roots, sortConfig, assigneeMap),
+    [roots, sortConfig, assigneeMap]
+  );
+
   // 表示順のフラット配列を生成（折り畳み状態を考慮）
   const data = useMemo(() => {
     const result: RowData[] = [];
 
-    for (const root of roots) {
+    for (const root of sortedRoots) {
       const children = childrenByParent.get(root.id) ?? [];
       const hasChildren = children.length > 0;
       result.push({ ticket: root, isChild: false, hasChildren });
@@ -70,7 +153,7 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
     }
 
     return result;
-  }, [roots, childrenByParent, collapsedIds]);
+  }, [sortedRoots, childrenByParent, collapsedIds]);
 
   const toggleCollapse = useCallback((id: string) => {
     setCollapsedIds((prev) => {
@@ -88,7 +171,15 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
     () => [
       columnHelper.display({
         id: "category",
-        header: "カテゴリ",
+        header: () => (
+          <button
+            onClick={() => handleSort("category")}
+            className="flex items-center gap-1 hover:text-foreground w-full"
+          >
+            カテゴリ
+            <SortIcon column="category" sortConfig={sortConfig} />
+          </button>
+        ),
         size: 110,
         minSize: 80,
         cell: ({ row }) => {
@@ -104,7 +195,15 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
       }),
       columnHelper.display({
         id: "title",
-        header: "タイトル",
+        header: () => (
+          <button
+            onClick={() => handleSort("title")}
+            className="flex items-center gap-1 hover:text-foreground w-full"
+          >
+            タイトル
+            <SortIcon column="title" sortConfig={sortConfig} />
+          </button>
+        ),
         size: 380,
         minSize: 150,
         cell: ({ row }) => {
@@ -136,7 +235,15 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
       }),
       columnHelper.display({
         id: "assignee",
-        header: "担当者",
+        header: () => (
+          <button
+            onClick={() => handleSort("assignee")}
+            className="flex items-center gap-1 hover:text-foreground w-full"
+          >
+            担当者
+            <SortIcon column="assignee" sortConfig={sortConfig} />
+          </button>
+        ),
         size: 150,
         minSize: 80,
         cell: ({ row }) => {
@@ -149,7 +256,15 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
       }),
       columnHelper.display({
         id: "priority",
-        header: "優先度",
+        header: () => (
+          <button
+            onClick={() => handleSort("priority")}
+            className="flex items-center gap-1 hover:text-foreground w-full"
+          >
+            優先度
+            <SortIcon column="priority" sortConfig={sortConfig} />
+          </button>
+        ),
         size: 120,
         minSize: 80,
         cell: ({ row }) => {
@@ -164,7 +279,15 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
       }),
       columnHelper.display({
         id: "status",
-        header: "ステータス",
+        header: () => (
+          <button
+            onClick={() => handleSort("status")}
+            className="flex items-center gap-1 hover:text-foreground w-full"
+          >
+            ステータス
+            <SortIcon column="status" sortConfig={sortConfig} />
+          </button>
+        ),
         size: 130,
         minSize: 80,
         cell: ({ row }) => {
@@ -178,7 +301,15 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
       }),
       columnHelper.display({
         id: "due_date",
-        header: "期限",
+        header: () => (
+          <button
+            onClick={() => handleSort("due_date")}
+            className="flex items-center gap-1 hover:text-foreground w-full"
+          >
+            期限
+            <SortIcon column="due_date" sortConfig={sortConfig} />
+          </button>
+        ),
         size: 120,
         minSize: 80,
         cell: ({ row }) => {
@@ -190,7 +321,15 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
       }),
       columnHelper.display({
         id: "created_at",
-        header: "作成日",
+        header: () => (
+          <button
+            onClick={() => handleSort("created_at")}
+            className="flex items-center gap-1 hover:text-foreground w-full"
+          >
+            作成日
+            <SortIcon column="created_at" sortConfig={sortConfig} />
+          </button>
+        ),
         size: 160,
         minSize: 100,
         cell: ({ row }) => (
@@ -200,7 +339,7 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
         ),
       }),
     ],
-    [assigneeMap, collapsedIds, toggleCollapse]
+    [assigneeMap, collapsedIds, toggleCollapse, sortConfig, handleSort]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library

@@ -25,6 +25,10 @@ export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
   const [isPending, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(searchParams.get("q") ?? "");
 
+  const statusValue = searchParams.get("status") ?? "all";
+  const priorityValue = searchParams.get("priority") ?? "all";
+  const categoryValue = searchParams.get("category") ?? "all";
+
   // 検索ボックスの debounce 処理
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,16 +47,14 @@ export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
 
   // クエリパラメータを更新する関数
   const updateParams = (key: string, value: string) => {
-    // 既存のクエリパラメータをコピー
     const params = new URLSearchParams(searchParams.toString());
 
     if (value === "all") {
-      params.delete(key); // "すべて"を選んだらパラメータを削除
+      params.delete(key);
     } else {
       params.set(key, value);
     }
 
-    // URLを更新（ページ遷移ではなくURLだけ変わる）
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -78,49 +80,13 @@ export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
         </div>
       )}
 
-      {/* ステータスフィルタ */}
-      <Select
-        defaultValue={searchParams.get("status") ?? "all"}
-        onValueChange={(value) => updateParams("status", value)}
-      >
-        <SelectTrigger className="w-36">
-          <SelectValue placeholder="ステータス" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">すべて</SelectItem>
-          <SelectItem value="todo">{STATUS_LABELS.todo}</SelectItem>
-          <SelectItem value="in_progress">{STATUS_LABELS.in_progress}</SelectItem>
-          <SelectItem value="done">{STATUS_LABELS.done}</SelectItem>
-        </SelectContent>
-      </Select>
-
-      {/* 優先度フィルタ */}
-      <Select
-        defaultValue={searchParams.get("priority") ?? "all"}
-        onValueChange={(value) => updateParams("priority", value)}
-      >
-        <SelectTrigger className="w-36">
-          <SelectValue placeholder="優先度" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">すべて</SelectItem>
-          <SelectItem value="low">{PRIORITY_LABELS.low}</SelectItem>
-          <SelectItem value="medium">{PRIORITY_LABELS.medium}</SelectItem>
-          <SelectItem value="high">{PRIORITY_LABELS.high}</SelectItem>
-          <SelectItem value="urgent">{PRIORITY_LABELS.urgent}</SelectItem>
-        </SelectContent>
-      </Select>
-
       {/* カテゴリフィルタ */}
-      <Select
-        defaultValue={searchParams.get("category") ?? "all"}
-        onValueChange={(value) => updateParams("category", value)}
-      >
+      <Select value={categoryValue} onValueChange={(value) => updateParams("category", value)}>
         <SelectTrigger className="w-36">
-          <SelectValue placeholder="カテゴリ" />
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">すべて</SelectItem>
+          <SelectItem value="all">カテゴリ</SelectItem>
           <SelectItem value="bug">{CATEGORY_LABELS.bug}</SelectItem>
           <SelectItem value="task">{CATEGORY_LABELS.task}</SelectItem>
           <SelectItem value="feature">{CATEGORY_LABELS.feature}</SelectItem>
@@ -128,21 +94,32 @@ export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
         </SelectContent>
       </Select>
 
-      {/* ソート */}
-      {currentView === "list" && (
-        <Select
-          defaultValue={searchParams.get("order") ?? "desc"}
-          onValueChange={(value) => updateParams("order", value)}
-        >
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="並び順" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="desc">作成日（新しい順）</SelectItem>
-            <SelectItem value="asc">作成日（古い順）</SelectItem>
-          </SelectContent>
-        </Select>
-      )}
+      {/* ステータスフィルタ */}
+      <Select value={statusValue} onValueChange={(value) => updateParams("status", value)}>
+        <SelectTrigger className="w-36">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">ステータス</SelectItem>
+          <SelectItem value="todo">{STATUS_LABELS.todo}</SelectItem>
+          <SelectItem value="in_progress">{STATUS_LABELS.in_progress}</SelectItem>
+          <SelectItem value="done">{STATUS_LABELS.done}</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* 優先度フィルタ */}
+      <Select value={priorityValue} onValueChange={(value) => updateParams("priority", value)}>
+        <SelectTrigger className="w-36">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">優先度</SelectItem>
+          <SelectItem value="low">{PRIORITY_LABELS.low}</SelectItem>
+          <SelectItem value="medium">{PRIORITY_LABELS.medium}</SelectItem>
+          <SelectItem value="high">{PRIORITY_LABELS.high}</SelectItem>
+          <SelectItem value="urgent">{PRIORITY_LABELS.urgent}</SelectItem>
+        </SelectContent>
+      </Select>
 
       <Button variant="ghost" className="ml-auto" onClick={handleReload} disabled={isPending}>
         {isPending ? <LoaderCircle className="animate-spin" /> : <RotateCcwIcon />}

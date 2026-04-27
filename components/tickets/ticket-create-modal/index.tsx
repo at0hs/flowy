@@ -104,6 +104,18 @@ interface RootTicket {
   title: string;
 }
 
+export interface TicketDefaultValues {
+  title?: string;
+  description?: string;
+  status?: StatusType;
+  priority?: PriorityType;
+  category?: CategoryType;
+  assigneeId?: string;
+  startDate?: Date;
+  dueDate?: Date;
+  parentId?: string;
+}
+
 interface TicketCreateModalProps {
   projectId: string;
   members: ProjectMemberWithProfile[];
@@ -112,9 +124,7 @@ interface TicketCreateModalProps {
   triggerLabel?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  initialTitle?: string;
-  initialDescription?: string;
-  initialPriority?: PriorityType;
+  defaultValues?: TicketDefaultValues;
 }
 
 export function TicketCreateModal({
@@ -125,9 +135,7 @@ export function TicketCreateModal({
   triggerLabel,
   open: externalOpen,
   onOpenChange: externalOnOpenChange,
-  initialTitle,
-  initialDescription,
-  initialPriority,
+  defaultValues,
 }: TicketCreateModalProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,24 +146,32 @@ export function TicketCreateModal({
   const isOpen = isControlled ? externalOpen : internalOpen;
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [title, setTitle] = useState(initialTitle ?? "");
-  const [assigneeId, setAssigneeId] = useState<string>("none");
-  const [description, setDescription] = useState(initialDescription ?? "");
-  const [parentId, setParentId] = useState<string>(defaultParentId ?? "none");
-  const [status, setStatus] = useState<StatusType>("todo");
-  const [priority, setPriority] = useState<PriorityType>(initialPriority ?? "medium");
-  const [category, setCategory] = useState<CategoryType>("task");
-  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [title, setTitle] = useState(defaultValues?.title ?? "");
+  const [assigneeId, setAssigneeId] = useState<string>(defaultValues?.assigneeId ?? "none");
+  const [description, setDescription] = useState(defaultValues?.description ?? "");
+  const [parentId, setParentId] = useState<string>(
+    defaultValues?.parentId ?? defaultParentId ?? "none"
+  );
+  const [status, setStatus] = useState<StatusType>(defaultValues?.status ?? "todo");
+  const [priority, setPriority] = useState<PriorityType>(defaultValues?.priority ?? "medium");
+  const [category, setCategory] = useState<CategoryType>(defaultValues?.category ?? "task");
+  const [startDate, setStartDate] = useState<Date | undefined>(defaultValues?.startDate);
   const [startDateOpen, setStartDateOpen] = useState(false);
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
+  const [dueDate, setDueDate] = useState<Date | undefined>(defaultValues?.dueDate);
   const [dueDateOpen, setDueDateOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   useEffect(() => {
     if (isOpen) {
-      if (initialTitle !== undefined) setTitle(initialTitle);
-      if (initialDescription !== undefined) setDescription(initialDescription);
-      if (initialPriority !== undefined) setPriority(initialPriority);
+      setTitle(defaultValues?.title ?? "");
+      setDescription(defaultValues?.description ?? "");
+      setStatus(defaultValues?.status ?? "todo");
+      setPriority(defaultValues?.priority ?? "medium");
+      setCategory(defaultValues?.category ?? "task");
+      setAssigneeId(defaultValues?.assigneeId ?? "none");
+      setStartDate(defaultValues?.startDate);
+      setDueDate(defaultValues?.dueDate);
+      setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
     }
     // isOpen の変化時のみ適用する
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -271,15 +287,15 @@ export function TicketCreateModal({
 
     if (!isControlled) setInternalOpen(false);
     externalOnOpenChange?.(false);
-    setTitle("");
-    setAssigneeId("none");
-    setParentId(defaultParentId ?? "none");
-    setStatus("todo");
-    setPriority("medium");
-    setCategory("task");
-    setDescription("");
-    setStartDate(undefined);
-    setDueDate(undefined);
+    setTitle(defaultValues?.title ?? "");
+    setAssigneeId(defaultValues?.assigneeId ?? "none");
+    setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
+    setStatus(defaultValues?.status ?? "todo");
+    setPriority(defaultValues?.priority ?? "medium");
+    setCategory(defaultValues?.category ?? "task");
+    setDescription(defaultValues?.description ?? "");
+    setStartDate(defaultValues?.startDate);
+    setDueDate(defaultValues?.dueDate);
     setPendingFiles([]);
     router.refresh();
     setIsLoading(false);
@@ -293,15 +309,15 @@ export function TicketCreateModal({
       }
       blobUrlToFileRef.current.clear();
       setErrorMessage("");
-      setTitle("");
-      setAssigneeId("none");
-      setParentId(defaultParentId ?? "none");
-      setStatus("todo");
-      setPriority("medium");
-      setCategory("task");
-      setDescription("");
-      setStartDate(undefined);
-      setDueDate(undefined);
+      setTitle(defaultValues?.title ?? "");
+      setAssigneeId(defaultValues?.assigneeId ?? "none");
+      setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
+      setStatus(defaultValues?.status ?? "todo");
+      setPriority(defaultValues?.priority ?? "medium");
+      setCategory(defaultValues?.category ?? "task");
+      setDescription(defaultValues?.description ?? "");
+      setStartDate(defaultValues?.startDate);
+      setDueDate(defaultValues?.dueDate);
       setPendingFiles([]);
     }
     if (!isControlled) setInternalOpen(nextOpen);
