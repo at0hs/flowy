@@ -1,15 +1,7 @@
 import { createClient } from "./server";
 import { Notification, NotificationWithDetails } from "@/types";
 import { logger } from "@/lib/logger";
-
-/** 通知として扱う期間（日数） */
-const NOTIFICATION_RETENTION_DAYS = 30;
-
-function thirtyDaysAgo(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - NOTIFICATION_RETENTION_DAYS);
-  return d.toISOString();
-}
+import { thirtyDaysAgo } from "@/lib/date";
 
 /**
  * ユーザーの通知一覧を取得する（actor・ticket を JOIN、新しい順、30日以内）

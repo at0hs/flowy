@@ -1,5 +1,6 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
+import { NOTIFICATION_RETENTION_DAYS } from "@/lib/constants";
 
 /** 相対時間（30日超は絶対日時にフォールバック） */
 export function formatRelativeTime(dateStr: string): string {
@@ -17,4 +18,11 @@ export function formatDateTime(dateStr: string): string {
 /** 日付のみ（例: 2026/04/07） */
 export function formatDate(dateStr: string): string {
   return format(new Date(dateStr), "yyyy/MM/dd");
+}
+
+/** NOTIFICATION_RETENTION_DAYS 日前のISO文字列 */
+export function thirtyDaysAgo(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - NOTIFICATION_RETENTION_DAYS);
+  return d.toISOString();
 }

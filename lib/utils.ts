@@ -15,7 +15,12 @@ export function generateUUID(): string {
   });
 }
 /** HTMLタグを除去する（メール本文用） */
-
 export function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").trim();
+}
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }

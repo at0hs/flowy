@@ -19,7 +19,7 @@ const faviconPath =
 
 export const metadata: Metadata = {
   title: "Flowy",
-  description: "Jira-like ticket management app",
+  description: "Ticket management app",
   icons: {
     icon: faviconPath,
   },
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="ja" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="light">
           <TooltipProvider delayDuration={200}>{children}</TooltipProvider>

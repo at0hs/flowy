@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { Paperclip, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { formatFileSize } from "@/components/tickets/attachment-section/attachment-item";
+import { formatFileSize } from "@/lib/utils";
 
 type PendingFileListProps = {
   files: File[];

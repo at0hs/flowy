@@ -1,6 +1,8 @@
-import { File, FileText, ImageIcon, Download, Trash2 } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AttachmentWithUploader } from "@/types";
+import { getFileIcon } from "@/lib/file-icons";
+import { formatFileSize } from "@/lib/utils";
 
 interface AttachmentItemProps {
   attachment: AttachmentWithUploader;
@@ -8,20 +10,6 @@ interface AttachmentItemProps {
   onPreviewRequest: (attachmentId: string, mimeType: string) => void;
   onDownloadRequest: (attachmentId: string, fileName: string) => void;
   onDeleteRequest: (attachmentId: string) => void;
-}
-
-function getFileIcon(mimeType: string) {
-  if (mimeType.startsWith("image/"))
-    return <ImageIcon className="h-4 w-4 shrink-0 text-muted-foreground" />;
-  if (mimeType === "application/pdf")
-    return <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />;
-  return <File className="h-4 w-4 shrink-0 text-muted-foreground" />;
-}
-
-export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function isPreviewable(mimeType: string): boolean {

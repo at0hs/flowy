@@ -1,6 +1,7 @@
 import { createClient } from "./server";
 import { Ticket, Project, NotificationWithDetails } from "@/types";
 import { logger } from "@/lib/logger";
+import { thirtyDaysAgo } from "@/lib/date";
 
 /** 担当者が自分かつ未完了のチケット（プロジェクト名付き） */
 export interface MyTicket extends Ticket {
@@ -31,13 +32,6 @@ export interface RecentActivityItem {
 export interface UnreadNotificationSummary {
   unreadCount: number;
   recentNotifications: NotificationWithDetails[];
-}
-
-/** 30日前のISO文字列 */
-function thirtyDaysAgo(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 30);
-  return d.toISOString();
 }
 
 /**
