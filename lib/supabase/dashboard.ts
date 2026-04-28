@@ -15,13 +15,16 @@ export interface ProjectProgress {
   done: number;
 }
 
-/** 最近のアクティビティ（チケット + プロジェクト名） */
-export interface RecentActivityTicket {
+/** 最近のアクティビティ（ticket_activities ベース） */
+export interface RecentActivityItem {
   id: string;
-  title: string;
+  action: string;
+  created_at: string;
+  ticket_id: string;
+  ticket_title: string;
   project_id: string;
   project_name: string;
-  updated_at: string;
+  actor_username: string | null;
 }
 
 /** 未読通知サマリー */
@@ -127,47 +130,63 @@ export async function getProjectProgress(userId: string): Promise<ProjectProgres
 }
 
 /**
- * 自分が参加するプロジェクト全体で updated_at が新しいチケットを最大10件取得する
- * @param userId 取得対象のユーザーID
+ * 自分が参加するプロジェクト全体の最近のアクティビティをチケットごとに最新1件・最大10件取得する
+ * コメント系アクション（comment_added / comment_deleted）は除外
  */
-export async function getRecentActivity(userId: string): Promise<RecentActivityTicket[]> {
+export async function getRecentActivity(): Promise<RecentActivityItem[]> {
   const supabase = await createClient();
 
-  const { data: memberData, error: memberError } = await supabase
-    .from("project_members")
-    .select("project_id")
-    .eq("user_id", userId);
-
-  if (memberError) {
-    logger.error("Failed to fetch project members:", memberError);
-    throw memberError;
-  }
-
-  if (!memberData || memberData.length === 0) {
-    return [];
-  }
-
-  const projectIds = memberData.map((m) => m.project_id);
-
+  // RLS (can_access_ticket) がプロジェクトメンバーに自動で絞るため project_id フィルタ不要
   const { data, error } = await supabase
-    .from("tickets")
-    .select("id, title, project_id, updated_at, project:projects!tickets_project_id_fkey(name)")
-    .in("project_id", projectIds)
-    .order("updated_at", { ascending: false })
-    .limit(10);
+    .from("ticket_activities")
+    .select(
+      `
+      id,
+      action,
+      created_at,
+      ticket:tickets!ticket_activities_ticket_id_fkey(
+        id, title, project_id,
+        project:projects!tickets_project_id_fkey(name)
+      ),
+      actor:profiles!ticket_activities_user_id_fkey(username)
+    `
+    )
+    .not("action", "in", '("comment_added","comment_deleted")')
+    .order("created_at", { ascending: false })
+    .limit(50);
 
   if (error) {
     logger.error("Failed to fetch recent activity:", error);
     throw error;
   }
 
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    project_id: row.project_id,
-    project_name: (row.project as { name: string } | null)?.name ?? "",
-    updated_at: row.updated_at,
-  }));
+  // チケットごとに最新1件のみ残し、10件に絞る
+  const seen = new Set<string>();
+  const deduped: RecentActivityItem[] = [];
+  for (const row of data ?? []) {
+    const ticket = row.ticket as {
+      id: string;
+      title: string;
+      project_id: string;
+      project: { name: string } | null;
+    } | null;
+    if (!ticket) continue;
+    if (seen.has(ticket.id)) continue;
+    seen.add(ticket.id);
+    deduped.push({
+      id: row.id,
+      action: row.action,
+      created_at: row.created_at,
+      ticket_id: ticket.id,
+      ticket_title: ticket.title,
+      project_id: ticket.project_id,
+      project_name: ticket.project?.name ?? "",
+      actor_username: (row.actor as { username: string } | null)?.username ?? null,
+    });
+    if (deduped.length === 10) break;
+  }
+
+  return deduped;
 }
 
 /**

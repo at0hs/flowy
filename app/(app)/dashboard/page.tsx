@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   const [myTickets, projectProgress, recentActivity, notificationSummary] = await Promise.all([
     getMyTickets(user.id),
     getProjectProgress(user.id),
-    getRecentActivity(user.id),
+    getRecentActivity(),
     getUnreadNotificationSummary(user.id),
   ]);
 
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <MyTickets tickets={myTickets} />
         <ProjectProgressSection projects={projectProgress} />
-        <RecentActivity tickets={recentActivity} />
+        <RecentActivity activities={recentActivity} />
         <NotificationSummary summary={notificationSummary} />
       </div>
     </div>
