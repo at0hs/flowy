@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TICKET_VIEWS } from "@/lib/constants";
 
 // チケット一覧ページのクエリパラメータスキーマ
 export const ticketsQuerySchema = z.object({
@@ -6,7 +7,7 @@ export const ticketsQuerySchema = z.object({
   priority: z.enum(["low", "medium", "high", "urgent"] as const).optional(),
   category: z.enum(["bug", "task", "feature", "improvement"] as const).optional(),
   order: z.enum(["asc", "desc"] as const).optional(),
-  view: z.enum(["list", "kanban", "gantt"] as const).optional(),
+  view: z.enum(TICKET_VIEWS).optional(),
   q: z.string().trim().optional(),
 });
 

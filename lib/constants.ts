@@ -17,3 +17,6 @@ export const CATEGORY_LABELS: Record<string, string> = {
   feature: "機能",
   improvement: "改善",
 };
+
+export const TICKET_VIEWS = ["list", "kanban", "gantt"] as const;
+export type TicketView = (typeof TICKET_VIEWS)[number];

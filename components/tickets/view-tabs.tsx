@@ -3,9 +3,10 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { LayoutList, Kanban, GanttChartSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TicketView } from "@/lib/constants";
 
 type ViewTabsProps = {
-  currentView: "list" | "kanban" | "gantt";
+  currentView: TicketView;
 };
 
 export function ViewTabs({ currentView }: ViewTabsProps) {
@@ -13,7 +14,7 @@ export function ViewTabs({ currentView }: ViewTabsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const setView = (view: "list" | "kanban" | "gantt") => {
+  const setView = (view: TicketView) => {
     const params = new URLSearchParams(searchParams.toString());
     if (view === "list") {
       params.delete("view");

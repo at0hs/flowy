@@ -21,20 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  EqualIcon,
-  ChevronsDownIcon,
-  ChevronUpIcon,
-  ChevronsUpIcon,
-  Plus,
-  CalendarIcon,
-  X,
-  Paperclip,
-  LoaderCircle,
-} from "lucide-react";
-import { formatFileSize } from "@/components/tickets/attachment-section/attachment-item";
+import { Plus, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -45,87 +32,34 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 import { PriorityType, StatusType, CategoryType } from "@/types";
-import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
-import { CATEGORY_CONFIG } from "@/lib/ticket-config";
-import { ja } from "date-fns/locale";
+import { STATUS_CONFIG, PRIORITY_CONFIG, CATEGORY_CONFIG } from "@/lib/ticket-config";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { DatePickerField } from "./date-picker-field";
+import { PendingFileList } from "./pending-file-list";
+import type { TicketCreateModalProps, TicketDefaultValues } from "./types";
 
-const STATUS_OPTIONS: { value: StatusType; label: string; className: string }[] = [
-  {
-    value: "todo",
-    label: STATUS_LABELS.todo,
-    className: "bg-slate-500/20 text-black hover:bg-slate-500/30",
-  },
-  {
-    value: "in_progress",
-    label: STATUS_LABELS.in_progress,
-    className: "bg-blue-500/20 text-black hover:bg-blue-500/30",
-  },
-  {
-    value: "done",
-    label: STATUS_LABELS.done,
-    className: "bg-green-500/20 text-black hover:bg-green-500/30",
-  },
-];
+export type { TicketDefaultValues };
 
-const PRIORITY_OPTIONS: {
-  value: PriorityType;
-  label: string;
-  icon: React.ElementType;
-  iconColor: string;
-}[] = [
-  { value: "low", label: PRIORITY_LABELS.low, icon: ChevronsDownIcon, iconColor: "text-blue-400" },
-  {
-    value: "medium",
-    label: PRIORITY_LABELS.medium,
-    icon: EqualIcon,
-    iconColor: "text-orange-300",
-  },
-  { value: "high", label: PRIORITY_LABELS.high, icon: ChevronUpIcon, iconColor: "text-red-400" },
-  {
-    value: "urgent",
-    label: PRIORITY_LABELS.urgent,
-    icon: ChevronsUpIcon,
-    iconColor: "text-red-400",
-  },
-];
+const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
+
+const STATUS_OPTIONS = (
+  Object.entries(STATUS_CONFIG) as [StatusType, (typeof STATUS_CONFIG)[StatusType]][]
+).map(([value, config]) => ({ value, label: config.label, className: config.badgeAlphaClass }));
+
+const PRIORITY_OPTIONS = (
+  Object.entries(PRIORITY_CONFIG) as [PriorityType, (typeof PRIORITY_CONFIG)[PriorityType]][]
+).map(([value, config]) => ({
+  value,
+  label: config.label,
+  icon: config.icon,
+  iconColor: config.iconColor,
+}));
 
 const CATEGORY_OPTIONS = (
   Object.entries(CATEGORY_CONFIG) as [CategoryType, (typeof CATEGORY_CONFIG)[CategoryType]][]
 ).map(([value, config]) => ({ value, ...config }));
-
-const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
-
-interface RootTicket {
-  id: string;
-  title: string;
-}
-
-export interface TicketDefaultValues {
-  title?: string;
-  description?: string;
-  status?: StatusType;
-  priority?: PriorityType;
-  category?: CategoryType;
-  assigneeId?: string;
-  startDate?: Date;
-  dueDate?: Date;
-  parentId?: string;
-}
-
-interface TicketCreateModalProps {
-  projectId: string;
-  members: ProjectMemberWithProfile[];
-  rootTickets?: RootTicket[];
-  defaultParentId?: string;
-  triggerLabel?: string;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  defaultValues?: TicketDefaultValues;
-}
 
 export function TicketCreateModal({
   projectId,
@@ -138,7 +72,6 @@ export function TicketCreateModal({
   defaultValues,
 }: TicketCreateModalProps) {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   // Blob URL（画像プレビュー用）→ File のマッピング
   const blobUrlToFileRef = useRef<Map<string, File>>(new Map());
   const [internalOpen, setInternalOpen] = useState(false);
@@ -156,9 +89,7 @@ export function TicketCreateModal({
   const [priority, setPriority] = useState<PriorityType>(defaultValues?.priority ?? "medium");
   const [category, setCategory] = useState<CategoryType>(defaultValues?.category ?? "task");
   const [startDate, setStartDate] = useState<Date | undefined>(defaultValues?.startDate);
-  const [startDateOpen, setStartDateOpen] = useState(false);
   const [dueDate, setDueDate] = useState<Date | undefined>(defaultValues?.dueDate);
-  const [dueDateOpen, setDueDateOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   useEffect(() => {
@@ -177,15 +108,17 @@ export function TicketCreateModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files ?? []);
-    if (selected.length === 0) return;
-    setPendingFiles((prev) => [...prev, ...selected]);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleRemovePendingFile = (index: number) => {
-    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
+  const resetForm = () => {
+    setTitle(defaultValues?.title ?? "");
+    setAssigneeId(defaultValues?.assigneeId ?? "none");
+    setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
+    setStatus(defaultValues?.status ?? "todo");
+    setPriority(defaultValues?.priority ?? "medium");
+    setCategory(defaultValues?.category ?? "task");
+    setDescription(defaultValues?.description ?? "");
+    setStartDate(defaultValues?.startDate);
+    setDueDate(defaultValues?.dueDate);
+    setPendingFiles([]);
   };
 
   const handleImagePreview = (file: File, blobUrl: string) => {
@@ -287,16 +220,7 @@ export function TicketCreateModal({
 
     if (!isControlled) setInternalOpen(false);
     externalOnOpenChange?.(false);
-    setTitle(defaultValues?.title ?? "");
-    setAssigneeId(defaultValues?.assigneeId ?? "none");
-    setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
-    setStatus(defaultValues?.status ?? "todo");
-    setPriority(defaultValues?.priority ?? "medium");
-    setCategory(defaultValues?.category ?? "task");
-    setDescription(defaultValues?.description ?? "");
-    setStartDate(defaultValues?.startDate);
-    setDueDate(defaultValues?.dueDate);
-    setPendingFiles([]);
+    resetForm();
     router.refresh();
     setIsLoading(false);
   };
@@ -309,16 +233,7 @@ export function TicketCreateModal({
       }
       blobUrlToFileRef.current.clear();
       setErrorMessage("");
-      setTitle(defaultValues?.title ?? "");
-      setAssigneeId(defaultValues?.assigneeId ?? "none");
-      setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
-      setStatus(defaultValues?.status ?? "todo");
-      setPriority(defaultValues?.priority ?? "medium");
-      setCategory(defaultValues?.category ?? "task");
-      setDescription(defaultValues?.description ?? "");
-      setStartDate(defaultValues?.startDate);
-      setDueDate(defaultValues?.dueDate);
-      setPendingFiles([]);
+      resetForm();
     }
     if (!isControlled) setInternalOpen(nextOpen);
     externalOnOpenChange?.(nextOpen);
@@ -368,7 +283,6 @@ export function TicketCreateModal({
                     "gap-1",
                     "transition-colors",
                     "text-black"
-                    // CATEGORY_CONFIG[category].badgeAlphaClass
                   )}
                 >
                   <SelectValue />
@@ -473,83 +387,13 @@ export function TicketCreateModal({
             {/* 開始日 */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0 text-muted-foreground">開始日</Label>
-              <div className="flex items-center gap-2">
-                <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-52 justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                      {startDate ? (
-                        format(startDate, "yyyy年MM月dd日", { locale: ja })
-                      ) : (
-                        <span className="text-muted-foreground">日付を選択</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={(date) => {
-                        setStartDate(date);
-                        setStartDateOpen(false);
-                      }}
-                      locale={ja}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {startDate && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setStartDate(undefined)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+              <DatePickerField value={startDate} onChange={setStartDate} />
             </div>
 
             {/* 期限 */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0 text-muted-foreground">期限</Label>
-              <div className="flex items-center gap-2">
-                <Popover open={dueDateOpen} onOpenChange={setDueDateOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-52 justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                      {dueDate ? (
-                        format(dueDate, "yyyy年MM月dd日", { locale: ja })
-                      ) : (
-                        <span className="text-muted-foreground">日付を選択</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dueDate}
-                      onSelect={(date) => {
-                        setDueDate(date);
-                        setDueDateOpen(false);
-                      }}
-                      locale={ja}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {dueDate && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setDueDate(undefined)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
+              <DatePickerField value={dueDate} onChange={setDueDate} />
             </div>
 
             {/* 親チケット */}
@@ -578,48 +422,11 @@ export function TicketCreateModal({
             <Separator className="my-6" />
 
             {/* 添付ファイル */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-muted-foreground">
-                  添付ファイル{pendingFiles.length > -1 && ` (${pendingFiles.length})`}
-                </Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1 text-xs"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Paperclip className="h-4.5 w-3.5" />
-                  ファイルを追加
-                </Button>
-                <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileSelect} />
-              </div>
-              {pendingFiles.length > -1 && (
-                <div className="border rounded-lg divide-y">
-                  {pendingFiles.map((file, index) => (
-                    <div key={index} className="flex items-center gap-3 px-3 py-2 text-sm">
-                      <Paperclip className="h-5 w-4 shrink-0 text-muted-foreground" />
-                      <span className="flex-2 truncate" title={file.name}>
-                        {file.name}
-                      </span>
-                      <span className="shrink text-muted-foreground text-xs">
-                        {formatFileSize(file.size)}
-                      </span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-6 text-muted-foreground hover:text-destructive shrink-0"
-                        onClick={() => handleRemovePendingFile(index)}
-                      >
-                        <X className="h-4.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <PendingFileList
+              files={pendingFiles}
+              onRemove={(index) => setPendingFiles((prev) => prev.filter((_, i) => i !== index))}
+              onAdd={(files) => setPendingFiles((prev) => [...prev, ...files])}
+            />
           </div>
 
           <DialogFooter className="mt-4">

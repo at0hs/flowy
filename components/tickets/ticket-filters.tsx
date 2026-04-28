@@ -12,10 +12,10 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { LoaderCircle, RotateCcwIcon, SearchIcon } from "lucide-react";
 import { useTransition, useState, useEffect } from "react";
-import { STATUS_LABELS, PRIORITY_LABELS, CATEGORY_LABELS } from "@/lib/constants";
+import { STATUS_LABELS, PRIORITY_LABELS, CATEGORY_LABELS, TicketView } from "@/lib/constants";
 
 type TicketFiltersProps = {
-  currentView?: "list" | "kanban" | "gantt";
+  currentView?: TicketView;
 };
 
 export function TicketFilters({ currentView = "list" }: TicketFiltersProps) {
