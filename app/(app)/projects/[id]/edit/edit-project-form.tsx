@@ -55,7 +55,7 @@ export function EditProjectForm({ project }: Props) {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 mb-1.5">
             <Label htmlFor="description">説明文</Label>
             <Textarea
               id="description"

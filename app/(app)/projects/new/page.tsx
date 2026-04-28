@@ -29,6 +29,10 @@ export default function NewProjectPage() {
 
     toast.success("プロジェクトを作成しました");
     setIsLoading(false);
+    if (result?.projectId) {
+      router.push(`/projects/${result.projectId}`);
+      return;
+    }
     router.push("/projects");
   };
 
@@ -50,7 +54,7 @@ export default function NewProjectPage() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 mb-1.5">
               <Label htmlFor="description">説明文</Label>
               <Textarea id="description" name="description" placeholder="任意" rows={4} />
             </div>

@@ -19,7 +19,7 @@ export async function createProject(formData: FormData) {
 
   const { error } = await supabase.from("projects").insert({
     name,
-    description: description || null, // 空文字はnullに変換
+    description: description || null,
     owner_id: user.id,
   });
 
@@ -27,9 +27,20 @@ export async function createProject(formData: FormData) {
     logger.error(error);
     return { error: "プロジェクトの作成に失敗しました" };
   }
-  // サイドバーの表示を更新するために、キャッシュを削除
+
+  // INSERT後に別リクエストでIDを取得する
+  // .insert().select() だと RETURNING がトリガー（project_members追加）より先に評価されるため
+  // is_project_member() が false を返し RLS でブロックされる
+  const { data } = await supabase
+    .from("projects")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
   revalidatePath("/projects");
-  return { success: true };
+  return { success: true, projectId: data?.id };
 }
 
 export async function updateProject(projectId: string, formData: FormData) {

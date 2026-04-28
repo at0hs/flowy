@@ -12,7 +12,7 @@ import { getSubtickets } from "@/lib/supabase/tickets";
 import { SubtaskSection } from "@/components/tickets/subtask-section";
 import { isWatching } from "@/lib/supabase/watches";
 import { TicketWatchButton } from "@/components/tickets/ticket-watch-button";
-import { ArrowLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date";
 import { getAttachments } from "@/lib/supabase/attachments";
 import { AttachmentSection } from "@/components/tickets/attachment-section";
@@ -34,6 +34,7 @@ export default async function TicketDetailPage({ params }: Props) {
 
   const [
     { data: ticket },
+    { data: project },
     members,
     comments,
     attachments,
@@ -42,6 +43,7 @@ export default async function TicketDetailPage({ params }: Props) {
     { data: rootTickets },
   ] = await Promise.all([
     supabase.from("tickets").select("*").eq("id", ticketId).single(),
+    supabase.from("projects").select("name").eq("id", id).single(),
     getProjectMembers(id),
     getComments(ticketId),
     getAttachments(ticketId),
@@ -59,23 +61,38 @@ export default async function TicketDetailPage({ params }: Props) {
 
   if (!ticket) notFound();
 
-  const [subtickets, watching] = await Promise.all([
+  const [subtickets, watching, { data: parentTicket }] = await Promise.all([
     ticket.parent_id === null ? getSubtickets(ticketId) : Promise.resolve([]),
     isWatching(ticketId, user.id),
+    ticket.parent_id
+      ? supabase.from("tickets").select("id, title").eq("id", ticket.parent_id).single()
+      : Promise.resolve({ data: null }),
   ]);
 
   return (
     <div className="max-w-3xl mx-auto p-8">
       {/* ヘッダ */}
       <div className="flex items-center">
-        {/* 戻るリンク */}
-        <Link
-          href={`/projects/${id}`}
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:underline"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          チケット一覧
-        </Link>
+        {/* パンくずリスト */}
+        <nav className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Link
+            href={`/projects/${id}`}
+            className="hover:underline hover:text-foreground transition-colors"
+          >
+            {project?.name ?? "プロジェクト"}
+          </Link>
+          {parentTicket && (
+            <>
+              <ChevronRight className="w-4 h-4 shrink-0" />
+              <Link
+                href={`/projects/${id}/tickets/${parentTicket.id}`}
+                className="hover:underline hover:text-foreground transition-colors truncate max-w-50"
+              >
+                {parentTicket.title}
+              </Link>
+            </>
+          )}
+        </nav>
         <div className="ml-auto flex items-center gap-2">
           <AiAssistButton ticketId={ticketId} isAiConfigured={isAiConfigured} />
           <CopyTicketButton
