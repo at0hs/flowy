@@ -1,4 +1,4 @@
-import { PriorityType, StatusType, CategoryType } from "@/types";
+import { PriorityType, StatusType, CategoryType, Tag } from "@/types";
 
 export interface RootTicket {
   id: string;
@@ -21,6 +21,7 @@ export interface TicketCreateModalProps {
   projectId: string;
   members: import("@/lib/supabase/members").ProjectMemberWithProfile[];
   rootTickets?: RootTicket[];
+  tags?: Tag[];
   defaultParentId?: string;
   triggerLabel?: string;
   open?: boolean;

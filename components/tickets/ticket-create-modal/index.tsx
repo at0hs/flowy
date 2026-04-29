@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, LoaderCircle } from "lucide-react";
+import { TagSelector } from "@/components/tags/tag-selector";
+import { addTagToTicket } from "@/app/(app)/projects/[id]/actions/tags";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -65,6 +67,7 @@ export function TicketCreateModal({
   projectId,
   members,
   rootTickets = [],
+  tags = [],
   defaultParentId,
   triggerLabel,
   open: externalOpen,
@@ -91,6 +94,7 @@ export function TicketCreateModal({
   const [startDate, setStartDate] = useState<Date | undefined>(defaultValues?.startDate);
   const [dueDate, setDueDate] = useState<Date | undefined>(defaultValues?.dueDate);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -103,6 +107,7 @@ export function TicketCreateModal({
       setStartDate(defaultValues?.startDate);
       setDueDate(defaultValues?.dueDate);
       setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
+      setSelectedTagIds([]);
     }
     // isOpen の変化時のみ適用する
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -119,6 +124,7 @@ export function TicketCreateModal({
     setStartDate(defaultValues?.startDate);
     setDueDate(defaultValues?.dueDate);
     setPendingFiles([]);
+    setSelectedTagIds([]);
   };
 
   const handleImagePreview = (file: File, blobUrl: string) => {
@@ -147,6 +153,11 @@ export function TicketCreateModal({
       setErrorMessage(result.error);
       setIsLoading(false);
       return;
+    }
+
+    // タグを付与
+    if (selectedTagIds.length > 0 && result.ticketId) {
+      await Promise.all(selectedTagIds.map((tagId) => addTagToTicket(result.ticketId!, tagId)));
     }
 
     // チケット INSERT 後に ticketId が確定してから添付ファイルをアップロード
@@ -395,6 +406,20 @@ export function TicketCreateModal({
               <Label className="w-24 shrink-0 text-muted-foreground">期限</Label>
               <DatePickerField value={dueDate} onChange={setDueDate} />
             </div>
+
+            {/* タグ */}
+            {tags.length > 0 && (
+              <div className="flex items-start gap-4">
+                <Label className="w-24 shrink-0 text-muted-foreground pt-1.5">タグ</Label>
+                <div className="flex-1">
+                  <TagSelector
+                    tags={tags}
+                    selectedTagIds={selectedTagIds}
+                    onChange={setSelectedTagIds}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* 親チケット */}
             {rootTickets.length > 0 && (

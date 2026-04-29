@@ -11,7 +11,6 @@ import {
   ChevronDown,
   ChevronRight,
   Ticket,
-  Users,
   LayoutDashboard,
   Home,
 } from "lucide-react";
@@ -120,10 +119,10 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
             projects.map((project) => {
               const isOpen = isProjectOpen(project.id);
               const ticketsPath = `/projects/${project.id}`;
-              const membersPath = `/projects/${project.id}/members`;
+              const settingsPath = `/projects/${project.id}/settings`;
               const isTicketsActive =
                 pathname === ticketsPath || pathname.startsWith(`/projects/${project.id}/tickets`);
-              const isMembersActive = pathname === membersPath;
+              const isSettingsActive = pathname.startsWith(`/projects/${project.id}/settings`);
 
               return (
                 <div key={project.id}>
@@ -161,16 +160,16 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
                         チケット一覧
                       </Link>
                       <Link
-                        href={membersPath}
+                        href={settingsPath}
                         className={cn(
                           "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
-                          isMembersActive
+                          isSettingsActive
                             ? "bg-accent text-black font-medium"
                             : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         )}
                       >
-                        <Users className="h-3.5 w-3.5 shrink-0" />
-                        メンバー管理
+                        <Settings className="h-3.5 w-3.5 shrink-0" />
+                        プロジェクト設定
                       </Link>
                     </div>
                   )}

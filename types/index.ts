@@ -9,6 +9,8 @@ export type Invitation = Database["public"]["Tables"]["invitations"]["Row"];
 export type Comment = Database["public"]["Tables"]["comments"]["Row"];
 export type TicketWatch = Database["public"]["Tables"]["ticket_watches"]["Row"];
 export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
+export type Tag = Database["public"]["Tables"]["tags"]["Row"];
+export type TicketTag = Database["public"]["Tables"]["ticket_tags"]["Row"];
 
 // ENUM型をエクスポート
 export type ProjectRole = Database["public"]["Enums"]["project_role"];

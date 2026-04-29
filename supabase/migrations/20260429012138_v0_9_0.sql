@@ -14,7 +14,7 @@ CREATE TABLE tags (
   id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id uuid        NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name       text        NOT NULL,
-  color      text,
+  color      text,       NOT NULL,
   created_by uuid        REFERENCES profiles(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (project_id, name)

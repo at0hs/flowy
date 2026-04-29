@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 
-export default function MembersLoading() {
+export default function ProjectSettingsLoading() {
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="mb-6">

@@ -16,10 +16,10 @@ type Props = {
 
 async function revalidateMembers(projectId: string) {
   "use server";
-  revalidatePath(`/projects/${projectId}/members`);
+  revalidatePath(`/projects/${projectId}/settings/members`);
 }
 
-export default async function MembersPage({ params }: Props) {
+export default async function ProjectSettingsMembersPage({ params }: Props) {
   const { id } = await params;
 
   const supabase = await createClient();

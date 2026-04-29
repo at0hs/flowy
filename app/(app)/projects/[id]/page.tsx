@@ -11,6 +11,7 @@ import { Suspense } from "react";
 import { ticketsQuerySchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { getProjectMembers } from "@/lib/supabase/members";
+import { getProjectTags } from "@/lib/supabase/tags";
 import { ArrowLeft } from "lucide-react";
 
 type Props = {
@@ -52,7 +53,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).single();
   if (!project) notFound();
 
-  const [members, rootTicketsResult] = await Promise.all([
+  const [members, rootTicketsResult, tags] = await Promise.all([
     getProjectMembers(id),
     supabase
       .from("tickets")
@@ -60,6 +61,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       .eq("project_id", id)
       .is("parent_id", null)
       .order("created_at", { ascending: true }),
+    getProjectTags(id),
   ]);
   const notExistsTicket = !rootTicketsResult.data || rootTicketsResult.data.length === 0;
   const rootTickets = rootTicketsResult.data ?? [];
@@ -113,7 +115,12 @@ export default async function TicketsPage({ params, searchParams }: Props) {
         </Link>
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold mt-1">{project.name}</h1>
-          <TicketCreateModal projectId={id} members={members} rootTickets={rootTickets} />
+          <TicketCreateModal
+            projectId={id}
+            members={members}
+            rootTickets={rootTickets}
+            tags={tags}
+          />
         </div>
       </div>
 
@@ -139,7 +146,12 @@ export default async function TicketsPage({ params, searchParams }: Props) {
         <div className="text-sm text-center py-16 text-muted-foreground">
           <p className="mb-4">チケットがありません</p>
           {notExistsTicket && (
-            <TicketCreateModal projectId={id} members={members} rootTickets={rootTickets} />
+            <TicketCreateModal
+              projectId={id}
+              members={members}
+              rootTickets={rootTickets}
+              tags={tags}
+            />
           )}
         </div>
       )}
