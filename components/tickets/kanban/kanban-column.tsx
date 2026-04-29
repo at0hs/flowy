@@ -40,9 +40,7 @@ export function KanbanColumn({ status, label, tickets, projectId, assigneeMap }:
               key={ticket.id}
               ticket={ticket}
               projectId={projectId}
-              assigneeName={
-                ticket.assignee_id ? assigneeMap[ticket.assignee_id]?.username : undefined
-              }
+              assignee={ticket.assignee_id ? assigneeMap[ticket.assignee_id] : undefined}
             />
           ))}
         </div>

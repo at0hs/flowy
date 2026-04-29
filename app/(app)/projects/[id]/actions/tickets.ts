@@ -277,6 +277,22 @@ export async function updateTicketField(
     return { error: "チケットの更新に失敗しました" };
   }
 
+  // assignee_id 変更時はユーザー名を事前に取得（アクティビティ・通知共用）
+  let oldAssigneeName: string | null = null;
+  let newAssigneeName: string | null = null;
+  if (update.field === "assignee_id") {
+    const [{ data: oldProfile }, { data: newProfile }] = await Promise.all([
+      update.prevValue
+        ? supabase.from("profiles").select("username").eq("id", update.prevValue).single()
+        : Promise.resolve({ data: null }),
+      update.value
+        ? supabase.from("profiles").select("username").eq("id", update.value).single()
+        : Promise.resolve({ data: null }),
+    ]);
+    oldAssigneeName = oldProfile?.username ?? null;
+    newAssigneeName = newProfile?.username ?? null;
+  }
+
   // アクティビティを記録（title / description / category は対象外）
   try {
     if (update.field === "status") {
@@ -290,8 +306,8 @@ export async function updateTicketField(
       await insertTicketActivity(
         ticketId,
         "assignee_changed",
-        update.prevValue ?? null,
-        update.value
+        oldAssigneeName ?? update.prevValue ?? null,
+        newAssigneeName ?? update.value ?? null
       );
     } else if (update.field === "priority") {
       await insertTicketActivity(
@@ -324,15 +340,6 @@ export async function updateTicketField(
       old_assignee_id: update.prevValue ?? null,
       new_assignee_id: update.value ?? null,
     });
-    const [{ data: oldAssignee }, { data: newAssignee }] = await Promise.all([
-      update.prevValue
-        ? supabase.from("profiles").select("username").eq("id", update.prevValue).single()
-        : Promise.resolve({ data: null }),
-      update.value
-        ? supabase.from("profiles").select("username").eq("id", update.value).single()
-        : Promise.resolve({ data: null }),
-    ]);
-
     const ctx = await fetchNotificationContext(supabase, ticketId, user.id);
     if (ctx) {
       if (update.value && update.value !== user.id) {
@@ -342,7 +349,7 @@ export async function updateTicketField(
           ticketUrl: ctx.ticketUrl,
           actorName: ctx.actorName,
           projectName: ctx.projectName,
-          ...(oldAssignee?.username && { oldAssigneeName: oldAssignee.username }),
+          ...(oldAssigneeName && { oldAssigneeName }),
         } as Omit<SlackNotificationPayload, "webhookUrl">);
       }
       await sendSlackNotificationToWatchers(ticketId, user.id, {
@@ -351,8 +358,8 @@ export async function updateTicketField(
         ticketUrl: ctx.ticketUrl,
         actorName: ctx.actorName,
         projectName: ctx.projectName,
-        oldValue: oldAssignee?.username ?? "なし",
-        newValue: newAssignee?.username ?? "なし",
+        oldValue: oldAssigneeName ?? "なし",
+        newValue: newAssigneeName ?? "なし",
       } as Omit<SlackNotificationPayload, "webhookUrl">);
     }
   }

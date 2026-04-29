@@ -95,9 +95,7 @@ export function KanbanBoard({ tickets: initialTickets, projectId, assigneeMap }:
           <KanbanCard
             ticket={activeTicket}
             projectId={projectId}
-            assigneeName={
-              activeTicket.assignee_id ? assigneeMap[activeTicket.assignee_id]?.username : undefined
-            }
+            assignee={activeTicket.assignee_id ? assigneeMap[activeTicket.assignee_id] : undefined}
           />
         )}
       </DragOverlay>

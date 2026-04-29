@@ -10,10 +10,10 @@ import { PRIORITY_CONFIG } from "@/lib/ticket-config";
 type Props = {
   ticket: Ticket;
   projectId: string;
-  assigneeName?: string;
+  assignee?: { username: string; avatarPath?: string | null };
 };
 
-export function KanbanCard({ ticket, projectId, assigneeName }: Props) {
+export function KanbanCard({ ticket, projectId, assignee }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: ticket.id,
     data: { ticket },
@@ -53,7 +53,7 @@ export function KanbanCard({ ticket, projectId, assigneeName }: Props) {
               PRIORITY_CONFIG[ticket.priority].dotColor
             )}
           />
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             {PRIORITY_CONFIG[ticket.priority].label}
           </span>
         </div>
@@ -68,9 +68,9 @@ export function KanbanCard({ ticket, projectId, assigneeName }: Props) {
         )}
       </div>
 
-      {assigneeName && (
+      {assignee && (
         <div className="mt-1.5">
-          <span className="text-xs text-muted-foreground">{assigneeName}</span>
+          <span className="text-xs text-muted-foreground">{assignee.username}</span>
         </div>
       )}
     </div>

@@ -19,12 +19,24 @@ type Props = {
   ticketId: string;
   projectId: string;
   ticketTitle: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
-export function DeleteTicketButton({ ticketId, projectId, ticketTitle }: Props) {
+export function DeleteTicketButton({
+  ticketId,
+  projectId,
+  ticketTitle,
+  open,
+  onOpenChange,
+}: Props) {
   const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isDialogOpen = isControlled ? open : internalOpen;
+  const setIsDialogOpen = isControlled ? onOpenChange : setInternalOpen;
 
   const handleDelete = async () => {
     setIsLoading(true);
@@ -45,9 +57,11 @@ export function DeleteTicketButton({ ticketId, projectId, ticketTitle }: Props) 
 
   return (
     <>
-      <Button variant="ghost" aria-label="チケットを削除" onClick={() => setIsDialogOpen(true)}>
-        <Trash2Icon className="text-red-400" />
-      </Button>
+      {!isControlled && (
+        <Button variant="ghost" aria-label="チケットを削除" onClick={() => setIsDialogOpen(true)}>
+          <Trash2Icon className="text-red-400" />
+        </Button>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>

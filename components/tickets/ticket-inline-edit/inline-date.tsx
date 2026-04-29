@@ -42,7 +42,7 @@ export function InlineDate({ value, onSave, disabled, placeholder }: Props) {
           <button
             type="button"
             disabled={disabled}
-            className="flex items-center gap-1.5 h-8 px-2 rounded-sm text-sm bg-transparent hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 h-8 px-2 w-full rounded-sm text-sm bg-transparent hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
             {selected ? (

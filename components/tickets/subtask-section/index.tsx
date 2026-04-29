@@ -4,13 +4,9 @@ import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
 import { SubtaskSuggestButton } from "@/components/tickets/ai-assist/subtask-suggest-button";
 import { SubticketWithAssignee } from "@/lib/supabase/tickets";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { STATUS_LABELS } from "@/lib/constants";
-
-const STATUS_MAP = {
-  todo: { label: STATUS_LABELS.todo, color: "bg-slate-500" },
-  in_progress: { label: STATUS_LABELS.in_progress, color: "bg-blue-500" },
-  done: { label: STATUS_LABELS.done, color: "bg-green-500" },
-} as const;
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { STATUS_CONFIG } from "@/lib/ticket-config";
+import { cn } from "@/lib/utils";
 
 interface SubtaskSectionProps {
   parentTicketId: string;
@@ -53,16 +49,20 @@ export function SubtaskSection({
       ) : (
         <div className="border rounded-lg divide-y">
           {subtickets.map((ticket) => {
-            const status = STATUS_MAP[ticket.status];
-            const assigneeName = ticket.assignee?.username ?? ticket.assignee?.email ?? null;
+            const statusConfig = STATUS_CONFIG[ticket.status];
 
             return (
               <div key={ticket.id} className="flex items-center gap-3 px-4 py-2 text-sm">
                 <Badge
                   variant="default"
-                  className={`${status.color}/20 text-primary rounded-sm shrink-0`}
+                  className={cn(
+                    statusConfig.badgeBgClass,
+                    "text-primary",
+                    "rounded-sm",
+                    "shrink-0"
+                  )}
                 >
-                  {status.label}
+                  {statusConfig.label}
                 </Badge>
                 <Link
                   href={`/projects/${projectId}/tickets/${ticket.id}`}
@@ -70,9 +70,16 @@ export function SubtaskSection({
                 >
                   {ticket.title}
                 </Link>
-                <span className="text-muted-foreground shrink-0">
-                  {assigneeName ?? <span className="italic">担当者なし</span>}
-                </span>
+                <div className="flex items-center gap-2">
+                  <UserAvatar
+                    avatarFilePath={ticket.assignee?.avatar_file_path}
+                    username={ticket.assignee?.username}
+                    size="sm"
+                  />
+                  <span className="text-muted-foreground shrink-0 text-xs">
+                    {ticket.assignee?.username ?? <span className="italic">担当者なし</span>}
+                  </span>
+                </div>
               </div>
             );
           })}

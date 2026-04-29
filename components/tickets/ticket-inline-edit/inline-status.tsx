@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { StatusType } from "@/types";
 import { STATUS_CONFIG } from "@/lib/ticket-config";
+import { cn } from "@/lib/utils";
 
 type Props = {
   value: StatusType;
@@ -28,7 +29,20 @@ export function InlineStatus({ value, onSave, disabled }: Props) {
   return (
     <Select value={value} onValueChange={handleChange} disabled={disabled}>
       <SelectTrigger
-        className={`w-auto h-7 px-3 text-xs font-medium border-0 shadow-none rounded-sm gap-1 transition-colors text-black ${status.badgeAlphaClass}`}
+        className={cn(
+          "w-min-30",
+          "h-8",
+          "px-3",
+          "text-xs",
+          "font-medium",
+          "border-0",
+          "shadow-none",
+          "rounded-sm",
+          "gap-1",
+          "transition-colors",
+          "text-black",
+          status.badgeAlphaClass
+        )}
       >
         <SelectValue />
       </SelectTrigger>

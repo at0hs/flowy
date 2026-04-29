@@ -17,6 +17,8 @@ interface CopyTicketButtonProps {
   projectId: string;
   members: ProjectMemberWithProfile[];
   rootTickets: RootTicket[];
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function CopyTicketButton({
@@ -24,8 +26,14 @@ export function CopyTicketButton({
   projectId,
   members,
   rootTickets,
+  open,
+  onOpenChange,
 }: CopyTicketButtonProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const isControlled = open !== undefined && onOpenChange !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isOpen = isControlled ? open : internalOpen;
+  const setIsOpen = isControlled ? onOpenChange : setInternalOpen;
 
   const defaultValues = {
     title: `${ticket.title} のコピー`,
@@ -41,10 +49,12 @@ export function CopyTicketButton({
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
-        <Copy className="w-4 h-4" />
-        コピー
-      </Button>
+      {!isControlled && (
+        <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
+          <Copy className="w-4 h-4" />
+          コピー
+        </Button>
+      )}
       <TicketCreateModal
         projectId={projectId}
         members={members}

@@ -36,7 +36,7 @@ export function InlineAssignee({ value, currentUserId, members, onSave, disabled
   return (
     <div className="flex flex-col gap-1">
       <Select value={value ?? "none"} onValueChange={handleChange} disabled={disabled}>
-        <SelectTrigger className="min-w-48 w-auto h-8 px-2 border-0 shadow-none bg-transparent hover:bg-muted rounded-sm gap-1.5 transition-colors focus:ring-0 focus-visible:ring-0 [&>svg:last-child]:hidden">
+        <SelectTrigger className="w-full h-8 px-2 border-0 shadow-none bg-transparent hover:bg-muted rounded-sm gap-1.5 transition-colors focus:ring-0 focus-visible:ring-0">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

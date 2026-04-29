@@ -29,7 +29,7 @@ export function InlinePriority({ value, onSave, disabled }: Props) {
 
   return (
     <Select value={value} onValueChange={handleChange} disabled={disabled}>
-      <SelectTrigger className="min-w-30 w-auto h-8 px-2 border-0 shadow-none bg-transparent hover:bg-muted rounded-sm gap-1.5 transition-colors focus:ring-0 focus-visible:ring-0 [&>svg:last-child]:hidden">
+      <SelectTrigger className="w-full h-8 px-2 border-0 shadow-none bg-transparent hover:bg-muted rounded-sm gap-1.5 transition-colors focus:ring-0 focus-visible:ring-0">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

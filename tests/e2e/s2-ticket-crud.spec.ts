@@ -45,8 +45,12 @@ test("S2: チケット作成 → 詳細表示", async ({ page }) => {
   // 詳細画面にタイトルが表示される
   await expect(page.getByRole("heading", { name: ticketTitle })).toBeVisible();
 
-  // 削除ボタンをクリック → 確認ダイアログが開く
-  await page.getByRole("button", { name: "チケットを削除" }).click();
+  // メニューボタンをクリック → DropdownMenu を開く
+  await page.getByRole("button", { name: "メニューを開く" }).click();
+  await expect(page.getByRole("menuitem", { name: "削除" })).toBeVisible();
+
+  // 「削除」メニュー項目をクリック → 確認ダイアログが開く
+  await page.getByRole("menuitem", { name: "削除" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(page.getByText("チケットを削除しますか？")).toBeVisible();
 
