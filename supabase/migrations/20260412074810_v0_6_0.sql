@@ -82,7 +82,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit)
   VALUES ('attachments', 'attachments', false, 30*1024*1024);
 
 -- プロジェクトのメンバーのみ操作可能
--- パスから project_id を抽出して権限チェック（projects/{project_id}/tickets/...）
+-- パスから project_id を抽出して権限チェック（attachments/{project_id}/tickets/...）
 CREATE POLICY "attachments bucket: project members only" ON storage.objects
   FOR ALL
     USING (

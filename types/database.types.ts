@@ -283,6 +283,7 @@ export type Database = {
           ai_endpoint_url: string | null;
           ai_model_name: string | null;
           ai_provider: Database["public"]["Enums"]["ai_provider_type"] | null;
+          avatar_url: string | null;
           created_at: string;
           email: string;
           id: string;
@@ -294,6 +295,7 @@ export type Database = {
           ai_endpoint_url?: string | null;
           ai_model_name?: string | null;
           ai_provider?: Database["public"]["Enums"]["ai_provider_type"] | null;
+          avatar_url?: string | null;
           created_at?: string;
           email: string;
           id: string;
@@ -305,6 +307,7 @@ export type Database = {
           ai_endpoint_url?: string | null;
           ai_model_name?: string | null;
           ai_provider?: Database["public"]["Enums"]["ai_provider_type"] | null;
+          avatar_url?: string | null;
           created_at?: string;
           email?: string;
           id?: string;
@@ -387,6 +390,48 @@ export type Database = {
           },
         ];
       };
+      tags: {
+        Row: {
+          color: string | null;
+          created_at: string;
+          created_by: string | null;
+          id: string;
+          name: string;
+          project_id: string;
+        };
+        Insert: {
+          color?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name: string;
+          project_id: string;
+        };
+        Update: {
+          color?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          id?: string;
+          name?: string;
+          project_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tags_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tags_project_id_fkey";
+            columns: ["project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       ticket_activities: {
         Row: {
           action: Database["public"]["Enums"]["activity_action"];
@@ -428,6 +473,36 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      ticket_tags: {
+        Row: {
+          tag_id: string;
+          ticket_id: string;
+        };
+        Insert: {
+          tag_id: string;
+          ticket_id: string;
+        };
+        Update: {
+          tag_id?: string;
+          ticket_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ticket_tags_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ticket_tags_ticket_id_fkey";
+            columns: ["ticket_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
             referencedColumns: ["id"];
           },
         ];
