@@ -9,6 +9,7 @@ import { DeleteMemberButton } from "@/components/members/delete-member-button";
 import { ChangeRoleButton } from "@/components/members/change-role-button";
 import { revalidatePath } from "next/cache";
 import { ArrowLeft } from "lucide-react";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -72,7 +73,16 @@ export default async function ProjectSettingsMembersPage({ params }: Props) {
           <tbody>
             {members.map((member) => (
               <tr key={member.id} className="border-b last:border-0">
-                <td className="px-4 py-3">{member.profile.username}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <UserAvatar
+                      avatarFilePath={member.profile.avatar_file_path}
+                      username={member.profile.username}
+                      size="sm"
+                    />
+                    {member.profile.username}
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{member.profile.email}</td>
                 <td className="px-4 py-3">
                   {isOwner ? (

@@ -16,6 +16,7 @@ import {
   ColumnDef,
 } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 type RowData = {
   ticket: Ticket;
@@ -25,7 +26,7 @@ type RowData = {
 
 type Props = {
   tickets: Ticket[];
-  assigneeMap: Record<string, string>;
+  assigneeMap: Record<string, { username: string; avatarFilePath?: string | null }>;
 };
 
 type SortColumn =
@@ -46,7 +47,7 @@ const CATEGORY_ORDER: Record<string, number> = { bug: 0, feature: 1, improvement
 function sortTickets(
   tickets: Ticket[],
   sortConfig: SortConfig,
-  assigneeMap: Record<string, string>
+  assigneeMap: Record<string, { username: string; avatarFilePath?: string | null }>
 ): Ticket[] {
   if (!sortConfig) return tickets;
 
@@ -63,8 +64,8 @@ function sortTickets(
         comparison = (PRIORITY_ORDER[a.priority] ?? 0) - (PRIORITY_ORDER[b.priority] ?? 0);
         break;
       case "assignee": {
-        const nameA = a.assignee_id ? (assigneeMap[a.assignee_id] ?? "") : "";
-        const nameB = b.assignee_id ? (assigneeMap[b.assignee_id] ?? "") : "";
+        const nameA = a.assignee_id ? (assigneeMap[a.assignee_id]?.username ?? "") : "";
+        const nameB = b.assignee_id ? (assigneeMap[b.assignee_id]?.username ?? "") : "";
         comparison = nameA.localeCompare(nameB, "ja");
         break;
       }
@@ -248,9 +249,20 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
         minSize: 80,
         cell: ({ row }) => {
           const { ticket } = row.original;
-          const assigneeName = ticket.assignee_id ? assigneeMap[ticket.assignee_id] : null;
+          const assignee = ticket.assignee_id ? assigneeMap[ticket.assignee_id] : null;
+          if (!assignee) {
+            return <span className="text-muted-foreground text-xs italic">担当者なし</span>;
+          }
           return (
-            assigneeName ?? <span className="text-muted-foreground text-xs italic">担当者なし</span>
+            <div className="flex items-center gap-2 overflow-hidden">
+              <UserAvatar
+                username={assignee.username}
+                avatarFilePath={assignee.avatarFilePath}
+                size="sm"
+                className="shrink-0"
+              />
+              <span className="truncate">{assignee.username}</span>
+            </div>
           );
         },
       }),

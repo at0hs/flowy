@@ -20,7 +20,7 @@ const STATUSES: StatusType[] = ["todo", "in_progress", "done"];
 type Props = {
   tickets: Ticket[];
   projectId: string;
-  assigneeMap: Record<string, string>;
+  assigneeMap: Record<string, { username: string; avatarFilePath?: string | null }>;
 };
 
 export function KanbanBoard({ tickets: initialTickets, projectId, assigneeMap }: Props) {
@@ -96,7 +96,7 @@ export function KanbanBoard({ tickets: initialTickets, projectId, assigneeMap }:
             ticket={activeTicket}
             projectId={projectId}
             assigneeName={
-              activeTicket.assignee_id ? assigneeMap[activeTicket.assignee_id] : undefined
+              activeTicket.assignee_id ? assigneeMap[activeTicket.assignee_id]?.username : undefined
             }
           />
         )}

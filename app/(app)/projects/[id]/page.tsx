@@ -92,14 +92,17 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   const assigneeIds = [
     ...new Set((tickets ?? []).map((t) => t.assignee_id).filter(Boolean)),
   ] as string[];
-  const assigneeMap: Record<string, string> = {};
+  const assigneeMap: Record<string, { username: string; avatarFilePath?: string | null }> = {};
   if (assigneeIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, username, email")
+      .select("id, username, email, avatar_file_path")
       .in("id", assigneeIds);
     profiles?.forEach((p) => {
-      assigneeMap[p.id] = p.username || p.email || "";
+      assigneeMap[p.id] = {
+        username: p.username || p.email || "",
+        avatarFilePath: p.avatar_file_path,
+      };
     });
   }
 

@@ -283,7 +283,7 @@ export type Database = {
           ai_endpoint_url: string | null;
           ai_model_name: string | null;
           ai_provider: Database["public"]["Enums"]["ai_provider_type"] | null;
-          avatar_url: string | null;
+          avatar_file_path: string | null;
           created_at: string;
           email: string;
           id: string;
@@ -295,7 +295,7 @@ export type Database = {
           ai_endpoint_url?: string | null;
           ai_model_name?: string | null;
           ai_provider?: Database["public"]["Enums"]["ai_provider_type"] | null;
-          avatar_url?: string | null;
+          avatar_file_path?: string | null;
           created_at?: string;
           email: string;
           id: string;
@@ -307,7 +307,7 @@ export type Database = {
           ai_endpoint_url?: string | null;
           ai_model_name?: string | null;
           ai_provider?: Database["public"]["Enums"]["ai_provider_type"] | null;
-          avatar_url?: string | null;
+          avatar_file_path?: string | null;
           created_at?: string;
           email?: string;
           id?: string;
@@ -392,7 +392,7 @@ export type Database = {
       };
       tags: {
         Row: {
-          color: string | null;
+          color: string;
           created_at: string;
           created_by: string | null;
           id: string;
@@ -400,7 +400,7 @@ export type Database = {
           project_id: string;
         };
         Insert: {
-          color?: string | null;
+          color: string;
           created_at?: string;
           created_by?: string | null;
           id?: string;
@@ -408,7 +408,7 @@ export type Database = {
           project_id: string;
         };
         Update: {
-          color?: string | null;
+          color?: string;
           created_at?: string;
           created_by?: string | null;
           id?: string;

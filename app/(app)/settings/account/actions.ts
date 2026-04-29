@@ -86,3 +86,25 @@ export async function updatePassword(formData: FormData) {
 
   return { success: true };
 }
+
+export async function updateAvatarPath(avatarFilePath: string | null) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_file_path: avatarFilePath })
+    .eq("id", user.id);
+
+  if (error) {
+    logger.error("Failed to update avatar_file_path:", error);
+    return { error: "アバターの更新に失敗しました" };
+  }
+
+  revalidatePath("/settings/account");
+  return { success: true };
+}

@@ -11,7 +11,7 @@ type Props = {
   label: string;
   tickets: Ticket[];
   projectId: string;
-  assigneeMap: Record<string, string>;
+  assigneeMap: Record<string, { username: string; avatarFilePath?: string | null }>;
 };
 
 export function KanbanColumn({ status, label, tickets, projectId, assigneeMap }: Props) {
@@ -40,7 +40,9 @@ export function KanbanColumn({ status, label, tickets, projectId, assigneeMap }:
               key={ticket.id}
               ticket={ticket}
               projectId={projectId}
-              assigneeName={ticket.assignee_id ? assigneeMap[ticket.assignee_id] : undefined}
+              assigneeName={
+                ticket.assignee_id ? assigneeMap[ticket.assignee_id]?.username : undefined
+              }
             />
           ))}
         </div>

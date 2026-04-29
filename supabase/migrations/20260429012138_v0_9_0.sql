@@ -1,20 +1,20 @@
 -- ----------------------------------------
--- - profileにアバターURLを追加
+-- - profileにアバター画像のパスを追加
 -- - tagsテーブルを新規作成
 -- - ticket_tagsテーブルを新規作成
 -- - avatarsバケットの作成
 -- ----------------------------------------
 
--- アバターURL
+-- アバター画像のパス
 ALTER TABLE profiles
-  ADD COLUMN avatar_url text;
+  ADD COLUMN avatar_file_path text;
 
 -- tagsテーブル
 CREATE TABLE tags (
   id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id uuid        NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   name       text        NOT NULL,
-  color      text,       NOT NULL,
+  color      text        NOT NULL,
   created_by uuid        REFERENCES profiles(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (project_id, name)

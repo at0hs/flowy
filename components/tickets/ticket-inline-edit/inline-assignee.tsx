@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
 
 type Props = {
@@ -39,10 +40,22 @@ export function InlineAssignee({ value, currentUserId, members, onSave, disabled
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">未割り当て</SelectItem>
+          <SelectItem value="none">
+            <div className="flex items-center gap-2">
+              <UserAvatar size="sm" />
+              未割り当て
+            </div>
+          </SelectItem>
           {members.map((m) => (
             <SelectItem key={m.user_id} value={m.user_id}>
-              {m.profile.username || m.profile.email}
+              <div className="flex items-center gap-2">
+                <UserAvatar
+                  avatarFilePath={m.profile.avatar_file_path}
+                  username={m.profile.username}
+                  size="sm"
+                />
+                {m.profile.username || m.profile.email}
+              </div>
             </SelectItem>
           ))}
         </SelectContent>

@@ -24,6 +24,7 @@ import { differenceInMilliseconds } from "date-fns";
 import { formatRelativeTime } from "@/lib/date";
 import { RichTextEditor, type MentionMember } from "@/components/editor/rich-text-editor";
 import { RichTextContent } from "@/components/editor/rich-text-content";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 type Props = {
   comments: CommentWithProfile[];
@@ -302,107 +303,115 @@ function CommentItem({
     );
   }
 
+  const username = comment.profile ? comment.profile.username : "削除済みユーザー";
+
   return (
-    <div className="text-sm">
-      {/* ヘッダー行：ユーザー名（左）・投稿日時＋アクションボタン（右） */}
-      <div className="flex items-center justify-between mb-1">
-        <span className="font-medium">
-          {comment.profile ? comment.profile.username : "削除済みユーザー"}
+    <div className="flex gap-3 text-sm">
+      <UserAvatar
+        avatarFilePath={comment.profile?.avatar_file_path}
+        username={username}
+        size="sm"
+        className="shrink-0 mt-0.5"
+      />
+      <div className="flex-1 min-w-0">
+        {/* ヘッダー行：ユーザー名・投稿日時 */}
+        <div className="flex items-center mb-1">
+          <span className="font-medium">{username}</span>
           <span className="text-xs text-muted-foreground pl-2">
             {formatCommentDate(comment.created_at, comment.updated_at)}
           </span>
-        </span>
-      </div>
+        </div>
 
-      {isEditing ? (
-        <div className="space-y-2">
-          <RichTextEditor
-            value={editBody}
-            onChange={onEditBodyChange}
-            maxHeight="16rem"
-            editable={!isEditPending}
-            members={members}
-          />
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={() => onEditSave(comment.id)}
-              disabled={isEditPending || isHtmlEmpty(editBody)}
-            >
-              {isEditPending ? <LoaderCircle className="animate-spin" /> : "保存"}
-            </Button>
-            <Button variant="outline" size="sm" onClick={onEditCancel} disabled={isEditPending}>
-              キャンセル
-            </Button>
+        {isEditing ? (
+          <div className="space-y-2">
+            <RichTextEditor
+              value={editBody}
+              onChange={onEditBodyChange}
+              maxHeight="16rem"
+              editable={!isEditPending}
+              members={members}
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => onEditSave(comment.id)}
+                disabled={isEditPending || isHtmlEmpty(editBody)}
+              >
+                {isEditPending ? <LoaderCircle className="animate-spin" /> : "保存"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={onEditCancel} disabled={isEditPending}>
+                キャンセル
+              </Button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="pl-4 min-h-6 whitespace-pre-wrap">
-          <RichTextContent html={comment.body} />
-        </div>
-      )}
-      <div className="flex items-center ml-2.5 gap-1">
-        {/* 返信ボタン（編集中は非表示） */}
-        {!isEditing && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 text-muted-foreground"
-            onClick={() => onReplyRequest(rootId)}
-            tooltip="返信"
-          >
-            <CornerDownRight className="h-3.5 w-3.5" />
-          </Button>
+        ) : (
+          <div className="min-h-6 whitespace-pre-wrap">
+            <RichTextContent html={comment.body} />
+          </div>
         )}
+        <div className="flex items-center gap-1 mt-1">
+          {/* 返信ボタン（編集中は非表示） */}
+          {!isEditing && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground"
+              onClick={() => onReplyRequest(rootId)}
+              tooltip="返信"
+            >
+              <CornerDownRight className="h-3.5 w-3.5" />
+            </Button>
+          )}
 
-        {/* 編集・削除ボタン（自分のコメントのみ） */}
-        {comment.user_id === currentUserId && !isEditing && (
-          <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground"
-              onClick={() => onEditStart(comment.id, comment.body)}
-              disabled={isEditPending}
-              tooltip="編集"
-            >
-              <SquarePen className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground"
-              onClick={() => onDeleteRequest(comment.id)}
-              disabled={isDeletePending}
-              tooltip="削除"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-            <Dialog
-              open={deleteTargetId === comment.id}
-              onOpenChange={(open) => !open && onDeleteCancel()}
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>コメントを削除しますか？</DialogTitle>
-                  <DialogDescription>この操作は取り消せません。</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button variant="outline" onClick={onDeleteCancel} disabled={isDeletePending}>
-                    キャンセル
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={() => onDeleteConfirm(comment.id)}
-                    disabled={isDeletePending}
-                  >
-                    {isDeletePending ? <LoaderCircle className="animate-spin" /> : "削除"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </>
-        )}
+          {/* 編集・削除ボタン（自分のコメントのみ） */}
+          {comment.user_id === currentUserId && !isEditing && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground"
+                onClick={() => onEditStart(comment.id, comment.body)}
+                disabled={isEditPending}
+                tooltip="編集"
+              >
+                <SquarePen className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-muted-foreground"
+                onClick={() => onDeleteRequest(comment.id)}
+                disabled={isDeletePending}
+                tooltip="削除"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+              <Dialog
+                open={deleteTargetId === comment.id}
+                onOpenChange={(open) => !open && onDeleteCancel()}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>コメントを削除しますか？</DialogTitle>
+                    <DialogDescription>この操作は取り消せません。</DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={onDeleteCancel} disabled={isDeletePending}>
+                      キャンセル
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => onDeleteConfirm(comment.id)}
+                      disabled={isDeletePending}
+                    >
+                      {isDeletePending ? <LoaderCircle className="animate-spin" /> : "削除"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
