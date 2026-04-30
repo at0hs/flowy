@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   LogOut,
   Settings,
@@ -13,6 +14,8 @@ import {
   Ticket,
   LayoutDashboard,
   Home,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
@@ -37,6 +40,15 @@ interface SidebarProps {
 export function Sidebar({ projects, userProfile, unreadCount, notifications }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isCollapsed, setIsCollapsed] = useState(
+    () =>
+      typeof window !== "undefined" && localStorage.getItem("flowy_sidebar_collapsed") === "true"
+  );
+
+  const toggleCollapse = (value: boolean) => {
+    setIsCollapsed(value);
+    localStorage.setItem("flowy_sidebar_collapsed", String(value));
+  };
 
   // 現在のパスからプロジェクトIDを抽出
   const currentProjectId = pathname.match(/^\/projects\/([^/]+)/)?.[1] ?? null;
@@ -78,138 +90,274 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
   };
 
   return (
-    <aside className="w-64 bg-surface border-r border-border flex flex-col h-screen">
-      {/* ユーザー情報セクション */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <UserAvatar
-            avatarFilePath={userProfile.avatar_file_path}
-            username={userProfile.username}
-            size="sm"
-            className="shrink-0"
-          />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-foreground truncate">
-              {userProfile.username}
+    <TooltipProvider>
+      <aside
+        className={cn(
+          "bg-surface border-r border-border flex flex-col h-screen transition-all duration-200",
+          isCollapsed ? "w-16" : "w-64"
+        )}
+      >
+        {/* ユーザー情報セクション */}
+        <div className={cn("border-b border-border", isCollapsed ? "p-2" : "p-4")}>
+          {isCollapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                onClick={() => toggleCollapse(false)}
+              >
+                <PanelLeftOpen className="h-4 w-4" />
+              </Button>
+              <NotificationDropdown unreadCount={unreadCount} notifications={notifications} />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <UserAvatar
+                      avatarFilePath={userProfile.avatar_file_path}
+                      username={userProfile.username}
+                      size="sm"
+                      className="shrink-0"
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right">{userProfile.username}</TooltipContent>
+              </Tooltip>
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5 truncate">{userProfile.email}</div>
-          </div>
-          <NotificationDropdown unreadCount={unreadCount} notifications={notifications} />
-        </div>
-      </div>
-
-      {/* プロジェクト一覧セクション */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {/* ホームボタン */}
-        <Link
-          href="/dashboard"
-          className={cn(
-            "flex items-center gap-1.5 px-1 py-1 rounded-md text-sm font-medium transition-colors mb-2",
-            pathname === "/dashboard"
-              ? "bg-accent text-foreground"
-              : "text-foreground hover:bg-accent"
+          ) : (
+            <div className="flex items-center gap-3">
+              <UserAvatar
+                avatarFilePath={userProfile.avatar_file_path}
+                username={userProfile.username}
+                size="sm"
+                className="shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-foreground truncate">
+                  {userProfile.username}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {userProfile.email}
+                </div>
+              </div>
+              <NotificationDropdown unreadCount={unreadCount} notifications={notifications} />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={() => toggleCollapse(true)}
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
+            </div>
           )}
-        >
-          <Home className="h-4 w-4 shrink-0" />
-          ホーム
-        </Link>
+        </div>
 
-        <Link
-          href="/projects"
-          className="group flex items-center gap-1.5 px-1 py-1 mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <LayoutDashboard className="h-3.5 w-3.5" />
-          プロジェクト
-          <ChevronRight className="h-3 w-3 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-        </Link>
-        <nav className="space-y-1">
-          {projects.length > 0 ? (
-            projects.map((project) => {
-              const isOpen = isProjectOpen(project.id);
-              const ticketsPath = `/projects/${project.id}`;
-              const settingsPath = `/projects/${project.id}/settings`;
-              const isTicketsActive =
-                pathname === ticketsPath || pathname.startsWith(`/projects/${project.id}/tickets`);
-              const isSettingsActive = pathname.startsWith(`/projects/${project.id}/settings`);
-
-              return (
-                <div key={project.id}>
-                  {/* プロジェクト名（アコーディオンヘッダー） */}
-                  <button
-                    onClick={() => toggleProject(project.id)}
+        {/* プロジェクト一覧セクション */}
+        <div className={cn("flex-1 overflow-y-auto", isCollapsed ? "p-2" : "p-4")}>
+          {isCollapsed ? (
+            <nav className="flex flex-col items-center gap-1">
+              {/* ホーム */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="/dashboard"
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      currentProjectId === project.id
-                        ? "text-foreground"
+                      "flex items-center justify-center w-9 h-9 rounded-md transition-colors",
+                      pathname === "/dashboard"
+                        ? "bg-accent text-foreground"
                         : "text-foreground hover:bg-accent"
                     )}
                   >
-                    <span className="truncate text-left">{project.name}</span>
-                    {isOpen ? (
-                      <ChevronDown className="h-4 w-4 shrink-0 ml-1 text-muted-foreground" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 shrink-0 ml-1 text-muted-foreground" />
+                    <Home className="h-4 w-4 shrink-0" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">ホーム</TooltipContent>
+              </Tooltip>
+              {/* プロジェクト一覧リンク */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    href="/projects"
+                    className={cn(
+                      "flex items-center justify-center w-9 h-9 rounded-md transition-colors",
+                      pathname === "/projects"
+                        ? "bg-accent text-foreground"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
                     )}
-                  </button>
-
-                  {/* 子項目（アコーディオンコンテンツ） */}
-                  {isOpen && (
-                    <div className="ml-3 mt-1 space-y-0.5">
-                      <Link
-                        href={ticketsPath}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
-                          isTicketsActive
-                            ? "bg-accent text-black font-medium"
-                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                        )}
-                      >
-                        <Ticket className="h-3.5 w-3.5 shrink-0" />
-                        チケット一覧
-                      </Link>
-                      <Link
-                        href={settingsPath}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
-                          isSettingsActive
-                            ? "bg-accent text-black font-medium"
-                            : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                        )}
-                      >
-                        <Settings className="h-3.5 w-3.5 shrink-0" />
-                        プロジェクト設定
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              );
-            })
+                  >
+                    <LayoutDashboard className="h-4 w-4 shrink-0" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">プロジェクト</TooltipContent>
+              </Tooltip>
+            </nav>
           ) : (
-            <div className="text-xs text-muted-foreground px-3 py-2">プロジェクトはありません</div>
+            <>
+              {/* ホームボタン */}
+              <Link
+                href="/dashboard"
+                className={cn(
+                  "flex items-center gap-1.5 px-1 py-1 rounded-md text-sm font-medium transition-colors mb-2",
+                  pathname === "/dashboard"
+                    ? "bg-accent text-foreground"
+                    : "text-foreground hover:bg-accent"
+                )}
+              >
+                <Home className="h-4 w-4 shrink-0" />
+                ホーム
+              </Link>
+
+              <Link
+                href="/projects"
+                className={cn(
+                  "flex items-center gap-1.5 px-1 py-1 rounded-md text-sm font-medium transition-colors mb-2",
+                  pathname === "/projects"
+                    ? "bg-accent text-foreground"
+                    : "text-foreground hover:bg-accent"
+                )}
+              >
+                <LayoutDashboard className="h-4 w-4 shrink-0" />
+                プロジェクト
+              </Link>
+              <Separator className="mb-2" />
+              <nav className="space-y-1">
+                {projects.length > 0 ? (
+                  projects.map((project) => {
+                    const isOpen = isProjectOpen(project.id);
+                    const ticketsPath = `/projects/${project.id}`;
+                    const settingsPath = `/projects/${project.id}/settings`;
+                    const isTicketsActive =
+                      pathname === ticketsPath ||
+                      pathname.startsWith(`/projects/${project.id}/tickets`);
+                    const isSettingsActive = pathname.startsWith(
+                      `/projects/${project.id}/settings`
+                    );
+
+                    return (
+                      <div key={project.id}>
+                        {/* プロジェクト名（アコーディオンヘッダー） */}
+                        <Button
+                          variant="ghost"
+                          onClick={() => toggleProject(project.id)}
+                          className={cn(
+                            "w-full h-auto justify-between px-3 py-2 text-sm font-medium",
+                            isOpen
+                              ? "bg-accent/50 text-foreground hover:bg-accent/50"
+                              : "text-foreground hover:bg-accent"
+                          )}
+                        >
+                          <span className="truncate text-left">{project.name}</span>
+                          {isOpen ? (
+                            <ChevronDown className="h-4 w-4 shrink-0 ml-1 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 shrink-0 ml-1 text-muted-foreground" />
+                          )}
+                        </Button>
+
+                        {/* 子項目（アコーディオンコンテンツ） */}
+                        {isOpen && (
+                          <div className="ml-3 mt-1 space-y-0.5">
+                            <Link
+                              href={ticketsPath}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
+                                isTicketsActive
+                                  ? "bg-accent text-black font-medium"
+                                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                              )}
+                            >
+                              <Ticket className="h-3.5 w-3.5 shrink-0" />
+                              チケット一覧
+                            </Link>
+                            <Link
+                              href={settingsPath}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
+                                isSettingsActive
+                                  ? "bg-accent text-black font-medium"
+                                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                              )}
+                            >
+                              <Settings className="h-3.5 w-3.5 shrink-0" />
+                              プロジェクト設定
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-xs text-muted-foreground px-3 py-2">
+                    プロジェクトはありません
+                  </div>
+                )}
+              </nav>
+            </>
           )}
-        </nav>
-      </div>
+        </div>
 
-      <Separator />
+        <Separator />
 
-      {/* メニューセクション */}
-      <div className="p-4 space-y-2">
-        <Link href="/settings" className="w-full">
-          <Button variant="ghost" className="w-full justify-start text-foreground hover:bg-accent">
-            <Settings className="mr-2 h-4 w-4" />
-            設定
-          </Button>
-        </Link>
+        {/* メニューセクション */}
+        <div className={cn("space-y-2", isCollapsed ? "p-2" : "p-4")}>
+          {isCollapsed ? (
+            <div className="flex flex-col items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href="/settings">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-foreground hover:bg-accent"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">設定</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 text-foreground hover:bg-accent"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">ログアウト</TooltipContent>
+              </Tooltip>
+            </div>
+          ) : (
+            <>
+              <Link
+                href="/settings"
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  pathname.startsWith("/settings")
+                    ? "bg-accent text-foreground"
+                    : "text-foreground hover:bg-accent"
+                )}
+              >
+                <Settings className="h-4 w-4" />
+                設定
+              </Link>
 
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-foreground hover:bg-accent"
-          onClick={handleLogout}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          ログアウト
-        </Button>
-      </div>
-    </aside>
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="w-full h-auto justify-start gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+              >
+                <LogOut className="h-4 w-4" />
+                ログアウト
+              </Button>
+            </>
+          )}
+        </div>
+      </aside>
+    </TooltipProvider>
   );
 }

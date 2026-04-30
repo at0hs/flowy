@@ -122,7 +122,7 @@ export function NotificationDropdown({
     <Popover>
       <PopoverTrigger asChild>
         <span>
-          <NotificationBell unreadCount={unreadCount} className="ml-2 shrink-0" />
+          <NotificationBell unreadCount={unreadCount} className="shrink-0" />
         </span>
       </PopoverTrigger>
 
@@ -163,11 +163,12 @@ export function NotificationDropdown({
               <ul role="list">
                 {displayed.map((notification, index) => (
                   <li key={notification.id}>
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       className={cn(
-                        "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors",
-                        "hover:bg-accent focus-visible:outline-none focus-visible:bg-accent",
+                        "w-full h-auto flex items-start justify-start gap-3 px-4 py-3 text-left rounded-none",
+                        "focus-visible:bg-accent",
                         !notification.is_read && "bg-primary/5"
                       )}
                       onClick={() => handleNotificationClick(notification)}
@@ -208,7 +209,7 @@ export function NotificationDropdown({
                           })}
                         </span>
                       </span>
-                    </button>
+                    </Button>
 
                     {index < displayed.length - 1 && (
                       <Separator className="mx-4" style={{ width: "calc(100% - 2rem)" }} />
