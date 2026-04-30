@@ -7,13 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StatusType } from "@/types";
+import { TicketStatus } from "@/types";
 import { STATUS_CONFIG } from "@/lib/ticket-config";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  value: StatusType;
-  onSave: (value: StatusType) => Promise<void>;
+  value: TicketStatus;
+  onSave: (value: TicketStatus) => Promise<void>;
   disabled?: boolean;
 };
 
@@ -22,7 +22,7 @@ export function InlineStatus({ value, onSave, disabled }: Props) {
 
   async function handleChange(newValue: string) {
     if (newValue !== value) {
-      await onSave(newValue as StatusType);
+      await onSave(newValue as TicketStatus);
     }
   }
 

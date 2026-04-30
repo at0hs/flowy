@@ -9,17 +9,19 @@ ALTER TABLE tickets DISABLE TRIGGER on_ticket_created;
 
 DO $$
 DECLARE
-  v_project_id uuid := '76ff34f2-4cc7-41fd-b49d-ff080b9f4d9a';  -- ← ここを変更
+  v_project_id uuid := '5abe6ec2-ef7c-437d-9757-5caa0483d013';  -- ← ここを変更
+  v_num_tickets integer := 5;
 BEGIN
-  INSERT INTO tickets (project_id, assignee_id, title, status, priority, created_at)
+  INSERT INTO tickets (project_id, assignee_id, title, status, priority, category, created_at)
   SELECT
     v_project_id,
     NULL,
-    '【テスト】チケット #' || n,
+    '【テスト】チケット #1-' || n,
     (ARRAY['todo', 'in_progress', 'done'])[1 + floor(random() * 3)::int]::ticket_status,
     (ARRAY['low', 'medium', 'high', 'urgent'])[1 + floor(random() * 4)::int]::ticket_priority,
+    (ARRAY['bug', 'task', 'feature', 'improvement'])[1 + floor(random() * 4)::int]::ticket_category,
     now() - (n * interval '1 hour')
-  FROM generate_series(1, 100) AS n;
+  FROM generate_series(1, v_num_tickets) AS n;
 END;
 $$;
 

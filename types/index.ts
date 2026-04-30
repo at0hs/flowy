@@ -16,9 +16,9 @@ export type TicketTag = Database["public"]["Tables"]["ticket_tags"]["Row"];
 export type ProjectRole = Database["public"]["Enums"]["project_role"];
 export type InvitationStatus = Database["public"]["Enums"]["invitation_status"];
 export type AiProviderType = Database["public"]["Enums"]["ai_provider_type"];
-export type PriorityType = Database["public"]["Enums"]["ticket_priority"];
-export type StatusType = Database["public"]["Enums"]["ticket_status"];
-export type CategoryType = Database["public"]["Enums"]["ticket_category"];
+export type TicketPriority = Database["public"]["Enums"]["ticket_priority"];
+export type TicketStatus = Database["public"]["Enums"]["ticket_status"];
+export type TicketCategory = Database["public"]["Enums"]["ticket_category"];
 export type ActivityActionType = Database["public"]["Enums"]["activity_action"];
 
 // 通知関連の型定義

@@ -9,7 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { StatusType, PriorityType, CategoryType } from "@/types";
+import type { TicketStatus, TicketPriority, TicketCategory } from "@/types";
 import { STATUS_LABELS, PRIORITY_LABELS, CATEGORY_LABELS } from "@/lib/constants";
 
 type StatusConfig = {
@@ -20,7 +20,7 @@ type StatusConfig = {
   columnBgClass: string;
 };
 
-export const STATUS_CONFIG: Record<StatusType, StatusConfig> = {
+export const STATUS_CONFIG: Record<TicketStatus, StatusConfig> = {
   todo: {
     label: STATUS_LABELS.todo,
     badgeBgClass: "bg-slate-200",
@@ -51,7 +51,7 @@ type PriorityConfig = {
   dotColor: string;
 };
 
-export const PRIORITY_CONFIG: Record<PriorityType, PriorityConfig> = {
+export const PRIORITY_CONFIG: Record<TicketPriority, PriorityConfig> = {
   low: {
     label: PRIORITY_LABELS.low,
     icon: ChevronsDownIcon,
@@ -86,7 +86,7 @@ type CategoryConfig = {
   badgeAlphaClass: string;
 };
 
-export const CATEGORY_CONFIG: Record<CategoryType, CategoryConfig> = {
+export const CATEGORY_CONFIG: Record<TicketCategory, CategoryConfig> = {
   bug: {
     label: CATEGORY_LABELS.bug,
     icon: BugIcon,

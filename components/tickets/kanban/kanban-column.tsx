@@ -1,13 +1,13 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import { Ticket, StatusType } from "@/types";
+import { Ticket, TicketStatus } from "@/types";
 import { KanbanCard } from "./kanban-card";
 import { cn } from "@/lib/utils";
 import { STATUS_CONFIG } from "@/lib/ticket-config";
 
 type Props = {
-  status: StatusType;
+  status: TicketStatus;
   label: string;
   tickets: Ticket[];
   projectId: string;

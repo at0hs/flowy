@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge";
-import { CategoryType } from "@/types";
+import { TicketCategory } from "@/types";
 import { CATEGORY_CONFIG } from "@/lib/ticket-config";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  value: CategoryType;
+  value: TicketCategory;
 };
 
 export function InlineCategory({ value }: Props) {

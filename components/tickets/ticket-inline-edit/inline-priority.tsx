@@ -7,23 +7,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PriorityType } from "@/types";
+import { TicketPriority } from "@/types";
 import { PRIORITY_CONFIG } from "@/lib/ticket-config";
 
 const PRIORITIES = (
-  Object.entries(PRIORITY_CONFIG) as [PriorityType, (typeof PRIORITY_CONFIG)[PriorityType]][]
+  Object.entries(PRIORITY_CONFIG) as [TicketPriority, (typeof PRIORITY_CONFIG)[TicketPriority]][]
 ).map(([value, config]) => ({ value, ...config }));
 
 type Props = {
-  value: PriorityType;
-  onSave: (value: PriorityType) => Promise<void>;
+  value: TicketPriority;
+  onSave: (value: TicketPriority) => Promise<void>;
   disabled?: boolean;
 };
 
 export function InlinePriority({ value, onSave, disabled }: Props) {
   async function handleChange(newValue: string) {
     if (newValue !== value) {
-      await onSave(newValue as PriorityType);
+      await onSave(newValue as TicketPriority);
     }
   }
 

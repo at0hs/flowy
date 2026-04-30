@@ -3,7 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 import { logger } from "@/lib/logger";
-import { AiProviderType, PriorityType, StatusType } from "@/types";
+import { AiProviderType, TicketPriority, TicketStatus } from "@/types";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 
 export type AiConfig = {
@@ -100,15 +100,15 @@ export type SuggestSubtaskInput = {
   title: string;
   description: string | null;
   projectName: string;
-  priority: PriorityType;
-  status: StatusType;
+  priority: TicketPriority;
+  status: TicketStatus;
   existingSubtasks?: string[];
 };
 
 export type SuggestedSubtask = {
   title: string;
   description: string;
-  priority: PriorityType;
+  priority: TicketPriority;
 };
 
 const suggestedSubtaskSchema = z.object({

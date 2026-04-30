@@ -9,13 +9,13 @@ import {
   closestCenter,
 } from "@dnd-kit/core";
 import { useRouter } from "next/navigation";
-import { Ticket, StatusType } from "@/types";
+import { Ticket, TicketStatus } from "@/types";
 import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
 import { updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
 import { STATUS_LABELS } from "@/lib/constants";
 
-const STATUSES: StatusType[] = ["todo", "in_progress", "done"];
+const STATUSES: TicketStatus[] = ["todo", "in_progress", "done"];
 
 type Props = {
   tickets: Ticket[];
@@ -44,7 +44,7 @@ export function KanbanBoard({ tickets: initialTickets, projectId, assigneeMap }:
     if (!over) return;
 
     const ticketId = active.id as string;
-    const newStatus = over.id as StatusType;
+    const newStatus = over.id as TicketStatus;
 
     const ticket = tickets.find((t) => t.id === ticketId);
     if (!ticket || ticket.status === newStatus) return;

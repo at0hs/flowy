@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { ticketSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
-import { PriorityType, StatusType, CategoryType } from "@/types";
+import { TicketPriority, TicketStatus, TicketCategory } from "@/types";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { Json } from "@/types/database.types";
@@ -241,9 +241,9 @@ export async function updateTicket(ticketId: string, projectId: string, formData
 type TicketFieldUpdate =
   | { field: "title"; value: string }
   | { field: "description"; value: string | null }
-  | { field: "status"; value: StatusType; prevValue?: StatusType }
-  | { field: "priority"; value: PriorityType; prevValue?: PriorityType }
-  | { field: "category"; value: CategoryType }
+  | { field: "status"; value: TicketStatus; prevValue?: TicketStatus }
+  | { field: "priority"; value: TicketPriority; prevValue?: TicketPriority }
+  | { field: "category"; value: TicketCategory }
   | { field: "assignee_id"; value: string | null; prevValue?: string | null }
   | { field: "start_date"; value: string | null }
   | { field: "due_date"; value: string | null };

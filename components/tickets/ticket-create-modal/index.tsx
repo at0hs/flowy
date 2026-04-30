@@ -34,7 +34,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { PriorityType, StatusType, CategoryType } from "@/types";
+import { TicketPriority, TicketStatus, TicketCategory } from "@/types";
 import { STATUS_CONFIG, PRIORITY_CONFIG, CATEGORY_CONFIG } from "@/lib/ticket-config";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -47,11 +47,11 @@ export type { TicketDefaultValues };
 const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30MB
 
 const STATUS_OPTIONS = (
-  Object.entries(STATUS_CONFIG) as [StatusType, (typeof STATUS_CONFIG)[StatusType]][]
+  Object.entries(STATUS_CONFIG) as [TicketStatus, (typeof STATUS_CONFIG)[TicketStatus]][]
 ).map(([value, config]) => ({ value, label: config.label, className: config.badgeAlphaClass }));
 
 const PRIORITY_OPTIONS = (
-  Object.entries(PRIORITY_CONFIG) as [PriorityType, (typeof PRIORITY_CONFIG)[PriorityType]][]
+  Object.entries(PRIORITY_CONFIG) as [TicketPriority, (typeof PRIORITY_CONFIG)[TicketPriority]][]
 ).map(([value, config]) => ({
   value,
   label: config.label,
@@ -60,7 +60,7 @@ const PRIORITY_OPTIONS = (
 }));
 
 const CATEGORY_OPTIONS = (
-  Object.entries(CATEGORY_CONFIG) as [CategoryType, (typeof CATEGORY_CONFIG)[CategoryType]][]
+  Object.entries(CATEGORY_CONFIG) as [TicketCategory, (typeof CATEGORY_CONFIG)[TicketCategory]][]
 ).map(([value, config]) => ({ value, ...config }));
 
 export function TicketCreateModal({
@@ -88,9 +88,9 @@ export function TicketCreateModal({
   const [parentId, setParentId] = useState<string>(
     defaultValues?.parentId ?? defaultParentId ?? "none"
   );
-  const [status, setStatus] = useState<StatusType>(defaultValues?.status ?? "todo");
-  const [priority, setPriority] = useState<PriorityType>(defaultValues?.priority ?? "medium");
-  const [category, setCategory] = useState<CategoryType>(defaultValues?.category ?? "task");
+  const [status, setStatus] = useState<TicketStatus>(defaultValues?.status ?? "todo");
+  const [priority, setPriority] = useState<TicketPriority>(defaultValues?.priority ?? "medium");
+  const [category, setCategory] = useState<TicketCategory>(defaultValues?.category ?? "task");
   const [startDate, setStartDate] = useState<Date | undefined>(defaultValues?.startDate);
   const [dueDate, setDueDate] = useState<Date | undefined>(defaultValues?.dueDate);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -280,7 +280,7 @@ export function TicketCreateModal({
             {/* カテゴリ */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0">カテゴリ *</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v as CategoryType)}>
+              <Select value={category} onValueChange={(v) => setCategory(v as TicketCategory)}>
                 <SelectTrigger
                   className={cn(
                     "w-auto",
@@ -326,7 +326,7 @@ export function TicketCreateModal({
             {/* ステータス */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0">ステータス *</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as StatusType)}>
+              <Select value={status} onValueChange={(v) => setStatus(v as TicketStatus)}>
                 <SelectTrigger
                   className={`w-auto h-7 px-3 text-xs font-medium border-0 shadow-none rounded-sm gap-1 transition-colors ${currentStatus.className}`}
                 >
@@ -378,7 +378,7 @@ export function TicketCreateModal({
             {/* 優先度 */}
             <div className="flex items-center gap-4">
               <Label className="w-24 shrink-0 text-muted-foreground">優先度 *</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as PriorityType)}>
+              <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
                 <SelectTrigger className="w-80">
                   <SelectValue />
                 </SelectTrigger>

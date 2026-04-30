@@ -25,6 +25,8 @@ const PRESET_COLORS = [
   "#64748B",
 ];
 
+const DEFAULT_COLOR = PRESET_COLORS[0];
+
 type Props = {
   initialTags: Tag[];
   projectId: string;
@@ -56,22 +58,22 @@ export function TagSettingsClient({ initialTags, projectId }: Props) {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [editColor, setEditColor] = useState<string>(PRESET_COLORS[0]);
+  const [editColor, setEditColor] = useState<string>(DEFAULT_COLOR);
 
   const [newName, setNewName] = useState("");
-  const [newColor, setNewColor] = useState<string>(PRESET_COLORS[0]);
+  const [newColor, setNewColor] = useState<string>(DEFAULT_COLOR);
   const [isCreating, setIsCreating] = useState(false);
 
   const handleStartEdit = (tag: Tag) => {
     setEditingId(tag.id);
     setEditName(tag.name);
-    setEditColor(tag.color ?? PRESET_COLORS[0]);
+    setEditColor(tag.color ?? DEFAULT_COLOR);
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
     setEditName("");
-    setEditColor(PRESET_COLORS[0]);
+    setEditColor(DEFAULT_COLOR);
   };
 
   const handleSaveEdit = (tagId: string) => {
@@ -116,7 +118,7 @@ export function TagSettingsClient({ initialTags, projectId }: Props) {
       }
       toast.success("タグを作成しました");
       setNewName("");
-      setNewColor(PRESET_COLORS[0]);
+      setNewColor(DEFAULT_COLOR);
       setIsCreating(false);
       router.refresh();
     });
@@ -213,7 +215,7 @@ export function TagSettingsClient({ initialTags, projectId }: Props) {
                 if (e.key === "Escape") {
                   setIsCreating(false);
                   setNewName("");
-                  setNewColor(PRESET_COLORS[0]);
+                  setNewColor(DEFAULT_COLOR);
                 }
               }}
               placeholder="タグ名を入力"
@@ -238,7 +240,7 @@ export function TagSettingsClient({ initialTags, projectId }: Props) {
               onClick={() => {
                 setIsCreating(false);
                 setNewName("");
-                setNewColor(PRESET_COLORS[0]);
+                setNewColor(DEFAULT_COLOR);
               }}
               disabled={isPending}
             >

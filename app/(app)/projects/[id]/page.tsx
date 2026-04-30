@@ -12,6 +12,7 @@ import { ticketsQuerySchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { getProjectMembers } from "@/lib/supabase/members";
 import { getProjectTags } from "@/lib/supabase/tags";
+import { getProjectTickets } from "@/lib/supabase/tickets";
 import { ArrowLeft } from "lucide-react";
 
 type Props = {
@@ -28,6 +29,8 @@ export default async function TicketsPage({ params, searchParams }: Props) {
     status: rawSearchParams.status,
     priority: rawSearchParams.priority,
     category: rawSearchParams.category,
+    assignee: rawSearchParams.assignee,
+    tag: rawSearchParams.tag,
     order: rawSearchParams.order,
     view: rawSearchParams.view,
     q: rawSearchParams.q,
@@ -38,7 +41,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
     logger.warn("Invalid search params:", validationResult.error.issues);
   }
 
-  const { status, priority, category, order, view, q } = validationResult.success
+  const { status, priority, category, assignee, tag, order, view, q } = validationResult.success
     ? validationResult.data
     : {};
   const currentView = view ?? "list";
@@ -53,7 +56,7 @@ export default async function TicketsPage({ params, searchParams }: Props) {
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).single();
   if (!project) notFound();
 
-  const [members, rootTicketsResult, tags] = await Promise.all([
+  const [members, rootTicketsResult, tags, tickets] = await Promise.all([
     getProjectMembers(id),
     supabase
       .from("tickets")
@@ -62,36 +65,13 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       .is("parent_id", null)
       .order("created_at", { ascending: true }),
     getProjectTags(id),
+    getProjectTickets(id, { status, priority, category, assignee, tag, order, q }),
   ]);
   const notExistsTicket = !rootTicketsResult.data || rootTicketsResult.data.length === 0;
   const rootTickets = rootTicketsResult.data ?? [];
 
-  // チケット取得クエリを組み立てる
-  let query = supabase
-    .from("tickets")
-    .select("*")
-    .eq("project_id", id)
-    .order("created_at", { ascending: order === "asc" });
-
-  // ステータスフィルタ（指定がある場合のみ条件を追加）
-  if (status) query = query.eq("status", status);
-
-  // 優先度フィルタ（指定がある場合のみ条件を追加）
-  if (priority) query = query.eq("priority", priority);
-
-  // カテゴリフィルタ（指定がある場合のみ条件を追加）
-  if (category) query = query.eq("category", category);
-
-  // タイトル部分一致検索（指定がある場合のみ条件を追加）
-  if (q) query = query.ilike("title", `%${q}%`);
-  const { data: tickets, error } = await query;
-
-  if (error) logger.error(error);
-
   // 担当者プロフィールを一括取得
-  const assigneeIds = [
-    ...new Set((tickets ?? []).map((t) => t.assignee_id).filter(Boolean)),
-  ] as string[];
+  const assigneeIds = [...new Set(tickets.map((t) => t.assignee_id).filter(Boolean))] as string[];
   const assigneeMap: Record<string, { username: string; avatarFilePath?: string | null }> = {};
   if (assigneeIds.length > 0) {
     const { data: profiles } = await supabase
@@ -136,7 +116,14 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       </Suspense>
 
       <Suspense>
-        <TicketFilters currentView={currentView} />
+        <TicketFilters
+          currentView={currentView}
+          members={members.map((m) => ({
+            userId: m.user_id,
+            displayName: m.profile.username || m.profile.email || "",
+          }))}
+          tags={tags}
+        />
       </Suspense>
 
       {currentView === "kanban" ? (

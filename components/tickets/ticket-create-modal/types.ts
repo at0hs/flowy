@@ -1,4 +1,4 @@
-import { PriorityType, StatusType, CategoryType, Tag } from "@/types";
+import { TicketPriority, TicketStatus, TicketCategory, Tag } from "@/types";
 
 export interface RootTicket {
   id: string;
@@ -8,9 +8,9 @@ export interface RootTicket {
 export interface TicketDefaultValues {
   title?: string;
   description?: string;
-  status?: StatusType;
-  priority?: PriorityType;
-  category?: CategoryType;
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  category?: TicketCategory;
   assigneeId?: string;
   startDate?: Date;
   dueDate?: Date;
