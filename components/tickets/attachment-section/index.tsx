@@ -205,6 +205,8 @@ export function AttachmentSection({
           </DialogHeader>
           <div className="flex-1 min-h-0 flex items-center justify-center">
             {previewUrl && previewMime?.startsWith("image/") && (
+              // Signed URLは動的なため next/image の remotePatterns に登録不可。
+              // また縦横比が不定のプレビュー用途では width/height 指定が困難なため、<img> を使用。
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={previewUrl}

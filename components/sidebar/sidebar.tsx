@@ -189,7 +189,7 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
                     <LayoutDashboard className="h-4 w-4 shrink-0" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right">プロジェクト</TooltipContent>
+                <TooltipContent side="right">マイプロジェクト</TooltipContent>
               </Tooltip>
             </nav>
           ) : (
@@ -218,7 +218,7 @@ export function Sidebar({ projects, userProfile, unreadCount, notifications }: S
                 )}
               >
                 <LayoutDashboard className="h-4 w-4 shrink-0" />
-                プロジェクト
+                マイプロジェクト
               </Link>
               <Separator className="mb-2" />
               <nav className="space-y-1">

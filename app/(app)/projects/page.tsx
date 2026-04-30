@@ -29,7 +29,7 @@ export default async function ProjectsPage() {
     <div className="max-w-4xl mx-auto p-8">
       {/* ヘッダー */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">プロジェクト一覧</h1>
+        <h1 className="text-2xl font-bold">マイプロジェクト</h1>
         <Button asChild>
           <Link href="/projects/new">+ 新規作成</Link>
         </Button>

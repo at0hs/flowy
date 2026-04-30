@@ -80,6 +80,13 @@ export default async function TicketDetailPage({ params }: Props) {
           {/* パンくずリスト */}
           <nav className="flex items-center gap-1 text-sm text-muted-foreground">
             <Link
+              href="/projects"
+              className="hover:underline hover:text-foreground transition-colors"
+            >
+              マイプロジェクト
+            </Link>
+            <ChevronRight className="w-4 h-4 shrink-0" />
+            <Link
               href={`/projects/${id}`}
               className="hover:underline hover:text-foreground transition-colors"
             >

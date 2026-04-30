@@ -91,10 +91,9 @@ export default async function TicketsPage({ params, searchParams }: Props) {
       <div className="flex flex-col mb-2">
         <Link
           href="/projects"
-          className="flex items-center gap-1 text-sm text-muted-foreground hover:underline w-fit"
+          className="gap-1 text-sm text-muted-foreground hover:underline w-fit"
         >
-          <ArrowLeft className="w-4 h-4" />
-          プロジェクト一覧
+          マイプロジェクト
         </Link>
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold mt-1">{project.name}</h1>
