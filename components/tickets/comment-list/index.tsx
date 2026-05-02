@@ -141,8 +141,6 @@ export function CommentList({ comments, ticketId, currentUserId, members }: Prop
 
   return (
     <div>
-      <h3 className="text-sm font-medium mb-4">コメント ({totalCount})</h3>
-
       {/* 投稿フォーム */}
       <div className="space-y-2 pb-10">
         {newCommentWriting ? (
@@ -178,7 +176,7 @@ export function CommentList({ comments, ticketId, currentUserId, members }: Prop
         ) : (
           <div
             onClick={() => setNewCommentWriting(true)}
-            className="rounded-md border border-border p-3 min-h-20 transition-colors cursor-pointer hover:bg-muted/30"
+            className="rounded-md border border-border p-3 min-h-16 transition-colors cursor-pointer hover:bg-muted/30"
           >
             <p className="text-sm text-muted-foreground italic">コメントを入力</p>
           </div>
@@ -186,9 +184,7 @@ export function CommentList({ comments, ticketId, currentUserId, members }: Prop
       </div>
 
       {/* コメント一覧 */}
-      {totalCount === 0 ? (
-        <p className="text-sm text-muted-foreground mb-6">コメントはありません</p>
-      ) : (
+      {totalCount > 0 && (
         <div className="space-y-6 mb-6">
           {rootComments.map((comment) => {
             const hasReplies = !!repliesByRootId[comment.id]?.length;

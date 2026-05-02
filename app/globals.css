@@ -131,6 +131,9 @@
 /* Tiptap エディタ・表示エリア共通スタイル */
 .tiptap,
 .prose-tiptap {
+  p {
+    min-height: 1em;
+  }
   h1 {
     font-size: 1.5rem;
     font-weight: 700;
