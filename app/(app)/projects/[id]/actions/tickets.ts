@@ -6,34 +6,15 @@ import { ticketSchema } from "@/lib/validations";
 import { logger } from "@/lib/logger";
 import { z } from "zod";
 import { TicketPriority, TicketStatus, TicketCategory } from "@/types";
-import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
+import { type SlackNotificationPayload } from "@/lib/slack";
 import { STATUS_LABELS, PRIORITY_LABELS } from "@/lib/constants";
 import { Json } from "@/types/database.types";
-import { sendSlackNotificationToWatchers, fetchNotificationContext } from "./_helpers";
+import {
+  sendSlackNotificationToWatchers,
+  sendSlackNotificationToUser,
+  fetchNotificationContext,
+} from "./_helpers";
 import { insertTicketActivity } from "@/lib/supabase/activities";
-
-async function sendSlackNotificationToUser(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  payload: Omit<SlackNotificationPayload, "webhookUrl">
-): Promise<void> {
-  try {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("slack_webhook_url")
-      .eq("id", userId)
-      .single();
-
-    if (!profile?.slack_webhook_url) return;
-
-    await sendSlackNotification({
-      ...payload,
-      webhookUrl: profile.slack_webhook_url,
-    } as SlackNotificationPayload);
-  } catch (err) {
-    logger.warn("Failed to send Slack notification to user:", err);
-  }
-}
 
 type NotifyWatchersType =
   | "assignee_changed"
@@ -58,6 +39,10 @@ async function callNotifyWatchers(
     logger.warn(`Failed to send ${type} notification:`, error);
   }
 }
+
+// ---------------------------------------------------------------------------
+// チケット作成・削除・一括更新
+// ---------------------------------------------------------------------------
 
 export async function createTicket(projectId: string, formData: FormData) {
   const supabase = await createClient();
@@ -123,14 +108,12 @@ export async function createTicket(projectId: string, formData: FormData) {
     return { error: "チケットの作成に失敗しました" };
   }
 
-  // チケット作成アクティビティを記録
   try {
     await insertTicketActivity(newTicket.id, "created");
   } catch (activityError) {
     logger.warn("Failed to insert ticket activity (created):", activityError);
   }
 
-  // 担当者が設定されており、自分以外の場合は `assigned` 通知を発行
   if (assigneeId && assigneeId !== user.id) {
     const { error: notifyError } = await supabase.from("notifications").insert({
       user_id: assigneeId,
@@ -164,8 +147,6 @@ export async function deleteTicket(ticketId: string, projectId: string) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // チケットおよびサブタスクに紐づく添付ファイルのパスを取得
-  // （parent_id・ticket_id ともに ON DELETE CASCADE のため、チケット削除前に収集する）
   const { data: childTickets } = await supabase
     .from("tickets")
     .select("id")
@@ -178,7 +159,6 @@ export async function deleteTicket(ticketId: string, projectId: string) {
     .select("file_path")
     .in("ticket_id", targetTicketIds);
 
-  // Storage からファイルを一括削除（ベストエフォート）
   if (attachments && attachments.length > 0) {
     const filePaths = attachments.map((a) => a.file_path);
     const { error: storageError } = await supabase.storage.from("attachments").remove(filePaths);
@@ -238,112 +218,284 @@ export async function updateTicket(ticketId: string, projectId: string, formData
   return { success: true, ticketId, projectId };
 }
 
-type TicketFieldUpdate =
-  | { field: "title"; value: string }
-  | { field: "description"; value: string | null }
-  | { field: "status"; value: TicketStatus; prevValue?: TicketStatus }
-  | { field: "priority"; value: TicketPriority; prevValue?: TicketPriority }
-  | { field: "category"; value: TicketCategory }
-  | { field: "assignee_id"; value: string | null; prevValue?: string | null }
-  | { field: "start_date"; value: string | null }
-  | { field: "due_date"; value: string | null };
+// ---------------------------------------------------------------------------
+// フィールド別インライン更新
+// ---------------------------------------------------------------------------
 
-export async function updateTicketField(
+/**
+ * @todo
+ * 現状各アクションが、すべて直列で実行されている
+ * DB更新 → activityInsert → notifyWatchers(DB) → fetchContext(DB) → Slack HTTP通知
+ * アクティビティ履歴・in-app通知・スラック通知はPromise.allで並列化するか要検討
+ */
+
+export async function updateTicketTitle(
   ticketId: string,
-  _projectId: string,
-  update: TicketFieldUpdate
+  value: string
 ): Promise<{ success: true } | { error: string }> {
-  const supabase = await createClient();
+  const result = z.string().min(1, "タイトルは必須です").safeParse(value);
+  if (!result.success) return { error: result.error.issues[0].message };
 
+  const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  if (update.field === "title") {
-    const result = z.string().min(1, "タイトルは必須です").safeParse(update.value);
-    if (!result.success) {
-      return { error: result.error.issues[0].message };
-    }
-  }
-
-  const { error } = await supabase
-    .from("tickets")
-    .update({ [update.field]: update.value })
-    .eq("id", ticketId);
-
+  const { error } = await supabase.from("tickets").update({ title: value }).eq("id", ticketId);
   if (error) {
     logger.error(error);
     return { error: "チケットの更新に失敗しました" };
   }
 
-  // assignee_id 変更時はユーザー名を事前に取得（アクティビティ・通知共用）
-  let oldAssigneeName: string | null = null;
-  let newAssigneeName: string | null = null;
-  if (update.field === "assignee_id") {
-    const [{ data: oldProfile }, { data: newProfile }] = await Promise.all([
-      update.prevValue
-        ? supabase.from("profiles").select("username").eq("id", update.prevValue).single()
-        : Promise.resolve({ data: null }),
-      update.value
-        ? supabase.from("profiles").select("username").eq("id", update.value).single()
-        : Promise.resolve({ data: null }),
-    ]);
-    oldAssigneeName = oldProfile?.username ?? null;
-    newAssigneeName = newProfile?.username ?? null;
+  return { success: true };
+}
+
+export async function updateTicketDescription(
+  ticketId: string,
+  value: string | null
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("tickets")
+    .update({ description: value })
+    .eq("id", ticketId);
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
   }
 
-  // アクティビティを記録（title / description / category は対象外）
+  return { success: true };
+}
+
+export async function updateTicketCategory(
+  ticketId: string,
+  value: TicketCategory
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.from("tickets").update({ category: value }).eq("id", ticketId);
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
+  return { success: true };
+}
+
+export async function updateTicketStartDate(
+  ticketId: string,
+  value: string | null
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.from("tickets").update({ start_date: value }).eq("id", ticketId);
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
   try {
-    if (update.field === "status") {
-      await insertTicketActivity(
-        ticketId,
-        "status_changed",
-        update.prevValue ?? null,
-        update.value
-      );
-    } else if (update.field === "assignee_id") {
-      await insertTicketActivity(
-        ticketId,
-        "assignee_changed",
-        oldAssigneeName ?? update.prevValue ?? null,
-        newAssigneeName ?? update.value ?? null
-      );
-    } else if (update.field === "priority") {
-      await insertTicketActivity(
-        ticketId,
-        "priority_changed",
-        update.prevValue ?? null,
-        update.value
-      );
-    } else if (update.field === "due_date") {
-      await insertTicketActivity(ticketId, "due_date_changed", null, update.value);
-    } else if (update.field === "start_date") {
-      await insertTicketActivity(ticketId, "start_date_changed", null, update.value);
-    }
+    await insertTicketActivity(ticketId, "start_date_changed", null, value);
   } catch (activityError) {
     logger.warn("Failed to insert ticket activity:", activityError);
   }
 
-  if (update.field === "assignee_id" && update.value !== update.prevValue) {
-    // 新担当者が設定されており、自分以外の場合は `assigned` 通知を発行
-    if (update.value && update.value !== user.id) {
+  return { success: true };
+}
+
+export async function updateTicketDueDate(
+  ticketId: string,
+  value: string | null
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.from("tickets").update({ due_date: value }).eq("id", ticketId);
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
+  try {
+    await insertTicketActivity(ticketId, "due_date_changed", null, value);
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity:", activityError);
+  }
+
+  return { success: true };
+}
+
+export async function updateTicketStatus(
+  ticketId: string,
+  value: TicketStatus,
+  prevValue?: TicketStatus
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.from("tickets").update({ status: value }).eq("id", ticketId);
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
+  try {
+    await insertTicketActivity(ticketId, "status_changed", prevValue ?? null, value);
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity:", activityError);
+  }
+
+  if (value !== prevValue) {
+    await callNotifyWatchers(supabase, ticketId, "status_changed", user.id, {
+      old_status: prevValue ?? null,
+      new_status: value,
+    });
+
+    const ctx = await fetchNotificationContext(supabase, ticketId, user.id);
+    if (ctx) {
+      await sendSlackNotificationToWatchers(ticketId, user.id, {
+        type: "status_changed",
+        ticketTitle: ctx.ticketTitle,
+        ticketUrl: ctx.ticketUrl,
+        actorName: ctx.actorName,
+        projectName: ctx.projectName,
+        oldValue: STATUS_LABELS[prevValue ?? ""] ?? prevValue ?? "",
+        newValue: STATUS_LABELS[value] ?? value,
+      } as Omit<SlackNotificationPayload, "webhookUrl">);
+    }
+  }
+
+  return { success: true };
+}
+
+export async function updateTicketPriority(
+  ticketId: string,
+  value: TicketPriority,
+  prevValue?: TicketPriority
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.from("tickets").update({ priority: value }).eq("id", ticketId);
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
+  try {
+    await insertTicketActivity(ticketId, "priority_changed", prevValue ?? null, value);
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity:", activityError);
+  }
+
+  if (value !== prevValue) {
+    await callNotifyWatchers(supabase, ticketId, "priority_changed", user.id, {
+      old_priority: prevValue ?? null,
+      new_priority: value,
+    });
+
+    const ctx = await fetchNotificationContext(supabase, ticketId, user.id);
+    if (ctx) {
+      await sendSlackNotificationToWatchers(ticketId, user.id, {
+        type: "priority_changed",
+        ticketTitle: ctx.ticketTitle,
+        ticketUrl: ctx.ticketUrl,
+        actorName: ctx.actorName,
+        projectName: ctx.projectName,
+        oldValue: PRIORITY_LABELS[prevValue ?? ""] ?? prevValue ?? "",
+        newValue: PRIORITY_LABELS[value] ?? value,
+      } as Omit<SlackNotificationPayload, "webhookUrl">);
+    }
+  }
+
+  return { success: true };
+}
+
+export async function updateTicketAssignee(
+  ticketId: string,
+  value: string | null,
+  prevValue?: string | null
+): Promise<{ success: true } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase
+    .from("tickets")
+    .update({ assignee_id: value })
+    .eq("id", ticketId);
+  if (error) {
+    logger.error(error);
+    return { error: "チケットの更新に失敗しました" };
+  }
+
+  const [{ data: oldProfile }, { data: newProfile }] = await Promise.all([
+    prevValue
+      ? supabase.from("profiles").select("username").eq("id", prevValue).single()
+      : Promise.resolve({ data: null }),
+    value
+      ? supabase.from("profiles").select("username").eq("id", value).single()
+      : Promise.resolve({ data: null }),
+  ]);
+  const oldAssigneeName = oldProfile?.username ?? null;
+  const newAssigneeName = newProfile?.username ?? null;
+
+  try {
+    await insertTicketActivity(
+      ticketId,
+      "assignee_changed",
+      oldAssigneeName ?? prevValue ?? null,
+      newAssigneeName ?? value ?? null
+    );
+  } catch (activityError) {
+    logger.warn("Failed to insert ticket activity:", activityError);
+  }
+
+  if (value !== prevValue) {
+    if (value && value !== user.id) {
       const { error: notifyError } = await supabase.from("notifications").insert({
-        user_id: update.value,
+        user_id: value,
         actor_id: user.id,
         ticket_id: ticketId,
         type: "assigned" as const,
       });
       if (notifyError) logger.warn("Failed to send assigned notification:", notifyError);
     }
+
     await callNotifyWatchers(supabase, ticketId, "assignee_changed", user.id, {
-      old_assignee_id: update.prevValue ?? null,
-      new_assignee_id: update.value ?? null,
+      old_assignee_id: prevValue ?? null,
+      new_assignee_id: value ?? null,
     });
+
     const ctx = await fetchNotificationContext(supabase, ticketId, user.id);
     if (ctx) {
-      if (update.value && update.value !== user.id) {
-        await sendSlackNotificationToUser(supabase, update.value, {
+      if (value && value !== user.id) {
+        await sendSlackNotificationToUser(supabase, value, {
           type: "assigned",
           ticketTitle: ctx.ticketTitle,
           ticketUrl: ctx.ticketUrl,
@@ -360,46 +512,6 @@ export async function updateTicketField(
         projectName: ctx.projectName,
         oldValue: oldAssigneeName ?? "なし",
         newValue: newAssigneeName ?? "なし",
-      } as Omit<SlackNotificationPayload, "webhookUrl">);
-    }
-  }
-
-  if (update.field === "status" && update.value !== update.prevValue) {
-    await callNotifyWatchers(supabase, ticketId, "status_changed", user.id, {
-      old_status: update.prevValue ?? null,
-      new_status: update.value,
-    });
-
-    const ctxStatus = await fetchNotificationContext(supabase, ticketId, user.id);
-    if (ctxStatus) {
-      await sendSlackNotificationToWatchers(ticketId, user.id, {
-        type: "status_changed",
-        ticketTitle: ctxStatus.ticketTitle,
-        ticketUrl: ctxStatus.ticketUrl,
-        actorName: ctxStatus.actorName,
-        projectName: ctxStatus.projectName,
-        oldValue: STATUS_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
-        newValue: STATUS_LABELS[update.value] ?? update.value,
-      } as Omit<SlackNotificationPayload, "webhookUrl">);
-    }
-  }
-
-  if (update.field === "priority" && update.value !== update.prevValue) {
-    await callNotifyWatchers(supabase, ticketId, "priority_changed", user.id, {
-      old_priority: update.prevValue ?? null,
-      new_priority: update.value,
-    });
-
-    const ctxPriority = await fetchNotificationContext(supabase, ticketId, user.id);
-    if (ctxPriority) {
-      await sendSlackNotificationToWatchers(ticketId, user.id, {
-        type: "priority_changed",
-        ticketTitle: ctxPriority.ticketTitle,
-        ticketUrl: ctxPriority.ticketUrl,
-        actorName: ctxPriority.actorName,
-        projectName: ctxPriority.projectName,
-        oldValue: PRIORITY_LABELS[update.prevValue ?? ""] ?? update.prevValue ?? "",
-        newValue: PRIORITY_LABELS[update.value] ?? update.value,
       } as Omit<SlackNotificationPayload, "webhookUrl">);
     }
   }

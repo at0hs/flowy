@@ -5,7 +5,15 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Ticket } from "@/types";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
+import {
+  updateTicketTitle,
+  updateTicketDescription,
+  updateTicketStatus,
+  updateTicketPriority,
+  updateTicketAssignee,
+  updateTicketStartDate,
+  updateTicketDueDate,
+} from "@/app/(app)/projects/[id]/actions/tickets";
 import { InlineTitle } from "./inline-title";
 import { InlineDescription } from "./inline-description";
 import { InlineStatus } from "./inline-status";
@@ -28,14 +36,14 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
   const router = useRouter();
 
   async function save(
-    update: Parameters<typeof updateTicketField>[2],
+    actionFn: () => Promise<{ success: true } | { error: string }>,
     optimistic: Partial<Ticket>
   ) {
     const rollback = { ...localTicket };
     setLocalTicket((prev) => ({ ...prev, ...optimistic }));
 
     startTransition(async () => {
-      const result = await updateTicketField(ticket.id, projectId, update);
+      const result = await actionFn();
       if ("error" in result) {
         setLocalTicket(rollback);
         toast.error(result.error);
@@ -56,7 +64,7 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
       <div className="mb-6">
         <InlineTitle
           value={localTicket.title}
-          onSave={(v) => save({ field: "title", value: v }, { title: v })}
+          onSave={(v) => save(() => updateTicketTitle(ticket.id, v), { title: v })}
           disabled={isPending}
         />
       </div>
@@ -66,7 +74,7 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
         <InlineStatus
           value={localTicket.status}
           onSave={(v) =>
-            save({ field: "status", value: v, prevValue: localTicket.status }, { status: v })
+            save(() => updateTicketStatus(ticket.id, v, localTicket.status), { status: v })
           }
           disabled={isPending}
         />
@@ -82,7 +90,7 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
         </p>
         <InlineDescription
           value={localTicket.description}
-          onSave={(v) => save({ field: "description", value: v }, { description: v })}
+          onSave={(v) => save(() => updateTicketDescription(ticket.id, v), { description: v })}
           disabled={isPending}
           ticketId={ticket.id}
           projectId={projectId}
@@ -99,10 +107,9 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
           currentUserId={currentUserId}
           members={members}
           onSave={(v) =>
-            save(
-              { field: "assignee_id", value: v, prevValue: localTicket.assignee_id },
-              { assignee_id: v }
-            )
+            save(() => updateTicketAssignee(ticket.id, v, localTicket.assignee_id), {
+              assignee_id: v,
+            })
           }
           disabled={isPending}
         />
@@ -113,10 +120,7 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
           <InlinePriority
             value={localTicket.priority}
             onSave={(v) =>
-              save(
-                { field: "priority", value: v, prevValue: localTicket.priority },
-                { priority: v }
-              )
+              save(() => updateTicketPriority(ticket.id, v, localTicket.priority), { priority: v })
             }
             disabled={isPending}
           />
@@ -126,7 +130,7 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
         <span className="text-muted-foreground pt-1.5">開始日</span>
         <InlineStartDate
           value={localTicket.start_date}
-          onSave={(v) => save({ field: "start_date", value: v }, { start_date: v })}
+          onSave={(v) => save(() => updateTicketStartDate(ticket.id, v), { start_date: v })}
           disabled={isPending}
         />
 
@@ -134,7 +138,7 @@ export function TicketInlineEditPanel({ ticket, projectId, members, currentUserI
         <span className="text-muted-foreground pt-1.5">期限</span>
         <InlineDueDate
           value={localTicket.due_date}
-          onSave={(v) => save({ field: "due_date", value: v }, { due_date: v })}
+          onSave={(v) => save(() => updateTicketDueDate(ticket.id, v), { due_date: v })}
           disabled={isPending}
         />
       </div>

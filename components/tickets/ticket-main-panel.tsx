@@ -4,7 +4,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Ticket } from "@/types";
-import { updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
+import {
+  updateTicketTitle,
+  updateTicketDescription,
+} from "@/app/(app)/projects/[id]/actions/tickets";
 import { InlineTitle } from "./ticket-inline-edit/inline-title";
 import { InlineDescription } from "./ticket-inline-edit/inline-description";
 
@@ -19,14 +22,14 @@ export function TicketMainPanel({ ticket, projectId }: Props) {
   const router = useRouter();
 
   async function save(
-    update: Parameters<typeof updateTicketField>[2],
+    actionFn: () => Promise<{ success: true } | { error: string }>,
     optimistic: Partial<Ticket>
   ) {
     const rollback = { ...localTicket };
     setLocalTicket((prev) => ({ ...prev, ...optimistic }));
 
     startTransition(async () => {
-      const result = await updateTicketField(ticket.id, projectId, update);
+      const result = await actionFn();
       if ("error" in result) {
         setLocalTicket(rollback);
         toast.error(result.error);
@@ -42,7 +45,7 @@ export function TicketMainPanel({ ticket, projectId }: Props) {
       <div className="mb-6">
         <InlineTitle
           value={localTicket.title}
-          onSave={(v) => save({ field: "title", value: v }, { title: v })}
+          onSave={(v) => save(() => updateTicketTitle(ticket.id, v), { title: v })}
           disabled={isPending}
         />
       </div>
@@ -57,7 +60,7 @@ export function TicketMainPanel({ ticket, projectId }: Props) {
         </p>
         <InlineDescription
           value={localTicket.description}
-          onSave={(v) => save({ field: "description", value: v }, { description: v })}
+          onSave={(v) => save(() => updateTicketDescription(ticket.id, v), { description: v })}
           disabled={isPending}
           ticketId={ticket.id}
           projectId={projectId}

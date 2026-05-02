@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createTicket, updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
+import { createTicket, updateTicketDescription } from "@/app/(app)/projects/[id]/actions/tickets";
 import {
   registerAttachment,
   getAttachmentUrl,
@@ -216,10 +216,7 @@ export function TicketCreateModal({
       // Blob URL の置換が発生していた場合、説明文を更新する
       const originalDescription = isDescriptionEmpty ? "" : description;
       if (finalDescription !== originalDescription) {
-        await updateTicketField(result.ticketId, projectId, {
-          field: "description",
-          value: finalDescription || null,
-        });
+        await updateTicketDescription(result.ticketId, finalDescription || null);
       }
     }
 

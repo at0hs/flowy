@@ -3,6 +3,29 @@ import { logger } from "@/lib/logger";
 import { getWatcherEmails } from "@/lib/supabase/watches";
 import { sendSlackNotification, type SlackNotificationPayload } from "@/lib/slack";
 
+export async function sendSlackNotificationToUser(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  payload: Omit<SlackNotificationPayload, "webhookUrl">
+): Promise<void> {
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("slack_webhook_url")
+      .eq("id", userId)
+      .single();
+
+    if (!profile?.slack_webhook_url) return;
+
+    await sendSlackNotification({
+      ...payload,
+      webhookUrl: profile.slack_webhook_url,
+    } as SlackNotificationPayload);
+  } catch (err) {
+    logger.warn("Failed to send Slack notification to user:", err);
+  }
+}
+
 /**
  * ウォッチ中のユーザー全員へ Slack 通知を送信する
  * Webhook URL が設定されているユーザーのみに送信する
@@ -29,14 +52,15 @@ export async function sendSlackNotificationToWatchers(
     );
 
     await Promise.all(
-      watchersWithWebhook.map(({ slack_webhook_url }) => {
-        const slackPayload: SlackNotificationPayload = {
-          ...payload,
-          webhookUrl: slack_webhook_url,
-        } as SlackNotificationPayload;
-        return sendSlackNotification(slackPayload).catch((err) =>
-          logger.warn("Failed to send Slack notification to watcher:", err)
-        );
+      watchersWithWebhook.map(async ({ slack_webhook_url }) => {
+        try {
+          await sendSlackNotification({
+            ...payload,
+            webhookUrl: slack_webhook_url,
+          } as SlackNotificationPayload);
+        } catch (err) {
+          logger.warn("Failed to send Slack notification to watcher:", err);
+        }
       })
     );
   } catch (err) {

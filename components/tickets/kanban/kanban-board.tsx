@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { Ticket, TicketStatus } from "@/types";
 import { KanbanColumn } from "./kanban-column";
 import { KanbanCard } from "./kanban-card";
-import { updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
+import { updateTicketStatus } from "@/app/(app)/projects/[id]/actions/tickets";
 import { STATUS_LABELS } from "@/lib/constants";
 
 const STATUSES: TicketStatus[] = ["todo", "in_progress", "done"];
@@ -55,11 +55,7 @@ export function KanbanBoard({ tickets: initialTickets, projectId, assigneeMap }:
     setTickets((prev) => prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t)));
 
     startTransition(async () => {
-      const result = await updateTicketField(ticketId, projectId, {
-        field: "status",
-        value: newStatus,
-        prevValue: prevStatus,
-      });
+      const result = await updateTicketStatus(ticketId, newStatus, prevStatus);
 
       if ("error" in result) {
         // ロールバック

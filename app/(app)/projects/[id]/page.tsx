@@ -13,7 +13,6 @@ import { logger } from "@/lib/logger";
 import { getProjectMembers } from "@/lib/supabase/members";
 import { getProjectTags } from "@/lib/supabase/tags";
 import { getProjectTickets } from "@/lib/supabase/tickets";
-import { ArrowLeft } from "lucide-react";
 
 type Props = {
   params: Promise<{ id: string }>;

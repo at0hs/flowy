@@ -5,6 +5,7 @@ import { useEditorState } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -194,8 +195,11 @@ function TableInsertItem({ editor }: { editor: Editor }) {
         <div className="space-y-2">
           <p className="text-xs font-medium">テーブルを挿入</p>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground w-6">行</label>
+            <Label htmlFor="table-rows" className="text-xs text-muted-foreground w-6">
+              行
+            </Label>
             <Input
+              id="table-rows"
               type="number"
               min={1}
               max={20}
@@ -205,8 +209,11 @@ function TableInsertItem({ editor }: { editor: Editor }) {
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-muted-foreground w-6">列</label>
+            <Label htmlFor="table-cols" className="text-xs text-muted-foreground w-6">
+              列
+            </Label>
             <Input
+              id="table-cols"
               type="number"
               min={1}
               max={20}
@@ -366,13 +373,13 @@ function TableActionToolbar({ editor }: { editor: Editor }) {
 
   return (
     <div className="flex flex-wrap items-center gap-1 p-1">
-      <label className="flex items-center gap-1.5 cursor-pointer px-1 select-none">
+      <Label className="flex items-center gap-1.5 cursor-pointer px-1 select-none">
         <span className="text-xs text-muted-foreground">ヘッダー:</span>
         <Checkbox
           checked={hasHeaderRow}
           onCheckedChange={() => editor.chain().focus().toggleHeaderRow().run()}
         />
-      </label>
+      </Label>
       <Separator orientation="vertical" className="h-6" />
       <span className="text-xs text-muted-foreground px-1">行:</span>
       <Button

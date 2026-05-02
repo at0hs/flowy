@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Ticket, Tag } from "@/types";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
+import {
+  updateTicketStatus,
+  updateTicketPriority,
+  updateTicketAssignee,
+  updateTicketStartDate,
+  updateTicketDueDate,
+} from "@/app/(app)/projects/[id]/actions/tickets";
 import { addTagToTicket, removeTagFromTicket } from "@/app/(app)/projects/[id]/actions/tags";
 import { InlineStatus } from "./ticket-inline-edit/inline-status";
 import { InlinePriority } from "./ticket-inline-edit/inline-priority";
@@ -28,7 +34,6 @@ type Props = {
 
 export function TicketPropertyPanel({
   ticket,
-  projectId,
   members,
   currentUserId,
   projectTags,
@@ -40,14 +45,14 @@ export function TicketPropertyPanel({
   const router = useRouter();
 
   async function save(
-    update: Parameters<typeof updateTicketField>[2],
+    actionFn: () => Promise<{ success: true } | { error: string }>,
     optimistic: Partial<Ticket>
   ) {
     const rollback = { ...localTicket };
     setLocalTicket((prev) => ({ ...prev, ...optimistic }));
 
     startTransition(async () => {
-      const result = await updateTicketField(ticket.id, projectId, update);
+      const result = await actionFn();
       if ("error" in result) {
         setLocalTicket(rollback);
         toast.error(result.error);
@@ -94,7 +99,7 @@ export function TicketPropertyPanel({
         <InlineStatus
           value={localTicket.status}
           onSave={(v) =>
-            save({ field: "status", value: v, prevValue: localTicket.status }, { status: v })
+            save(() => updateTicketStatus(ticket.id, v, localTicket.status), { status: v })
           }
           disabled={isPending}
         />
@@ -107,7 +112,7 @@ export function TicketPropertyPanel({
         <InlinePriority
           value={localTicket.priority}
           onSave={(v) =>
-            save({ field: "priority", value: v, prevValue: localTicket.priority }, { priority: v })
+            save(() => updateTicketPriority(ticket.id, v, localTicket.priority), { priority: v })
           }
           disabled={isPending}
         />
@@ -122,10 +127,9 @@ export function TicketPropertyPanel({
           currentUserId={currentUserId}
           members={members}
           onSave={(v) =>
-            save(
-              { field: "assignee_id", value: v, prevValue: localTicket.assignee_id },
-              { assignee_id: v }
-            )
+            save(() => updateTicketAssignee(ticket.id, v, localTicket.assignee_id), {
+              assignee_id: v,
+            })
           }
           disabled={isPending}
         />
@@ -137,7 +141,7 @@ export function TicketPropertyPanel({
       <PropertyRow label="開始日">
         <InlineStartDate
           value={localTicket.start_date}
-          onSave={(v) => save({ field: "start_date", value: v }, { start_date: v })}
+          onSave={(v) => save(() => updateTicketStartDate(ticket.id, v), { start_date: v })}
           disabled={isPending}
         />
       </PropertyRow>
@@ -148,7 +152,7 @@ export function TicketPropertyPanel({
       <PropertyRow label="期限">
         <InlineDueDate
           value={localTicket.due_date}
-          onSave={(v) => save({ field: "due_date", value: v }, { due_date: v })}
+          onSave={(v) => save(() => updateTicketDueDate(ticket.id, v), { due_date: v })}
           disabled={isPending}
         />
       </PropertyRow>

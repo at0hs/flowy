@@ -2,9 +2,12 @@
 
 import { useState, useRef, useEffect, useTransition } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { Ticket } from "@/types";
-import { updateTicketField } from "@/app/(app)/projects/[id]/actions/tickets";
+import {
+  updateTicketStartDate,
+  updateTicketDueDate,
+} from "@/app/(app)/projects/[id]/actions/tickets";
 import {
   type GanttScale,
   getViewConfig,
@@ -83,14 +86,10 @@ export function GanttChart({ tickets, projectId }: GanttChartProps) {
         const updates: Promise<{ success: true } | { error: string }>[] = [];
 
         if (newStart !== ticket.start_date) {
-          updates.push(
-            updateTicketField(ticketId, projectId, { field: "start_date", value: newStart })
-          );
+          updates.push(updateTicketStartDate(ticketId, newStart));
         }
         if (newDue !== ticket.due_date) {
-          updates.push(
-            updateTicketField(ticketId, projectId, { field: "due_date", value: newDue })
-          );
+          updates.push(updateTicketDueDate(ticketId, newDue));
         }
 
         const results = await Promise.all(updates);
@@ -117,23 +116,18 @@ export function GanttChart({ tickets, projectId }: GanttChartProps) {
     <div className="mt-0">
       {/* スケールコントロール */}
       <div className="flex justify-end items-center gap-1 mb-2">
-        <button
-          onClick={scrollToToday}
-          className="px-2.5 py-1 text-xs rounded border border-border hover:bg-accent transition-colors"
-        >
+        <Button variant="outline" size="sm" onClick={scrollToToday}>
           今日
-        </button>
+        </Button>
         {(["week", "month", "quarter"] as GanttScale[]).map((s) => (
-          <button
+          <Button
             key={s}
+            size="sm"
+            variant={scale === s ? "default" : "outline"}
             onClick={() => setScale(s)}
-            className={cn(
-              "px-2.5 py-1 text-xs rounded border border-border transition-colors",
-              scale === s ? "bg-primary text-primary-foreground" : "hover:bg-accent text-foreground"
-            )}
           >
             {scaleLabels[s]}
-          </button>
+          </Button>
         ))}
       </div>
 
