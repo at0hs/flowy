@@ -15,6 +15,7 @@ export interface TicketDefaultValues {
   startDate?: Date;
   dueDate?: Date;
   parentId?: string;
+  tagIds?: string[];
 }
 
 export interface TicketCreateModalProps {

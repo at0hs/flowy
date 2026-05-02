@@ -5,7 +5,7 @@ import { Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TicketCreateModal } from "@/components/tickets/ticket-create-modal";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { Ticket } from "@/types";
+import { Ticket, Tag } from "@/types";
 
 interface RootTicket {
   id: string;
@@ -17,6 +17,8 @@ interface CopyTicketButtonProps {
   projectId: string;
   members: ProjectMemberWithProfile[];
   rootTickets: RootTicket[];
+  tags?: Tag[];
+  ticketTagIds?: string[];
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -26,6 +28,8 @@ export function CopyTicketButton({
   projectId,
   members,
   rootTickets,
+  tags,
+  ticketTagIds,
   open,
   onOpenChange,
 }: CopyTicketButtonProps) {
@@ -45,6 +49,7 @@ export function CopyTicketButton({
     startDate: ticket.start_date ? new Date(ticket.start_date + "T00:00:00") : undefined,
     dueDate: ticket.due_date ? new Date(ticket.due_date + "T00:00:00") : undefined,
     parentId: ticket.parent_id ?? "none",
+    tagIds: ticketTagIds,
   };
 
   return (
@@ -59,6 +64,7 @@ export function CopyTicketButton({
         projectId={projectId}
         members={members}
         rootTickets={rootTickets}
+        tags={tags}
         open={isOpen}
         onOpenChange={setIsOpen}
         defaultValues={defaultValues}

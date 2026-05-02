@@ -107,7 +107,7 @@ export function TicketCreateModal({
       setStartDate(defaultValues?.startDate);
       setDueDate(defaultValues?.dueDate);
       setParentId(defaultValues?.parentId ?? defaultParentId ?? "none");
-      setSelectedTagIds([]);
+      setSelectedTagIds(defaultValues?.tagIds ?? []);
     }
     // isOpen の変化時のみ適用する
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,7 +124,7 @@ export function TicketCreateModal({
     setStartDate(defaultValues?.startDate);
     setDueDate(defaultValues?.dueDate);
     setPendingFiles([]);
-    setSelectedTagIds([]);
+    setSelectedTagIds(defaultValues?.tagIds ?? []);
   };
 
   const handleImagePreview = (file: File, blobUrl: string) => {

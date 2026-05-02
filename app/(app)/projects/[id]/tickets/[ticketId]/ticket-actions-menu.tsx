@@ -13,16 +13,25 @@ import {
 import { DeleteTicketButton } from "./delete-ticket-button";
 import { CopyTicketButton } from "@/components/tickets/copy-ticket-button";
 import { ProjectMemberWithProfile } from "@/lib/supabase/members";
-import { Ticket } from "@/types";
+import { Ticket, Tag } from "@/types";
 
 interface Props {
   ticket: Ticket;
   projectId: string;
   members: ProjectMemberWithProfile[];
   rootTickets: { id: string; title: string }[];
+  tags?: Tag[];
+  ticketTagIds?: string[];
 }
 
-export function TicketActionsMenu({ ticket, projectId, members, rootTickets }: Props) {
+export function TicketActionsMenu({
+  ticket,
+  projectId,
+  members,
+  rootTickets,
+  tags,
+  ticketTagIds,
+}: Props) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isCopyOpen, setIsCopyOpen] = useState(false);
 
@@ -62,6 +71,8 @@ export function TicketActionsMenu({ ticket, projectId, members, rootTickets }: P
         projectId={projectId}
         members={members}
         rootTickets={rootTickets}
+        tags={tags}
+        ticketTagIds={ticketTagIds}
         open={isCopyOpen}
         onOpenChange={setIsCopyOpen}
       />

@@ -112,6 +112,8 @@ export default async function TicketDetailPage({ params }: Props) {
               projectId={id}
               members={members}
               rootTickets={rootTickets ?? []}
+              tags={projectTags}
+              ticketTagIds={ticketTags.map((t) => t.id)}
             />
           </div>
         </div>
