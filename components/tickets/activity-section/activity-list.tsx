@@ -2,6 +2,7 @@ import { TicketActivityWithProfile } from "@/types";
 import { ActivityActionType } from "@/types";
 import { formatRelativeTime, formatDate } from "@/lib/date";
 import { History } from "lucide-react";
+import { STATUS_CONFIG, PRIORITY_CONFIG } from "@/lib/ticket-config";
 
 type Props = {
   activities: TicketActivityWithProfile[];
@@ -59,13 +60,15 @@ function buildDescription(activity: TicketActivityWithProfile): string {
       return `優先度を「${formatPriority(old_value)}」→「${formatPriority(new_value)}」に変更しました`;
 
     case "due_date_changed":
+      // 期日は常にold_value=null
       if (!old_value && new_value) return `期限を「${formatDateValue(new_value)}」に設定しました`;
-      if (old_value && !new_value) return `期限「${formatDateValue(old_value)}」を削除しました`;
+      if (!old_value && !new_value) return `期限を削除しました`;
       return `期限を「${formatDateValue(old_value)}」→「${formatDateValue(new_value)}」に変更しました`;
 
     case "start_date_changed":
+      // 開始日は常にold_value=null
       if (!old_value && new_value) return `開始日を「${formatDateValue(new_value)}」に設定しました`;
-      if (old_value && !new_value) return `開始日「${formatDateValue(old_value)}」を削除しました`;
+      if (!old_value && !new_value) return `開始日を削除しました`;
       return `開始日を「${formatDateValue(old_value)}」→「${formatDateValue(new_value)}」に変更しました`;
 
     case "comment_added":
@@ -80,22 +83,13 @@ function buildDescription(activity: TicketActivityWithProfile): string {
 }
 
 function formatStatus(value: string | null): string {
-  const map: Record<string, string> = {
-    todo: "TODO",
-    in_progress: "進行中",
-    done: "完了",
-  };
-  return value ? (map[value] ?? value) : "未設定";
+  if (!value) return "未設定";
+  return STATUS_CONFIG[value as keyof typeof STATUS_CONFIG]?.label ?? value;
 }
 
 function formatPriority(value: string | null): string {
-  const map: Record<string, string> = {
-    low: "低",
-    medium: "中",
-    high: "高",
-    urgent: "緊急",
-  };
-  return value ? (map[value] ?? value) : "未設定";
+  if (!value) return "未設定";
+  return PRIORITY_CONFIG[value as keyof typeof PRIORITY_CONFIG]?.label ?? value;
 }
 
 function formatDateValue(value: string | null): string {
