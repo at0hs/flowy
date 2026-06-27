@@ -11,6 +11,7 @@ export type TicketWatch = Database["public"]["Tables"]["ticket_watches"]["Row"];
 export type Attachment = Database["public"]["Tables"]["attachments"]["Row"];
 export type Tag = Database["public"]["Tables"]["tags"]["Row"];
 export type TicketTag = Database["public"]["Tables"]["ticket_tags"]["Row"];
+export type CommentReaction = Database["public"]["Tables"]["comment_reactions"]["Row"];
 
 // ENUM型をエクスポート
 export type ProjectRole = Database["public"]["Enums"]["project_role"];
