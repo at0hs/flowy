@@ -7,6 +7,7 @@ import { TicketPropertyPanel } from "@/components/tickets/ticket-property-panel"
 import { getProjectMembers } from "@/lib/supabase/members";
 import { getComments } from "@/lib/supabase/comments";
 import { getTicketActivities } from "@/lib/supabase/activities";
+import { getCommentReactions } from "@/lib/supabase/reactions";
 import { CommentActivityTabs } from "@/components/tickets/activity-section/comment-activity-tabs";
 import { getSubtickets } from "@/lib/supabase/tickets";
 import { SubtaskSection } from "@/components/tickets/subtask-section";
@@ -42,6 +43,7 @@ export default async function TicketDetailPage({ params }: Props) {
     activities,
     { data: rootTickets },
     projectTags,
+    initialReactions,
   ] = await Promise.all([
     supabase.from("tickets").select("*").eq("id", ticketId).single(),
     supabase.from("projects").select("name").eq("id", id).single(),
@@ -57,6 +59,7 @@ export default async function TicketDetailPage({ params }: Props) {
       .is("parent_id", null)
       .order("created_at", { ascending: true }),
     getProjectTags(id),
+    getCommentReactions(ticketId),
   ]);
 
   const isAiConfigured = !!profile?.ai_provider;
@@ -159,8 +162,10 @@ export default async function TicketDetailPage({ params }: Props) {
               comments={comments}
               activities={activities}
               ticketId={ticketId}
+              projectId={id}
               currentUserId={user.id}
               members={members.map((m) => ({ id: m.user_id, label: m.profile.username }))}
+              initialReactions={initialReactions}
             />
           </div>
 

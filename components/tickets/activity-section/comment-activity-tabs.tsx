@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { CommentList } from "@/components/tickets/comment-list";
 import { ActivityList } from "./activity-list";
 import { CommentWithProfile } from "@/lib/supabase/comments";
-import { TicketActivityWithProfile } from "@/types";
+import { CommentWithReactions, TicketActivityWithProfile } from "@/types";
 import { type MentionMember } from "@/components/editor/rich-text-editor";
 
 type Tab = "comments" | "activities";
@@ -14,16 +14,20 @@ type Props = {
   comments: CommentWithProfile[];
   activities: TicketActivityWithProfile[];
   ticketId: string;
+  projectId: string;
   currentUserId: string;
   members?: MentionMember[];
+  initialReactions: CommentWithReactions;
 };
 
 export function CommentActivityTabs({
   comments,
   activities,
   ticketId,
+  projectId,
   currentUserId,
   members,
+  initialReactions,
 }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("comments");
 
@@ -42,8 +46,10 @@ export function CommentActivityTabs({
         <CommentList
           comments={comments}
           ticketId={ticketId}
+          projectId={projectId}
           currentUserId={currentUserId}
           members={members}
+          initialReactions={initialReactions}
         />
       ) : (
         <ActivityList activities={activities} />

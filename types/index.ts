@@ -13,6 +13,9 @@ export type Tag = Database["public"]["Tables"]["tags"]["Row"];
 export type TicketTag = Database["public"]["Tables"]["ticket_tags"]["Row"];
 export type CommentReaction = Database["public"]["Tables"]["comment_reactions"]["Row"];
 
+// コメントIDをキーにリアクション配列を引くマップ型
+export type CommentWithReactions = Record<string, CommentReaction[]>;
+
 // ENUM型をエクスポート
 export type ProjectRole = Database["public"]["Enums"]["project_role"];
 export type InvitationStatus = Database["public"]["Enums"]["invitation_status"];

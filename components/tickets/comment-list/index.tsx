@@ -11,6 +11,8 @@ import {
   removeComment,
 } from "@/app/(app)/projects/[id]/actions/comments";
 import { SquarePen, Trash2, CornerDownRight, LoaderCircle } from "lucide-react";
+import { CommentReaction } from "./comment-reaction";
+import type { CommentWithReactions } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,11 +31,20 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 type Props = {
   comments: CommentWithProfile[];
   ticketId: string;
+  projectId: string;
   currentUserId: string;
   members?: MentionMember[];
+  initialReactions: CommentWithReactions;
 };
 
-export function CommentList({ comments, ticketId, currentUserId, members }: Props) {
+export function CommentList({
+  comments,
+  ticketId,
+  projectId,
+  currentUserId,
+  members,
+  initialReactions,
+}: Props) {
   const [newBody, setNewBody] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
@@ -116,8 +127,11 @@ export function CommentList({ comments, ticketId, currentUserId, members }: Prop
   const totalCount = comments.filter((c) => !c.is_deleted).length;
 
   const commonItemProps = {
+    ticketId,
+    projectId,
     currentUserId,
     members,
+    initialReactions,
     editingId,
     editBody,
     deleteTargetId,
@@ -254,8 +268,11 @@ export function CommentList({ comments, ticketId, currentUserId, members }: Prop
 type CommentItemProps = {
   comment: CommentWithProfile;
   rootId: string;
+  ticketId: string;
+  projectId: string;
   currentUserId: string;
   members?: MentionMember[];
+  initialReactions: CommentWithReactions;
   editingId: string | null;
   editBody: string;
   deleteTargetId: string | null;
@@ -274,8 +291,11 @@ type CommentItemProps = {
 function CommentItem({
   comment,
   rootId,
+  ticketId,
+  projectId,
   currentUserId,
   members,
+  initialReactions,
   editingId,
   editBody,
   deleteTargetId,
@@ -358,6 +378,15 @@ function CommentItem({
               <CornerDownRight className="h-3.5 w-3.5" />
             </Button>
           )}
+
+          {/* リアクションボタン */}
+          <CommentReaction
+            commentId={comment.id}
+            ticketId={ticketId}
+            projectId={projectId}
+            currentUserId={currentUserId}
+            initialReactions={initialReactions[comment.id] ?? []}
+          />
 
           {/* 編集・削除ボタン（自分のコメントのみ） */}
           {comment.user_id === currentUserId && !isEditing && (

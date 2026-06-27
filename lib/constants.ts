@@ -22,3 +22,17 @@ export const TICKET_VIEWS = ["list", "kanban", "gantt"] as const;
 export type TicketView = (typeof TICKET_VIEWS)[number];
 
 export const NOTIFICATION_RETENTION_DAYS = 30;
+
+export const REACTION_EMOJIS = [
+  "👍",
+  "😄",
+  "🎉",
+  "😕",
+  "❤️",
+  "🚀",
+  "👀",
+  "🤔",
+  "⭐",
+  "🔥",
+] as const;
+export type ReactionEmoji = (typeof REACTION_EMOJIS)[number];
