@@ -29,10 +29,12 @@ const FEATURES = [
 
 export function FeaturesSection() {
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-6">
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">主な機能</h2>
+    <section className="bg-white py-14 md:py-20">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mb-10 text-center md:mb-12">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            主な機能
+          </h2>
           <p className="mt-3 text-muted-foreground">
             プロジェクト管理に必要なものが、すべて揃っています。
           </p>
