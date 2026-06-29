@@ -42,8 +42,9 @@ export async function proxy(request: NextRequest) {
   // 未認証ユーザーが認証必要なページにアクセスしようとした場合
   const isAuthPage =
     request.nextUrl.pathname.startsWith("/login") || request.nextUrl.pathname.startsWith("/signup");
+  const isLandingPage = request.nextUrl.pathname === "/";
 
-  if (!user && !isAuthPage) {
+  if (!user && !isAuthPage && !isLandingPage) {
     // /login へリダイレクト
     const url = request.nextUrl.clone();
     url.pathname = "/login";
