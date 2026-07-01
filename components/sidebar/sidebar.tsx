@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -40,14 +40,26 @@ interface SidebarProps {
 export function Sidebar({ projects, userProfile, unreadCount, notifications }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(
-    () =>
-      typeof window !== "undefined" && localStorage.getItem("flowy_sidebar_collapsed") === "true"
-  );
+  // サーバー側の初回描画と一致させるため、初期値はサーバーと同じ false にしておく
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // マウント後（ブラウザ側でのみ）に実際の画面幅を見て正しい状態へ補正する
+  // window.innerWidth / localStorage はサーバーには存在しない外部情報のため、
+  // hydration 完了後にしか読み取れない（= 初回描画で読むと SSR とのミスマッチが起きる）
+  useEffect(() => {
+    if (window.innerWidth < 1280) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsCollapsed(true);
+    } else {
+      setIsCollapsed(localStorage.getItem("flowy_sidebar_collapsed") === "true");
+    }
+  }, []);
 
   const toggleCollapse = (value: boolean) => {
     setIsCollapsed(value);
-    localStorage.setItem("flowy_sidebar_collapsed", String(value));
+    if (window.innerWidth >= 1280) {
+      localStorage.setItem("flowy_sidebar_collapsed", String(value));
+    }
   };
 
   // 現在のパスからプロジェクトIDを抽出

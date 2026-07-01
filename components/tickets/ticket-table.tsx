@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Ticket } from "@/types";
@@ -102,6 +102,20 @@ const columnHelper = createColumnHelper<RowData>();
 export function TicketTable({ tickets, assigneeMap }: Props) {
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+  // サーバー側の初回描画と一致させるため、初期値は「全列表示」にしておく
+  const [columnVisibility, setColumnVisibility] = useState({});
+
+  // マウント後（ブラウザ側でのみ）に画面幅を監視し、1280px未満ではカテゴリ列・作成日列を非表示にする
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1279px)");
+    const updateVisibility = (matches: boolean) => {
+      setColumnVisibility(matches ? { category: false, created_at: false } : {});
+    };
+    updateVisibility(mediaQuery.matches);
+    const listener = (e: MediaQueryListEvent) => updateVisibility(e.matches);
+    mediaQuery.addEventListener("change", listener);
+    return () => mediaQuery.removeEventListener("change", listener);
+  }, []);
 
   const handleSort = useCallback((column: SortColumn) => {
     setSortConfig((prev) => {
@@ -363,6 +377,10 @@ export function TicketTable({ tickets, assigneeMap }: Props) {
     defaultColumn: {
       minSize: 80,
     },
+    state: {
+      columnVisibility,
+    },
+    onColumnVisibilityChange: setColumnVisibility,
   });
 
   return (
