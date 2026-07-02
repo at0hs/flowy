@@ -45,19 +45,10 @@ export function CommentList({
   members,
   initialReactions,
 }: Props) {
-  const [newBody, setNewBody] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editBody, setEditBody] = useState("");
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [newCommentWriting, setNewCommentWriting] = useState(false);
-  const [replyingToRootId, setReplyingToRootId] = useState<string | null>(null);
-  const [replyBody, setReplyBody] = useState("");
-
-  const [isPostPending, startPostTransition] = useTransition();
-  const [isEditPending, startEditTransition] = useTransition();
-  const [isDeletePending, startDeleteTransition] = useTransition();
-  const [isReplyPending, startReplyTransition] = useTransition();
   const router = useRouter();
+  const [newBody, setNewBody] = useState("");
+  const [newCommentWriting, setNewCommentWriting] = useState(false);
+  const [isPostPending, startPostTransition] = useTransition();
 
   const handlePost = () => {
     if (isHtmlEmpty(newBody)) return;
@@ -68,46 +59,6 @@ export function CommentList({
       } else {
         setNewBody("");
         setNewCommentWriting(false);
-        router.refresh();
-      }
-    });
-  };
-
-  const handleReply = (rootId: string) => {
-    if (isHtmlEmpty(replyBody)) return;
-    startReplyTransition(async () => {
-      const result = await addReply(ticketId, replyBody, rootId);
-      if ("error" in result) {
-        toast.error(result.error);
-      } else {
-        setReplyBody("");
-        setReplyingToRootId(null);
-        router.refresh();
-      }
-    });
-  };
-
-  const handleEditSave = (commentId: string) => {
-    if (isHtmlEmpty(editBody)) return;
-    startEditTransition(async () => {
-      const result = await editComment(commentId, editBody);
-      if ("error" in result) {
-        toast.error(result.error);
-      } else {
-        setEditingId(null);
-        router.refresh();
-      }
-    });
-  };
-
-  const handleDelete = (commentId: string) => {
-    startDeleteTransition(async () => {
-      const result = await removeComment(commentId);
-      if ("error" in result) {
-        toast.error(result.error);
-      } else {
-        setDeleteTargetId(null);
-        toast.success("コメントを削除しました");
         router.refresh();
       }
     });
@@ -126,67 +77,26 @@ export function CommentList({
 
   const totalCount = comments.filter((c) => !c.is_deleted).length;
 
-  const commonItemProps = {
-    ticketId,
-    projectId,
-    currentUserId,
-    members,
-    initialReactions,
-    editingId,
-    editBody,
-    deleteTargetId,
-    isEditPending,
-    isDeletePending,
-    onEditStart: (id: string, body: string) => {
-      setEditingId(id);
-      setEditBody(body);
-    },
-    onEditBodyChange: setEditBody,
-    onEditSave: handleEditSave,
-    onEditCancel: () => setEditingId(null),
-    onDeleteRequest: setDeleteTargetId,
-    onDeleteCancel: () => setDeleteTargetId(null),
-    onDeleteConfirm: handleDelete,
-    onReplyRequest: (rootId: string) => {
-      setReplyingToRootId(rootId);
-      setReplyBody("");
-    },
-  };
+  const threadProps = { ticketId, projectId, currentUserId, members, initialReactions };
 
   return (
     <div>
       {/* 投稿フォーム */}
       <div className="space-y-2 pb-10">
         {newCommentWriting ? (
-          <>
-            <RichTextEditor
-              value={newBody}
-              onChange={setNewBody}
-              placeholder="コメントを入力..."
-              maxHeight="16rem"
-              editable={!isPostPending}
-              members={members}
-            />
-            <div className="flex justify-end gap-1">
-              <Button
-                size="sm"
-                onClick={handlePost}
-                disabled={isPostPending || isHtmlEmpty(newBody)}
-              >
-                {isPostPending ? <LoaderCircle className="animate-spin" /> : "投稿"}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setNewCommentWriting(false);
-                  setNewBody("");
-                }}
-              >
-                キャンセル
-              </Button>
-            </div>
-          </>
+          <CommentForm
+            value={newBody}
+            onChange={setNewBody}
+            onSubmit={handlePost}
+            onCancel={() => {
+              setNewCommentWriting(false);
+              setNewBody("");
+            }}
+            isPending={isPostPending}
+            submitLabel="投稿"
+            placeholder="コメントを入力..."
+            members={members}
+          />
         ) : (
           <div
             onClick={() => setNewCommentWriting(true)}
@@ -200,65 +110,99 @@ export function CommentList({
       {/* コメント一覧 */}
       {totalCount > 0 && (
         <div className="space-y-6 mb-6">
-          {rootComments.map((comment) => {
-            const hasReplies = !!repliesByRootId[comment.id]?.length;
-            const isReplyingToThis = replyingToRootId === comment.id;
-            const showReplyThread = hasReplies || (!comment.is_deleted && isReplyingToThis);
+          {rootComments.map((comment) => (
+            <CommentThread
+              key={comment.id}
+              {...threadProps}
+              comment={comment}
+              replies={repliesByRootId[comment.id] ?? []}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
-            return (
-              <div key={comment.id}>
-                {/* ルートコメント */}
-                <CommentItem {...commonItemProps} comment={comment} rootId={comment.id} />
+type CommentThreadProps = {
+  comment: CommentWithProfile;
+  replies: CommentWithProfile[];
+  ticketId: string;
+  projectId: string;
+  currentUserId: string;
+  members?: MentionMember[];
+  initialReactions: CommentWithReactions;
+};
 
-                {/* 返信一覧＋返信フォーム（1階層インデント） */}
-                {showReplyThread && (
-                  <div className="mt-3 ml-8 space-y-3 border-l-2 border-border pl-4">
-                    {repliesByRootId[comment.id]?.map((reply) => (
-                      <CommentItem
-                        key={reply.id}
-                        {...commonItemProps}
-                        comment={reply}
-                        rootId={comment.id}
-                      />
-                    ))}
+function CommentThread({
+  comment,
+  replies,
+  ticketId,
+  projectId,
+  currentUserId,
+  members,
+  initialReactions,
+}: CommentThreadProps) {
+  const router = useRouter();
+  const [isReplying, setIsReplying] = useState(false);
+  const [replyBody, setReplyBody] = useState("");
+  const [isReplyPending, startReplyTransition] = useTransition();
 
-                    {/* 返信フォーム（ソフトデリートコメントには表示しない） */}
-                    {isReplyingToThis && (
-                      <div className="space-y-2 pt-1">
-                        <RichTextEditor
-                          value={replyBody}
-                          onChange={setReplyBody}
-                          placeholder="返信を入力..."
-                          maxHeight="12rem"
-                          editable={!isReplyPending}
-                          members={members}
-                        />
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="sm"
-                            onClick={() => handleReply(comment.id)}
-                            disabled={isReplyPending || isHtmlEmpty(replyBody)}
-                          >
-                            {isReplyPending ? <LoaderCircle className="animate-spin" /> : "返信"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setReplyingToRootId(null);
-                              setReplyBody("");
-                            }}
-                          >
-                            キャンセル
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+  const handleReply = () => {
+    if (isHtmlEmpty(replyBody)) return;
+    startReplyTransition(async () => {
+      const result = await addReply(ticketId, replyBody, comment.id);
+      if ("error" in result) {
+        toast.error(result.error);
+      } else {
+        setReplyBody("");
+        setIsReplying(false);
+        router.refresh();
+      }
+    });
+  };
+
+  const startReply = () => {
+    setReplyBody("");
+    setIsReplying(true);
+  };
+
+  const itemProps = { ticketId, projectId, currentUserId, members, initialReactions };
+
+  const hasReplies = replies.length > 0;
+  const showReplyThread = hasReplies || (!comment.is_deleted && isReplying);
+
+  return (
+    <div>
+      {/* ルートコメント */}
+      <CommentItem {...itemProps} comment={comment} onReply={startReply} />
+
+      {/* 返信一覧＋返信フォーム（1階層インデント） */}
+      {showReplyThread && (
+        <div className="mt-3 ml-8 space-y-3 border-l-2 border-border pl-4">
+          {replies.map((reply) => (
+            <CommentItem key={reply.id} {...itemProps} comment={reply} onReply={startReply} />
+          ))}
+
+          {/* 返信フォーム（ソフトデリートコメントには表示しない） */}
+          {isReplying && (
+            <div className="pt-1">
+              <CommentForm
+                value={replyBody}
+                onChange={setReplyBody}
+                onSubmit={handleReply}
+                onCancel={() => {
+                  setIsReplying(false);
+                  setReplyBody("");
+                }}
+                isPending={isReplyPending}
+                submitLabel="返信"
+                placeholder="返信を入力..."
+                members={members}
+                maxHeight="12rem"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -267,50 +211,60 @@ export function CommentList({
 
 type CommentItemProps = {
   comment: CommentWithProfile;
-  rootId: string;
   ticketId: string;
   projectId: string;
   currentUserId: string;
   members?: MentionMember[];
   initialReactions: CommentWithReactions;
-  editingId: string | null;
-  editBody: string;
-  deleteTargetId: string | null;
-  isEditPending: boolean;
-  isDeletePending: boolean;
-  onEditStart: (id: string, body: string) => void;
-  onEditBodyChange: (body: string) => void;
-  onEditSave: (id: string) => void;
-  onEditCancel: () => void;
-  onDeleteRequest: (id: string) => void;
-  onDeleteCancel: () => void;
-  onDeleteConfirm: (id: string) => void;
-  onReplyRequest: (rootId: string) => void;
+  onReply: () => void;
 };
 
 function CommentItem({
   comment,
-  rootId,
   ticketId,
   projectId,
   currentUserId,
   members,
   initialReactions,
-  editingId,
-  editBody,
-  deleteTargetId,
-  isEditPending,
-  isDeletePending,
-  onEditStart,
-  onEditBodyChange,
-  onEditSave,
-  onEditCancel,
-  onDeleteRequest,
-  onDeleteCancel,
-  onDeleteConfirm,
-  onReplyRequest,
+  onReply,
 }: CommentItemProps) {
-  const isEditing = editingId === comment.id;
+  const router = useRouter();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editBody, setEditBody] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isEditPending, startEditTransition] = useTransition();
+  const [isDeletePending, startDeleteTransition] = useTransition();
+
+  const handleEditStart = () => {
+    setEditBody(comment.body);
+    setIsEditing(true);
+  };
+
+  const handleEditSave = () => {
+    if (isHtmlEmpty(editBody)) return;
+    startEditTransition(async () => {
+      const result = await editComment(comment.id, editBody);
+      if ("error" in result) {
+        toast.error(result.error);
+      } else {
+        setIsEditing(false);
+        router.refresh();
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    startDeleteTransition(async () => {
+      const result = await removeComment(comment.id);
+      if ("error" in result) {
+        toast.error(result.error);
+      } else {
+        setDeleteOpen(false);
+        toast.success("コメントを削除しました");
+        router.refresh();
+      }
+    });
+  };
 
   // ソフトデリートされたコメントはプレースホルダーを表示
   if (comment.is_deleted) {
@@ -339,104 +293,141 @@ function CommentItem({
         </div>
 
         {isEditing ? (
-          <div className="space-y-2">
-            <RichTextEditor
-              value={editBody}
-              onChange={onEditBodyChange}
-              maxHeight="16rem"
-              editable={!isEditPending}
-              members={members}
-            />
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => onEditSave(comment.id)}
-                disabled={isEditPending || isHtmlEmpty(editBody)}
-              >
-                {isEditPending ? <LoaderCircle className="animate-spin" /> : "保存"}
-              </Button>
-              <Button variant="outline" size="sm" onClick={onEditCancel} disabled={isEditPending}>
-                キャンセル
-              </Button>
-            </div>
-          </div>
+          <CommentForm
+            value={editBody}
+            onChange={setEditBody}
+            onSubmit={handleEditSave}
+            onCancel={() => setIsEditing(false)}
+            isPending={isEditPending}
+            submitLabel="保存"
+            members={members}
+            align="start"
+          />
         ) : (
           <div className="min-h-6 whitespace-pre-wrap">
             <RichTextContent html={comment.body} />
           </div>
         )}
-        <div className="flex items-center gap-1 mt-1">
-          {/* 返信ボタン（編集中は非表示） */}
-          {!isEditing && (
+        {!isEditing && (
+          <div className="flex items-center gap-1 mt-1">
+            {/* 返信ボタン */}
             <Button
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-muted-foreground"
-              onClick={() => onReplyRequest(rootId)}
+              onClick={onReply}
               tooltip="返信"
             >
               <CornerDownRight className="h-3.5 w-3.5" />
             </Button>
-          )}
 
-          {/* リアクションボタン */}
-          <CommentReaction
-            commentId={comment.id}
-            ticketId={ticketId}
-            projectId={projectId}
-            currentUserId={currentUserId}
-            initialReactions={initialReactions[comment.id] ?? []}
-          />
+            {/* リアクションボタン */}
+            <CommentReaction
+              commentId={comment.id}
+              ticketId={ticketId}
+              projectId={projectId}
+              currentUserId={currentUserId}
+              initialReactions={initialReactions[comment.id] ?? []}
+            />
 
-          {/* 編集・削除ボタン（自分のコメントのみ） */}
-          {comment.user_id === currentUserId && !isEditing && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground"
-                onClick={() => onEditStart(comment.id, comment.body)}
-                disabled={isEditPending}
-                tooltip="編集"
-              >
-                <SquarePen className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-muted-foreground"
-                onClick={() => onDeleteRequest(comment.id)}
-                disabled={isDeletePending}
-                tooltip="削除"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-              <Dialog
-                open={deleteTargetId === comment.id}
-                onOpenChange={(open) => !open && onDeleteCancel()}
-              >
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>コメントを削除しますか？</DialogTitle>
-                    <DialogDescription>この操作は取り消せません。</DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={onDeleteCancel} disabled={isDeletePending}>
-                      キャンセル
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => onDeleteConfirm(comment.id)}
-                      disabled={isDeletePending}
-                    >
-                      {isDeletePending ? <LoaderCircle className="animate-spin" /> : "削除"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </>
-          )}
-        </div>
+            {/* 編集・削除ボタン（自分のコメントのみ） */}
+            {comment.user_id === currentUserId && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground"
+                  onClick={handleEditStart}
+                  disabled={isEditPending}
+                  tooltip="編集"
+                >
+                  <SquarePen className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-muted-foreground"
+                  onClick={() => setDeleteOpen(true)}
+                  disabled={isDeletePending}
+                  tooltip="削除"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+                <Dialog open={deleteOpen} onOpenChange={(open) => !open && setDeleteOpen(false)}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>コメントを削除しますか？</DialogTitle>
+                      <DialogDescription>この操作は取り消せません。</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setDeleteOpen(false)}
+                        disabled={isDeletePending}
+                      >
+                        キャンセル
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                        disabled={isDeletePending}
+                      >
+                        {isDeletePending ? <LoaderCircle className="animate-spin" /> : "削除"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type CommentFormProps = {
+  value: string;
+  onChange: (body: string) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  isPending: boolean;
+  submitLabel: string;
+  placeholder?: string;
+  members?: MentionMember[];
+  maxHeight?: string;
+  align?: "start" | "end";
+};
+
+function CommentForm({
+  value,
+  onChange,
+  onSubmit,
+  onCancel,
+  isPending,
+  submitLabel,
+  placeholder,
+  members,
+  maxHeight = "16rem",
+  align = "end",
+}: CommentFormProps) {
+  return (
+    <div className="space-y-2">
+      <RichTextEditor
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        maxHeight={maxHeight}
+        editable={!isPending}
+        members={members}
+      />
+      <div className={align === "start" ? "flex gap-2" : "flex justify-end gap-1"}>
+        <Button size="sm" onClick={onSubmit} disabled={isPending || isHtmlEmpty(value)}>
+          {isPending ? <LoaderCircle className="animate-spin" /> : submitLabel}
+        </Button>
+        <Button variant="outline" size="sm" onClick={onCancel} disabled={isPending}>
+          キャンセル
+        </Button>
       </div>
     </div>
   );

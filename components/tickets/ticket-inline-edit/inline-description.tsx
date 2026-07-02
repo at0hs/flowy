@@ -46,6 +46,9 @@ export function InlineDescription({
   if (isEditing) {
     return (
       <div className="space-y-2">
+        <p className="text-muted-foreground text-xs mb-1">
+          画像をドラッグ＆ドロップするとエディタに挿入されます
+        </p>
         <RichTextEditor
           value={draft}
           onChange={setDraft}
