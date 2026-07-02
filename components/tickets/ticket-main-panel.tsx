@@ -52,9 +52,7 @@ export function TicketMainPanel({ ticket, projectId }: Props) {
 
       {/* 説明 */}
       <div>
-        <p className="text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-          説明
-        </p>
+        <p className="text-sm font-medium mb-2 uppercase tracking-wide">説明</p>
         <p className="text-muted-foreground text-xs mb-1">
           画像をドラッグ＆ドロップするとエディタに挿入されます
         </p>

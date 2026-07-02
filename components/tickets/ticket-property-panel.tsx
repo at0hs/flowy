@@ -183,7 +183,7 @@ export function TicketPropertyPanel({
 function PropertyRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="py-1">
-      <p className="text-xs text-muted-foreground mb-1 px-1">{label}</p>
+      <p className="text-xs mb-1 px-1">{label}</p>
       {children}
     </div>
   );

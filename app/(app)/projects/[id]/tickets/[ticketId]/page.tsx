@@ -125,7 +125,7 @@ export default async function TicketDetailPage({ params }: Props) {
 
       {/* 2ペインレイアウト（単一スクロール） */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-8 py-6 flex gap-8 items-start">
+        <div className="max-w-5xl xl:max-w-7xl mx-auto px-8 py-6 flex gap-8 items-start">
           {/* 左カラム（メインエリア） */}
           <div className="flex-1 min-w-0">
             {/* タイトル・説明 */}
