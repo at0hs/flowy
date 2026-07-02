@@ -138,7 +138,7 @@ function SignupForm() {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 mb-4">
               <Label htmlFor="password">パスワード</Label>
               <Input
                 id="password"

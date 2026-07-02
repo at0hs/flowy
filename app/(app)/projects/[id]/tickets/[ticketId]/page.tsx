@@ -95,6 +95,7 @@ export default async function TicketDetailPage({ params }: Props) {
             >
               {project?.name ?? "プロジェクト"}
             </Link>
+            <ChevronRight className="w-4 h-4 shrink-0" />
             {parentTicket && (
               <>
                 <ChevronRight className="w-4 h-4 shrink-0" />
@@ -106,6 +107,12 @@ export default async function TicketDetailPage({ params }: Props) {
                 </Link>
               </>
             )}
+            <Link
+              href={`/projects/${id}/tickets/${ticket.id}`}
+              className="hover:underline hover:text-foreground transition-colors"
+            >
+              {ticket.title}
+            </Link>
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <AiAssistButton ticketId={ticketId} isAiConfigured={isAiConfigured} />
