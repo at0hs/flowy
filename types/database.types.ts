@@ -661,10 +661,6 @@ export type Database = {
         Args: { p_token: string; p_user_id: string };
         Returns: undefined;
       };
-      can_access_attachment_ticket: {
-        Args: { ticket_id: string };
-        Returns: boolean;
-      };
       can_access_ticket: { Args: { p_ticket_id: string }; Returns: boolean };
       create_invitation: {
         Args: { p_email: string; p_project_id: string };

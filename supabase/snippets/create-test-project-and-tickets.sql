@@ -9,7 +9,7 @@
 
 DO $$
 DECLARE
-  v_user_id   uuid := 'c84df6fb-11dd-481f-a709-a5bcb79b6659';  -- ← 自分の user_id に変更
+  v_user_id   uuid := '33bcfa71-fb05-40a3-9ba5-64255e5877d0';  -- ← 自分の user_id に変更
   v_project_id uuid := gen_random_uuid();
   v_t1_id     uuid := gen_random_uuid();
   v_t2_id     uuid := gen_random_uuid();

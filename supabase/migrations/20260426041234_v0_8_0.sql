@@ -34,23 +34,8 @@ CREATE TABLE ticket_activities (
 CREATE INDEX ticket_activities_ticket_id_idx ON ticket_activities(ticket_id, created_at DESC);
 
 -- ----------------------------------------
--- チケットIDからプロジェクトメンバーであるか確認する汎用関数
--- （ticket_id を持つ任意のテーブルの RLS で再利用可能）
--- ----------------------------------------
-CREATE OR REPLACE FUNCTION can_access_ticket(p_ticket_id uuid)
-  RETURNS boolean
-  AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM tickets
-    WHERE tickets.id = p_ticket_id
-    AND is_project_member(tickets.project_id)
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
--- ----------------------------------------
 -- ticket_activities の RLS ポリシー設定
+-- （can_access_ticket() は v0.6.0 で定義済み）
 -- ----------------------------------------
 ALTER TABLE ticket_activities ENABLE ROW LEVEL SECURITY;
 

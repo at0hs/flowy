@@ -19,7 +19,7 @@ CREATE TYPE ticket_priority AS ENUM(
 CREATE TABLE profiles(
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email text NOT NULL,
-  display_name text NOT NULL,
+  username text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -96,14 +96,14 @@ CREATE OR REPLACE FUNCTION handle_new_user()
   RETURNS TRIGGER
   AS $$
 BEGIN
-  INSERT INTO public.profiles(id, email, display_name)
-    VALUES(NEW.id, NEW.email, NEW.raw_user_meta_data ->> 'display_name' -- サインアップ時に渡すメタデータから取得
+  INSERT INTO public.profiles(id, email, username)
+    VALUES(NEW.id, NEW.email, NEW.raw_user_meta_data ->> 'username' -- サインアップ時に渡すメタデータから取得
 );
   RETURN NEW;
 END;
 $$
 LANGUAGE plpgsql
-SECURITY DEFINER;
+SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

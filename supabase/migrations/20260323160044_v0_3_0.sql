@@ -120,23 +120,6 @@ CREATE POLICY "comments: can delete own or project owner" ON comments
             t.id = comments.ticket_id AND is_project_owner(t.project_id)));
 
 -- ----------------------------------------
--- projects の RLS ポリシーを is_project_owner() ベースに更新
--- owner_id による直接比較から project_members.role = 'owner' チェックに変更し、
--- 後から昇格されたオーナーも操作できるようにする
--- ----------------------------------------
-DROP POLICY "owner can update" ON projects;
-
-DROP POLICY "owner can delete" ON projects;
-
-CREATE POLICY "owner can update" ON projects
-  FOR UPDATE
-    USING (is_project_owner(id));
-
-CREATE POLICY "owner can delete" ON projects
-  FOR DELETE
-    USING (is_project_owner(id));
-
--- ----------------------------------------
 -- project_members の RLS ポリシーに UPDATE を追加
 -- ----------------------------------------
 CREATE POLICY "owner can update members" ON project_members
@@ -319,9 +302,9 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- ----------------------------------------
--- moddatetime 拡張機能を有効化
+-- moddatetime 拡張機能を有効化（extensions スキーマ）
 -- ----------------------------------------
-CREATE EXTENSION IF NOT EXISTS "moddatetime";
+CREATE EXTENSION IF NOT EXISTS "moddatetime" WITH SCHEMA extensions;
 
 -- ----------------------------------------
 -- projects テーブルの updated_at 自動更新トリガー
@@ -329,7 +312,7 @@ CREATE EXTENSION IF NOT EXISTS "moddatetime";
 CREATE TRIGGER handle_updated_at
   BEFORE UPDATE ON projects
   FOR EACH ROW
-  EXECUTE FUNCTION moddatetime('updated_at');
+  EXECUTE FUNCTION extensions.moddatetime('updated_at');
 
 -- ----------------------------------------
 -- tickets テーブルの updated_at 自動更新トリガー
@@ -337,7 +320,7 @@ CREATE TRIGGER handle_updated_at
 CREATE TRIGGER handle_updated_at
   BEFORE UPDATE ON tickets
   FOR EACH ROW
-  EXECUTE FUNCTION moddatetime('updated_at');
+  EXECUTE FUNCTION extensions.moddatetime('updated_at');
 
 -- ----------------------------------------
 -- comments テーブルの updated_at 自動更新トリガー
@@ -345,4 +328,4 @@ CREATE TRIGGER handle_updated_at
 CREATE TRIGGER handle_updated_at
   BEFORE UPDATE ON comments
   FOR EACH ROW
-  EXECUTE FUNCTION moddatetime('updated_at');
+  EXECUTE FUNCTION extensions.moddatetime('updated_at');

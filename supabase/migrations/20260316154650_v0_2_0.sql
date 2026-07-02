@@ -1,31 +1,9 @@
 -- ============================================================
 -- v0.2.0 マイグレーション
--- - display_name を username にリネーム
 -- - project_members テーブルと project_role ENUM を追加
 -- - RLS ポリシーを project_members ベースに更新
--- - SECURITY DEFINER 関数の search_path 修正
 -- - メールアドレス自動同期トリガーを追加
 -- ============================================================
--- ----------------------------------------
--- profiles: display_name → username リネーム
--- ----------------------------------------
-ALTER TABLE public.profiles RENAME COLUMN display_name TO username;
-
--- ----------------------------------------
--- handle_new_user 関数の更新（username 対応 + search_path 修正）
--- ----------------------------------------
-CREATE OR REPLACE FUNCTION handle_new_user()
-  RETURNS TRIGGER
-  AS $$
-BEGIN
-  INSERT INTO public.profiles(id, email, username)
-    VALUES(NEW.id, NEW.email, NEW.raw_user_meta_data ->> 'username');
-  RETURN NEW;
-END;
-$$
-LANGUAGE plpgsql
-SECURITY DEFINER SET search_path = public;
-
 -- ----------------------------------------
 -- project_role ENUM 定義
 -- ----------------------------------------
@@ -168,17 +146,14 @@ CREATE POLICY "owner can create" ON projects
       SELECT
         auth.uid()) = owner_id);
 
+-- UPDATE/DELETE は is_project_owner() ベース（後から昇格されたオーナーも操作可）
 CREATE POLICY "owner can update" ON projects
   FOR UPDATE
-    USING ((
-      SELECT
-        auth.uid()) = owner_id);
+    USING (is_project_owner(id));
 
 CREATE POLICY "owner can delete" ON projects
   FOR DELETE
-    USING ((
-      SELECT
-        auth.uid()) = owner_id);
+    USING (is_project_owner(id));
 
 -- ----------------------------------------
 -- RLS ポリシー: project_members

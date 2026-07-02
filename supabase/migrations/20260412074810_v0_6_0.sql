@@ -33,16 +33,16 @@ CREATE TABLE attachments (
 CREATE INDEX attachments_ticket_id_idx ON attachments(ticket_id);
 
 -- ----------------------------------------
--- 添付ファイルアクセス権限確認関数
--- チケットIDからプロジェクトメンバーであるか確認
+-- チケットIDからプロジェクトメンバーであるか確認する汎用関数
+-- （ticket_id を持つ任意のテーブルの RLS で再利用可能）
 -- ----------------------------------------
-CREATE OR REPLACE FUNCTION can_access_attachment_ticket(ticket_id uuid)
+CREATE OR REPLACE FUNCTION can_access_ticket(p_ticket_id uuid)
   RETURNS boolean
   AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM tickets
-    WHERE tickets.id = $1
+    WHERE tickets.id = p_ticket_id
     AND is_project_member(tickets.project_id)
   );
 END;
@@ -53,26 +53,26 @@ ALTER TABLE attachments ENABLE ROW LEVEL SECURITY;
 -- プロジェクトのメンバーのみ操作可能
 CREATE POLICY "attachments: project members can read" ON attachments
   FOR SELECT
-    USING (can_access_attachment_ticket(ticket_id));
+    USING (can_access_ticket(ticket_id));
 
 CREATE POLICY "attachments: project members can create" ON attachments
   FOR INSERT
     WITH CHECK (
       (SELECT auth.uid()) = uploaded_by
-      AND can_access_attachment_ticket(ticket_id)
+      AND can_access_ticket(ticket_id)
     );
 
 CREATE POLICY "attachments: project members can update" ON attachments
   FOR UPDATE
-    USING (can_access_attachment_ticket(ticket_id))
+    USING (can_access_ticket(ticket_id))
     WITH CHECK (
       (SELECT auth.uid()) = uploaded_by
-      AND can_access_attachment_ticket(ticket_id)
+      AND can_access_ticket(ticket_id)
     );
 
 CREATE POLICY "attachments: project members can delete" ON attachments
   FOR DELETE
-    USING (can_access_attachment_ticket(ticket_id));
+    USING (can_access_ticket(ticket_id));
 
 
 -- ----------------------------------------
