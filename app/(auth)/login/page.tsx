@@ -2,12 +2,20 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { logger } from "@/lib/logger";
 import { acceptInvitationAction } from "@/app/(auth)/actions";
 import { LoaderCircle } from "lucide-react";
@@ -64,10 +72,16 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>ログイン</CardTitle>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-linear-to-b from-muted/40 to-background px-4">
+      <Link href="/" className="flex flex-col items-center gap-3">
+        <Image src="/logo.png" alt="Flowy" width={56} height={56} />
+        <span className="text-2xl font-bold tracking-tight">Flowy</span>
+      </Link>
+
+      <Card className="w-full max-w-sm shadow-lg py-6">
+        <CardHeader className="gap-1.5 text-center">
+          <CardTitle className="text-xl font-semibold">ログイン</CardTitle>
+          <CardDescription>アカウントにログインして続ける</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleLogin}>
@@ -80,6 +94,7 @@ function LoginForm() {
                 id="email"
                 type="email"
                 autoComplete="email"
+                className="h-10"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -92,6 +107,7 @@ function LoginForm() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
+                className="h-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -99,13 +115,16 @@ function LoginForm() {
             </div>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+          <CardFooter className="flex flex-col gap-3 border-t-0 bg-transparent">
+            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
               {isLoading ? <LoaderCircle className="animate-spin" /> : "ログイン"}
             </Button>
             <p className="text-sm text-muted-foreground">
               アカウントをお持ちでない方は{" "}
-              <Link href={token ? `/signup?token=${token}` : "/signup"} className="underline">
+              <Link
+                href={token ? `/signup?token=${token}` : "/signup"}
+                className="text-primary underline underline-offset-4"
+              >
                 サインアップ
               </Link>
             </p>

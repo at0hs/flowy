@@ -2,12 +2,20 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { logger } from "@/lib/logger";
 import { confirmEmailAndAcceptInvitationAction } from "@/app/(auth)/actions";
 import { LoaderCircle } from "lucide-react";
@@ -81,10 +89,15 @@ function SignupForm() {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle>確認メールを送信しました</CardTitle>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-linear-to-b from-muted/40 to-background px-4">
+        <Link href="/" className="flex flex-col items-center gap-3">
+          <Image src="/logo.png" alt="Flowy" width={56} height={56} />
+          <span className="text-2xl font-bold tracking-tight">Flowy</span>
+        </Link>
+
+        <Card className="w-full max-w-sm shadow-lg py-6">
+          <CardHeader className="gap-1.5 text-center">
+            <CardTitle className="text-xl font-semibold">確認メールを送信しました</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <p>
@@ -93,7 +106,7 @@ function SignupForm() {
             </p>
             <p>メール内のリンクをクリックして、メールアドレスを認証してください。</p>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="border-t-0 bg-transparent">
             <p className="text-sm text-muted-foreground">
               メールが届かない場合はスパムフォルダをご確認ください。
             </p>
@@ -104,10 +117,16 @@ function SignupForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>サインアップ</CardTitle>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-8 bg-linear-to-b from-muted/40 to-background px-4">
+      <Link href="/" className="flex flex-col items-center gap-3">
+        <Image src="/logo.png" alt="Flowy" width={56} height={56} />
+        <span className="text-2xl font-bold tracking-tight">Flowy</span>
+      </Link>
+
+      <Card className="w-full max-w-sm shadow-lg py-6">
+        <CardHeader className="gap-1.5 text-center">
+          <CardTitle className="text-xl font-semibold">サインアップ</CardTitle>
+          <CardDescription>アカウントを作成して始める</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSignup}>
@@ -120,6 +139,7 @@ function SignupForm() {
                 id="username"
                 type="text"
                 autoComplete="username"
+                className="h-10"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -132,6 +152,7 @@ function SignupForm() {
                 id="email"
                 type="email"
                 autoComplete="email"
+                className="h-10"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -144,6 +165,7 @@ function SignupForm() {
                 id="password"
                 type="password"
                 autoComplete="new-password"
+                className="h-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -151,13 +173,16 @@ function SignupForm() {
             </div>
           </CardContent>
 
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+          <CardFooter className="flex flex-col gap-3 border-t-0 bg-transparent">
+            <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
               {isLoading ? <LoaderCircle className="animate-spin" /> : "サインアップ"}
             </Button>
             <p className="text-sm text-muted-foreground">
               すでにアカウントをお持ちの方は{" "}
-              <Link href={token ? `/login?token=${token}` : "/login"} className="underline">
+              <Link
+                href={token ? `/login?token=${token}` : "/login"}
+                className="text-primary underline underline-offset-4"
+              >
                 ログイン
               </Link>
             </p>
