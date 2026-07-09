@@ -23,6 +23,8 @@ import { NotificationDropdown } from "@/components/notifications/notification-dr
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { NotificationWithDetails } from "@/types";
 
+const SIDEBAR_COOKIE_NAME = "flowy_sidebar_collapsed";
+
 interface SidebarProps {
   projects: Array<{
     id: string;
@@ -35,30 +37,36 @@ interface SidebarProps {
   };
   unreadCount: number;
   notifications: NotificationWithDetails[];
+  // サーバー側（Cookie）から読み取った初期開閉状態。未設定時は展開状態を既定とする
+  initialCollapsed?: boolean;
 }
 
-export function Sidebar({ projects, userProfile, unreadCount, notifications }: SidebarProps) {
+export function Sidebar({
+  projects,
+  userProfile,
+  unreadCount,
+  notifications,
+  initialCollapsed = false,
+}: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  // サーバー側の初回描画と一致させるため、初期値はサーバーと同じ false にしておく
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  // サーバー側で Cookie から読み取った値と一致させることで、
+  // PC幅でのリロード時にチラつきが起きないようにする
+  const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
 
-  // マウント後（ブラウザ側でのみ）に実際の画面幅を見て正しい状態へ補正する
-  // window.innerWidth / localStorage はサーバーには存在しない外部情報のため、
-  // hydration 完了後にしか読み取れない（= 初回描画で読むと SSR とのミスマッチが起きる）
+  // マウント後（ブラウザ側でのみ）にモバイル/タブレット幅なら強制的に閉じる
+  // window.innerWidth はサーバーには存在しない情報のため、hydration 完了後にしか読み取れない
   useEffect(() => {
     if (window.innerWidth < 1280) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCollapsed(true);
-    } else {
-      setIsCollapsed(localStorage.getItem("flowy_sidebar_collapsed") === "true");
     }
   }, []);
 
   const toggleCollapse = (value: boolean) => {
     setIsCollapsed(value);
     if (window.innerWidth >= 1280) {
-      localStorage.setItem("flowy_sidebar_collapsed", String(value));
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${value}; path=/; max-age=31536000; SameSite=Lax`;
     }
   };
 

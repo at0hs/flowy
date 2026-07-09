@@ -50,7 +50,7 @@ export function AddMemberForm({ projectId, onMemberAdded }: Props) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         disabled={isLoading}
-        className="flex-1"
+        className="flex-1 bg-white"
       />
       <Button type="submit" disabled={isLoading || !email.trim()}>
         {isLoading ? <LoaderCircle className="animate-spin" /> : "招待"}

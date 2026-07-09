@@ -1,6 +1,9 @@
 {
   "name": "flowy",
   "version": "0.9.0",
+  "license": "MIT",
+  "author": {"name": "atohs"},
+  "repository": "git@github.com:atohs/flowy.git",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3111",

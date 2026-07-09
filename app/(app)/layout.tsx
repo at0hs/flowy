@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { getUserProjects, getUserProfile } from "@/lib/supabase/projects";
 import { getUnreadCount, getNotifications } from "@/lib/supabase/notifications";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // ユーザープロフィールとプロジェクト一覧を取得
@@ -15,11 +16,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     notFound();
   }
 
-  const [projects, unreadCount, notifications] = await Promise.all([
+  const [projects, unreadCount, notifications, cookieStore] = await Promise.all([
     getUserProjects(),
     getUnreadCount(userProfile.id),
     getNotifications(userProfile.id, 20),
+    cookies(),
   ]);
+  const initialCollapsed = cookieStore.get("flowy_sidebar_collapsed")?.value === "true";
 
   return (
     <div className="flex h-screen bg-background">
@@ -29,6 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         userProfile={userProfile}
         unreadCount={unreadCount}
         notifications={notifications}
+        initialCollapsed={initialCollapsed}
       />
 
       {/* メインコンテンツエリア */}
