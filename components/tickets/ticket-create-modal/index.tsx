@@ -262,7 +262,7 @@ export function TicketCreateModal({
           </Button>
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="sm:max-w-4xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>チケット作成</DialogTitle>
           <DialogDescription className="text-xs">
