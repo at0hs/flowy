@@ -63,20 +63,21 @@ IMPORTANT:
 - 未確認なら「未確認」と明示し、読む/調べる/質問するのどれかに倒す。
 
 ## 参照ドキュメント
-必要に応じて、以下のドキュメントを参照してください。
-- 要件定義: @flowy-doc/requirements.md
-- アーキテクチャ、ディレクトリ構成、設計方針、環境構成: @flowy-doc/architecture.md
-- データベース設計書: @flowy-doc/database_design.md
-- 画面設計: @flowy-doc/screen_design.md
+必要に応じて、以下のドキュメントを参照してください（`flowy-docs/` は別ワークスペースの Obsidian Vault 内）。
+- 要件定義: @flowy-docs/requirements.md
+- アーキテクチャ、ディレクトリ構成、設計方針、環境構成: @flowy-docs/architecture.md
+- データベース設計書: @flowy-docs/database_design.md
+- 画面設計: @flowy-docs/screen_design.md
+- バージョンごとの仕様（最新は v1.0.0）: @flowy-docs/v1.0.0/SPEC_v1.0.0.md
 - コーディング規約: @.prettierrc
 
 ## Commands
 
 ```bash
 # Development
-npm run dev          # Start Next.js dev server (localhost:3111)
-npm run build        # Production build
-npm run lint         # Run ESLint
+npm run dev          # Next.js dev server 起動 (localhost:3111)
+npm run build        # 本番ビルド
+npm run lint         # ESLint 実行
 npm run type-check   # TypeScript 型チェック (tsc --noEmit)
 npm run format       # Prettier フォーマット適用
 npm run format:check # Prettier フォーマット確認
@@ -86,34 +87,38 @@ npm run validate     # check + build を一括実行
 # E2E testing (Playwright) ※ローカルSupabaseの起動が前提
 npm run test:e2e     # Playwright E2E テスト実行 (headless)
 npm run test:e2e:ui  # Playwright E2E テスト実行 (UIモード)
+# 単体実行例: npx playwright test tests/e2e/s2-ticket-crud.spec.ts
 
 # Email development (React Email)
 npm run email:dev    # React Email 開発サーバー起動 (emails/ ディレクトリ)
 npm run build:emails # React Email テンプレートを supabase/templates/ に HTML ビルド
 
 # Supabase local development (requires Docker)
-npm run sb:start     # Start local Supabase (DB, Auth, Studio)
-npm run sb:stop      # Stop local Supabase
+npm run sb:start     # Local Supabase 起動 (DB, Auth, Studio, Storage)
+npm run sb:stop      # Local Supabase 停止
 npm run sb:status    # Supabase 動作状態確認
-npm run sb:reset     # Reset DB and re-run all migrations
+npm run sb:reset     # DB リセット・全マイグレーション再実行
 npm run sb:push      # DB スキーマをリモートに push
 npm run sb:lint      # DB スキーマの lint チェック
 npm run sb:migration # sb:reset + sb:lint + gen:types を一括実行（マイグレーション後の定番フロー）
 npm run sb:func-serve  # Supabase Edge Functions をローカルで起動
-supabase migration new <name>   # Create a new migration file
+supabase migration new <name>   # 新規マイグレーションファイル作成
 
 # Type generation
-npm run gen:types    # Generate TypeScript types from Supabase schema
+npm run gen:types    # Supabase スキーマから TypeScript 型を生成 (types/database.types.ts)
 ```
 
 ## Architecture
 
-**Flowy** はJira風のチケット管理Webアプリ。Next.js 16 App Router + Supabase (PostgreSQL + Auth) で構成される。
+**Flowy** はJira風のチケット管理Webアプリ（現行バージョン v1.0.0）。Next.js 16 App Router + Supabase (PostgreSQL + Auth + Storage) で構成される。
 
 ### Directory layout
 
 ```
 app/
+├── (landing)/       # ランディングページ（認証不要、認証ガード外）
+│   ├── layout.tsx   # Navbar・Footer を含む共通レイアウト
+│   └── page.tsx     # ランディングページ本体 (/)
 ├── (auth)/          # 認証ガード外（未認証ユーザー向け）
 │   ├── login/
 │   ├── signup/
@@ -121,105 +126,110 @@ app/
 │   └── actions.ts   # signOut
 ├── (app)/           # アプリ本体（認証ガード済み）
 │   ├── layout.tsx   # サイドバー、Toaster
+│   ├── dashboard/   # ダッシュボード（自分のチケット・進捗・最近のアクティビティ・未読通知）
 │   ├── notifications/
 │   │   └── actions.ts            # 通知既読・全既読 Server Actions
 │   ├── projects/
-│   │   ├── actions.ts            # プロジェクト・メンバー・招待関連 Server Actions
+│   │   ├── actions.ts            # プロジェクト・チケット・メンバー・招待・タグ・リアクション関連 Server Actions
 │   │   ├── new/
 │   │   └── [id]/
-│   │       ├── actions.ts        # チケット・ウォッチ・通知関連 Server Actions
+│   │       ├── page.tsx          # チケット一覧（テーブル/カンバン/ガントの切替）
 │   │       ├── edit/
-│   │       ├── members/          # メンバー管理UI
-│   │       └── tickets/[ticketId]/
-│   └── settings/
-├── api/auth/logout/route.ts
+│   │       ├── settings/         # プロジェクト設定（左サイドメニュー）
+│   │       │   ├── members/      # メンバー管理（旧 /projects/[id]/members から移設）
+│   │       │   └── fields/       # フィールド設定（タグ管理）
+│   │       └── tickets/[ticketId]/   # チケット詳細（2ペイン: メインエリア＋プロパティサイドバー）
+│   └── settings/                 # ユーザー設定（左サイドメニュー）
+│       ├── account/              # プロフィール編集・パスワード変更・アバターアップロード
+│       ├── notifications/        # メール通知ON/OFF設定（種別ごと）
+│       └── integrations/         # Slack Webhook URL・AI プロバイダー設定
+└── api/auth/logout/route.ts
 components/
 ├── ui/              # shadcn/ui コンポーネント (radix-nova スタイル)
-├── layout/
-├── sidebar/
-├── projects/
+├── layout/, sidebar/, landing/, dashboard/, settings/
+├── projects/settings/  # プロジェクト設定ナビ・タグマネージャー
+├── account/         # アバターアップロードUI
 ├── editor/
-│   ├── rich-text-editor.tsx  # Tiptap エディタ本体（固定ツールバー付き）
-│   ├── editor-toolbar.tsx    # 固定ツールバーコンポーネント
+│   ├── rich-text-editor.tsx  # Tiptap エディタ本体（固定ツールバー・画像D&D・@メンション対応）
+│   ├── editor-toolbar.tsx
 │   └── rich-text-content.tsx # HTML表示用（DOMPurify でサニタイズして dangerouslySetInnerHTML）
-├── notifications/
-│   ├── notification-bell.tsx      # ベルアイコン + 未読数バッジ
-│   └── notification-dropdown.tsx  # 通知一覧ドロップダウン（無限スクロール）
+├── notifications/   # ベルアイコン + 未読数バッジ / 通知一覧ドロップダウン
 ├── tickets/
-│   ├── ticket-table.tsx
-│   ├── ticket-filters.tsx
-│   ├── ticket-watch-button.tsx    # ウォッチ/解除ボタン（楽観的更新）
-│   ├── ticket-create-modal/  # チケット作成モーダル (Dialog ベース)
-│   ├── subtask-section/      # サブタスク一覧 + 追加ボタン（チケット詳細用）
-│   ├── comment-list/         # コメント一覧・投稿・返信・編集・削除
-│   ├── ai-assist/            # AIアシストボタン（Vercel AI SDK 使用）
-│   └── ticket-inline-edit/   # チケット詳細インライン編集
+│   ├── ticket-table.tsx / ticket-filters.tsx / tag-select.tsx
+│   ├── kanban/          # カンバンビュー（dnd-kit）
+│   ├── gantt/           # ガントチャートビュー（自前実装）
+│   ├── ticket-watch-button.tsx
+│   ├── ticket-create-modal/  # チケット作成モーダル（コピー機能用に defaultValues 対応）
+│   ├── subtask-section/, attachment-section/, activity-section/
+│   ├── comment-list/    # コメント一覧・投稿・返信・編集・削除・リアクション(comment-reaction.tsx)
+│   ├── ai-assist/       # 要約・サブタスク提案（Vercel AI SDK 使用）
+│   └── ticket-inline-edit/   # プロパティサイドバー用インライン編集
 │       ├── index.tsx          # 楽観的更新ロジック
-│       ├── inline-title.tsx
-│       ├── inline-description.tsx  # Tiptap エディタ使用
-│       ├── inline-status.tsx
-│       ├── inline-assignee.tsx
-│       └── inline-priority.tsx
+│       ├── inline-title.tsx / inline-description.tsx / inline-status.tsx
+│       ├── inline-assignee.tsx / inline-priority.tsx / inline-tags.tsx
 └── members/
-    ├── add-member-form.tsx      # メンバー招待フォーム
-    ├── delete-member-button.tsx
-    └── change-role-button.tsx
+    ├── add-member-form.tsx / delete-member-button.tsx / change-role-button.tsx
 lib/
 ├── supabase/
-│   ├── client.ts         # ブラウザ用クライアント (createBrowserClient)
-│   ├── server.ts         # サーバー用クライアント (createServerClient + cookies())
-│   ├── admin.ts          # Supabase Admin クライアント（サービスロールキー使用）
-│   ├── projects.ts       # プロジェクト・プロフィール取得関数
-│   ├── members.ts        # メンバー取得・権限確認 (getProjectMembers, isProjectOwner)
-│   ├── tickets.ts        # チケット取得関数
-│   ├── comments.ts       # コメント CRUD (CommentWithProfile 型を含む)
-│   ├── invitations.ts    # 招待トークン検証・受け入れ
-│   ├── watches.ts        # ウォッチ取得・操作関数
-│   └── notifications.ts  # 通知取得・既読更新関数
-├── email.ts          # Resend API 経由メール送信
-├── utils.ts          # cn() 関数
-├── logger.ts         # 環境別ロギングユーティリティ
-└── validations.ts    # Zod バリデーションスキーマ
+│   ├── client.ts / server.ts / admin.ts
+│   ├── projects.ts / members.ts / tickets.ts / comments.ts / invitations.ts
+│   ├── watches.ts / notifications.ts / notification-settings.ts
+│   ├── attachments.ts / activities.ts / tags.ts / reactions.ts / dashboard.ts
+├── email.ts        # Resend API 経由メール送信
+├── slack.ts         # Slack Incoming Webhook 送信
+├── storage.ts        # Supabase Storage 操作
+├── ai.ts             # AI処理（要約・サブタスク提案）
+├── encryption.ts      # AI APIキー等の暗号化/復号
+├── ticket-config.ts   # ステータス/優先度/カテゴリのラベル・アイコン等の定義
+├── constants.ts / date.ts / file-icons.tsx
+├── utils.ts           # cn() 関数
+├── logger.ts          # 環境別ロギングユーティリティ
+└── validations.ts     # Zod バリデーションスキーマ
 types/
 ├── database.types.ts  # supabase gen types で自動生成
-└── index.ts           # 型エクスポート (Profile, Project, Ticket, Invitation, Comment 等)
-emails/
-├── invitation.tsx       # 招待メールテンプレート
-├── notification.tsx     # 通知メールテンプレート
-├── confirm-signup.tsx   # サインアップ確認メールテンプレート
-└── change-email.tsx     # メールアドレス変更確認テンプレート
-proxy.ts             # 認証ミドルウェア (Next.js middleware)
-scripts/
-└── build-emails.ts  # React Email → supabase/templates/ へ HTML ビルド（Supabase Auth メールカスタマイズ用）
+└── index.ts            # 型エクスポート
+emails/                 # invitation / notification / confirm-signup / change-email テンプレート
+proxy.ts                # 認証ミドルウェア (Next.js middleware)
+scripts/build-emails.ts # React Email → supabase/templates/ へ HTML ビルド
 supabase/
-├── migrations/      # タイムスタンプ付きSQLマイグレーション
-└── templates/       # build:emails で生成した Auth メール HTML（自動生成、手動編集不可）
-tests/
-└── e2e/             # Playwright E2E テスト
-    ├── auth.setup.ts        # 認証状態セットアップ（DBリセット + ログイン → playwright/.auth/user.json 保存）
-    ├── fixtures/            # テスト用フィクスチャ
-    ├── helpers/db.ts        # DB リセットヘルパー
-    └── s*.spec.ts           # シナリオ別テストファイル（s1: プロジェクト, s2: チケットCRUD, etc.）
+├── migrations/         # タイムスタンプ付きSQLマイグレーション
+├── functions/          # Edge Functions（cronバッチ）
+│   ├── deadline-notification/  # 期限切れ通知バッチ
+│   ├── email-notification/     # 通知メール一括送信バッチ（15分ごと）
+│   └── _shared/                # メールテンプレート等の共有コード
+└── templates/          # build:emails で生成した Auth メール HTML（自動生成、手動編集不可）
+tests/e2e/
+    ├── auth.setup.ts        # DB リセット + UIログイン → playwright/.auth/user.json 保存
+    ├── fixtures/, helpers/db.ts
+    └── s*.spec.ts           # シナリオ別テスト（s1: プロジェクト, s2: チケットCRUD, s3: インライン編集, s4: コメント）
 ```
 
 ### Key patterns
 
 - **Server Components優先**: デフォルトはServer Component。インタラクションが必要な箇所のみ `'use client'` を付ける
-- **Supabaseクライアントの使い分け**: Server Components・Route Handlers では `lib/supabase/server.ts`、Client Components では `lib/supabase/client.ts` を使う
+- **Supabaseクライアントの使い分け**: Server Components・Route Handlers・Server Actions では `lib/supabase/server.ts`、Client Components では `lib/supabase/client.ts`、RLSをバイパスする管理操作には `lib/supabase/admin.ts`（サービスロールキー使用）を使う
 - **Server Actions**: データ変更は `'use server'` の actions.ts で実装。変更後は `revalidatePath()` でキャッシュ削除し `redirect()` でナビゲーション
 - **バリデーション**: `lib/validations.ts` の Zod スキーマでフォームデータを検証
-- **状態管理**: グローバル状態ライブラリ未導入
+- **状態管理**: グローバル状態ライブラリ未導入（必要になるまで追加しない方針）
 - **エラーハンドリング**: ページレベルは `error.tsx`、APIエラーは `sonner` のトースト通知
-- **ロギング**: `lib/logger.ts` 経由で環境別ログ出力
+- **ロギング**: `lib/logger.ts` の `logger` オブジェクト経由（`console.*` 直接呼び出し禁止）。本番クライアントでは debug/info/warn を出力しない
 - **インライン編集**: `ticket-inline-edit/` のパターン。クリックで編集モード切替、Enter/blur で保存、Escape でキャンセル。二重送信防止に `isSavingRef` を使用
-- **楽観的更新**: `useTransition` + Server Action。即座にローカル状態を更新し、失敗時はロールバック → `router.refresh()` で再検証
+- **楽観的更新**: `useTransition` + Server Action。即座にローカル状態を更新し、失敗時はロールバック → `router.refresh()` で再検証（カンバンD&D、ガントの日程変更、コメントリアクションも同様のパターン）
 - **モーダル + Server Action**: `Dialog` コンポーネント + FormData で Server Action を呼び出すパターン（ticket-create-modal）
-- **メール送信フロー**: Server Action 内で招待レコード作成 → `lib/email.ts` 経由で Resend 送信 → 失敗時は招待レコード削除（ロールバック）
-- **リッチテキスト**: Tiptap で編集、HTML文字列として保存。表示時は `rich-text-content.tsx` が DOMPurify でサニタイズしてから `dangerouslySetInnerHTML` で描画
-- **通知発行**: Server Action 内でチケット更新後に `notify_watchers()` SECURITY DEFINER関数を呼び出してウォッチユーザーへ一括通知レコード挿入。担当者割り当ては直接 `notifications` テーブルに INSERT
+- **メール送信フロー**: 招待メールは Server Action 内で即時送信（`lib/email.ts` 経由）。それ以外の通知メールは Edge Function のバッチ処理で送信（即時送信は行わない）
+- **リッチテキスト**: Tiptap で編集、HTML文字列として保存（`description`・`body` カラム）。表示時は `rich-text-content.tsx` が DOMPurify でサニタイズしてから `dangerouslySetInnerHTML` で描画。@メンションは `data-mention-id` 属性に埋め込む
+- **通知発行**: Server Action 内でチケット更新後に `notify_watchers()` SECURITY DEFINER関数を呼び出してウォッチユーザーへ一括通知レコード挿入。担当者割り当ては直接 `notifications` テーブルに INSERT。メール送信は行わずレコード作成のみ（バッチが拾う）
 - **ウォッチ**: `ticket_watches` テーブルで管理。チケット作成時にトリガーで作成者を自動ウォッチ。`ticket-watch-button.tsx` で楽観的更新
-- **AIアシスト**: Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/openai`) を使用。`components/tickets/ai-assist/` 以下に実装
-- **E2Eテスト**: Playwright を使用（`tests/e2e/`）。実行前にローカル Supabase (`npm run sb:start`) が必要。`auth.setup.ts` が DB をリセットし `test@example.com` / `password123` でログイン状態を生成する。認証状態は `playwright/.auth/user.json` にキャッシュされる
+- **アクティビティ履歴**: チケット更新・作成・コメント投稿と同時に Server Action 内で `ticket_activities` テーブルへ INSERT。取得は `lib/supabase/activities.ts`。チケット詳細の「コメント/アクティビティ」タブで表示
+- **AIアシスト**: Vercel AI SDK (`ai`, `@ai-sdk/google`, `@ai-sdk/openai`) を使用。Gemini・OpenRouter に対応。APIキーは `lib/encryption.ts` で暗号化して `profiles.ai_api_key` に保存
+- **Slack連携**: `profiles.slack_webhook_url` が設定されている場合のみ `lib/slack.ts` 経由で Incoming Webhook に通知をPOST
+- **添付ファイル**: Supabase Storage の `attachments` バケット（`{project_id}/{ticket_id}/{uuid}.{拡張子}`）。メタデータは `attachments` テーブルで管理。Tiptap の Image エクステンションで画像D&D対応
+- **アバター**: Supabase Storage の `avatars` バケット（`{user_id}/avatar.{拡張子}`）。パスは `profiles.avatar_file_path`。2MB・JPEG/PNG/WebPのみ、公開読み取り可
+- **タグ**: プロジェクト単位（`tags` テーブル）、チケットとは `ticket_tags` で多対多。作成・編集・削除はプロジェクト設定の `fields` ページから
+- **カンバン/ガント**: カンバンは dnd-kit（`DndContext` → `SortableContext`/`useDroppable` → `useDraggable`）でステータス変更。ガントは自前実装（`gantt-task-react` は React 19 非対応のため不採用）でバードラッグにより `start_date`/`due_date` を更新
+- **ランディング/認証ルーティング**: `proxy.ts`（ミドルウェア）が制御。未認証で `/` はランディング表示、未認証で他の保護URLは `/login` へ、認証済みで `/` `/login` `/signup` は `/dashboard` へリダイレクト（Server Action呼び出し `Next-Action` ヘッダーがある場合はリダイレクトしない）
+- **レスポンシブ**: アプリ本体は `xl`（1280px）をブレークポイントとし、それ未満ではサイドバー折り畳みを強制（`localStorage` の折り畳み状態は 1280px 以上でのみ永続化）
+- **E2Eテスト**: Playwright を使用（`tests/e2e/`）。実行前にローカル Supabase (`npm run sb:start`) が必要。`auth.setup.ts` が DB をリセットし `test@example.com` / `password123` でログイン状態を生成する。認証状態は `playwright/.auth/user.json` にキャッシュされる。対象は「壊れたら致命的」な4シナリオ（プロジェクト作成、チケットCRUD、インライン編集、コメント投稿）。認証フロー自体（メール確認が絡む）はテスト対象外
 
 ### UI / Styling
 
@@ -235,21 +245,29 @@ tests/
 
 | Table | Description |
 |-------|-------------|
-| `profiles` | ユーザープロフィール (auth.usersと1:1, `username`, `email`) |
+| `profiles` | ユーザープロフィール (auth.usersと1:1、`slack_webhook_url`・`ai_provider`/`ai_api_key`/`ai_model_name`・`avatar_file_path` を含む) |
 | `projects` | プロジェクト (`owner_id` で RLS 制御) |
 | `project_members` | プロジェクトメンバー (`role: 'owner' \| 'member'`) |
-| `tickets` | チケット (`status: todo/in_progress/done`, `priority: low/medium/high/urgent`, `assignee_id`, `parent_id`) |
-| `invitations` | プロジェクト招待 (`token`, `status: pending/accepted/expired`, 有効期限付き) |
+| `tickets` | チケット (`status: todo/in_progress/done`, `priority: low/medium/high/urgent`, `category: bug/task/feature/improvement`, `assignee_id`, `parent_id`, `start_date`, `due_date`) |
 | `comments` | チケットコメント (`reply_to_id` で返信対応、`is_deleted` でソフトデリート) |
+| `invitations` | プロジェクト招待 (`token`, `status: pending/accepted/expired`, 有効期限付き) |
 | `ticket_watches` | チケットウォッチ (`ticket_id`, `user_id`, UNIQUE制約) |
-| `notifications` | 通知 (`type`, `is_read`, `actor_id`, `metadata` jsonb、30日表示制限) |
+| `notifications` | 通知 (`type`, `is_read`, `actor_id`, `metadata` jsonb, `email_sent_at`) |
+| `notification_settings` | ユーザーごとの通知種別ON/OFF設定 |
+| `attachments` | チケット添付ファイルのメタデータ（本体は Supabase Storage） |
+| `ticket_activities` | チケットの操作履歴（アクティビティタブ表示用） |
+| `tags` | プロジェクト内共有タグ |
+| `ticket_tags` | チケットとタグの中間テーブル |
+| `comment_reactions` | コメントへのリアクション（スタンプ、絵文字10種類固定） |
 
 - 全テーブルでRLS (Row Level Security) 有効。`project_members` をベースに多層的なポリシーを実装
 - サインアップ時にDBトリガーで `profiles` レコードを自動生成（`raw_user_meta_data` から `username` を取得）
 - `SECURITY DEFINER` 関数：`accept_invitation()`, `create_invitation()`, `remove_member_from_project()`, `notify_watchers()`, `is_email_registered()`, `is_project_member()`, `is_project_owner()`
 - マイグレーションは `supabase/migrations/` にタイムスタンプ付きSQLで管理
 - `types/database.types.ts` は `npm run gen:types` で再生成
+- 詳細なスキーマ・ENUM定義・トリガー・RLSポリシーは @flowy-docs/database_design.md を参照
 
 ### Auth flow
 
-- `proxy.ts` がミドルウェアとして動作：未認証ユーザーを `/login` へ、認証済みユーザーが `/` `/login` `/signup` アクセス時は `/dashboard` へリダイレクト
+- `proxy.ts` がミドルウェアとして動作：未認証ユーザーが `/`（ランディング）以外の保護URLへアクセス→ `/login` へ、認証済みユーザーが `/` `/login` `/signup` アクセス時は `/dashboard` へリダイレクト
+- 通常サインアップはメール確認必須。招待経由のサインアップはメール確認をスキップし即座にプロジェクトメンバーへ追加
