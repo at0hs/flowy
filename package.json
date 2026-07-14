@@ -1,9 +1,11 @@
 {
   "name": "flowy",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "license": "MIT",
-  "author": {"name": "atohs"},
-  "repository": "git@github.com:atohs/flowy.git",
+  "author": {
+    "name": "atohs"
+  },
+  "repository": "git@github.com:at0hs/flowy.git",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3111",
@@ -83,7 +85,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "supabase": "^2.84.4",
+    "supabase": "^2.109.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.4",
     "typescript": "^5"

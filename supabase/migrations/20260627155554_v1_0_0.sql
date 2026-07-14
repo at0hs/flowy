@@ -51,3 +51,26 @@ CREATE POLICY "comment_reactions: project members can insert" ON comment_reactio
 CREATE POLICY "comment_reactions: own reactions can delete" ON comment_reactions
   FOR DELETE
     USING ((SELECT auth.uid()) = user_id);
+
+-- ============================================================
+-- Supabase CLI の db reset は、マイグレーション適用前に
+--   ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+--     REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES / USAGE, SELECT ON SEQUENCES
+--     / EXECUTE ON FUNCTIONS FROM anon, authenticated, service_role
+-- を実行するようになったため、テーブルへの明示的な GRANT が
+-- どこにも存在しないこのプロジェクトでは anon/authenticated が
+-- 一切テーブルにアクセスできなくなっていた（permission denied for table ...）。
+-- 既存テーブルへの GRANT と、今後 postgres ロールが作成するテーブルに
+-- 対する default privileges を明示的に復元する。
+-- ============================================================
+
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
